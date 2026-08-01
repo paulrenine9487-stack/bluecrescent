@@ -1,0 +1,21 @@
+{
+  "name": "blue-crescent",
+  "version": "1.0.0",
+  "description": "Blue Crescent Engineering Web Application",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node": "^26.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
