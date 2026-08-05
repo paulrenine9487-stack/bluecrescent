@@ -38,8 +38,10 @@ export default function HeroSlider({ onNavigate }) {
   const videoRef = useRef(null);
   const [slides, setSlides] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [heroType, setHeroType] = useState('video');
+  const [heroUrl, setHeroUrl] = useState('');
 
-  // Fetch dynamic hero slides
+  // Fetch dynamic hero slides & banner settings
   useEffect(() => {
     fetch('/api/hero_slides')
       .then(res => res.ok ? res.json() : [])
@@ -50,6 +52,16 @@ export default function HeroSlider({ onNavigate }) {
         }
       })
       .catch(err => console.warn('Hero slides fetch warning:', err));
+
+    fetch('/api/settings/company')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && typeof data === 'object') {
+          if (data.aboutUsHeroType) setHeroType(data.aboutUsHeroType);
+          if (data.aboutUsHeroUrl) setHeroUrl(data.aboutUsHeroUrl);
+        }
+      })
+      .catch(err => console.warn('Hero settings fetch warning:', err));
   }, []);
 
   // Slide cycle interval
@@ -66,7 +78,7 @@ export default function HeroSlider({ onNavigate }) {
     const v = videoRef.current;
     if (!v) return;
     v.play().catch(() => {});
-  }, [activeIdx, slides]);
+  }, [activeIdx, slides, heroUrl, heroType]);
 
   // Determine current active slide
   const currentSlide = slides.length > 0 ? slides[activeIdx] : STATIC_HERO;
@@ -86,16 +98,32 @@ export default function HeroSlider({ onNavigate }) {
   return (
     <section className="hs-section">
 
-      {/* ── Slide Background (Video Background) ── */}
-      <video
-        ref={videoRef}
-        className="hs-video"
-        src="/hero2.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-      />
+      {/* ── Slide Background (Dynamic Video or Image Background) ── */}
+      {heroType === 'video' ? (
+        <video
+          ref={videoRef}
+          key={heroUrl || '/hero2.mp4'}
+          className="hs-video"
+          src={heroUrl || '/hero2.mp4'}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+      ) : (
+        <div
+          className="hs-video"
+          style={{
+            backgroundImage: `url(${heroUrl || '/aboutus-default-banner.png'})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%'
+          }}
+        />
+      )}
 
       {/* ── Dark video overlay for text contrast ────────────────── */}
       <div className="hs-video-overlay" />

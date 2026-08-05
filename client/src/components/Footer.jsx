@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ChevronRight, MapPin, Phone, Mail, Globe, Send,
-  ShieldCheck, Award, Handshake, Leaf, RadioTower, Factory
+  ShieldCheck, Award, Handshake, Leaf, RadioTower, Factory, Layers
 } from 'lucide-react';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
 
@@ -27,9 +27,9 @@ export default function Footer({ onNavigate }) {
       .catch(err => console.warn('Footer fetch warning:', err));
   }, []);
 
-  const handleNav = (page) => {
+  const handleNav = (page, subTab = '') => {
     if (onNavigate) {
-      onNavigate(page);
+      onNavigate(page, subTab);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -90,7 +90,7 @@ export default function Footer({ onNavigate }) {
         <div className="bce-footer-v2-col links-col">
           <h4 className="bce-footer-v2-heading">QUICK LINKS</h4>
           <ul className="bce-footer-v2-list">
-            {['Home', 'About Us', 'Services', 'Projects', 'Contact Us'].map((item) => (
+            {['Home', 'About Us', 'Services', 'Projects', 'Media', 'Contact Us'].map((item) => (
               <li key={item}>
                 <a href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} onClick={(e) => { e.preventDefault(); handleNav(item); }}>
                   <ChevronRight size={14} className="bce-list-icon" /> {item}
@@ -105,18 +105,18 @@ export default function Footer({ onNavigate }) {
           <h4 className="bce-footer-v2-heading">OUR SERVICES</h4>
           <ul className="bce-footer-v2-list services-list">
             <li>
-              <a href="#engineering" onClick={(e) => { e.preventDefault(); handleNav('Services'); }}>
+              <a href="#services-engineering" onClick={(e) => { e.preventDefault(); handleNav('Services', 'BIM Services'); }}>
                 <Factory size={18} className="bce-service-icon" /> Engineering Services
               </a>
             </li>
             <li>
-              <a href="#sustainability" onClick={(e) => { e.preventDefault(); handleNav('Services'); }}>
+              <a href="#services-sustainability" onClick={(e) => { e.preventDefault(); handleNav('Services', 'GSAS Service'); }}>
                 <Leaf size={18} className="bce-service-icon" /> Sustainability Services
               </a>
             </li>
             <li>
-              <a href="#telecom" onClick={(e) => { e.preventDefault(); handleNav('Services'); }}>
-                <RadioTower size={18} className="bce-service-icon" /> Telecom Services
+              <a href="#services-digital-twin" onClick={(e) => { e.preventDefault(); handleNav('Services', 'Life Cycle Twin Asset Management'); }}>
+                <Layers size={18} className="bce-service-icon" /> Digital Twin Services
               </a>
             </li>
           </ul>

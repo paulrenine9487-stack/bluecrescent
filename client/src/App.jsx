@@ -5,13 +5,13 @@ import CredentialsSection from './components/CredentialsSection';
 import CompanyInfo from './components/CompanyInfo';
 import SidebarContent from './components/SidebarContent';
 import ServicesList from './components/ServicesList';
-import WhatWeDoCarousel from './components/WhatWeDoCarousel';
 import ProjectsSlider from './components/ProjectsSlider';
 import ServicesPage from './components/ServicesPage';
 import AboutUsPage from './components/AboutUsPage';
 import ProjectsPage from './components/ProjectsPage';
 import ContactUsPage from './components/ContactUsPage';
 import CertificationsPage from './components/CertificationsPage';
+import MediaPage from './components/MediaPage';
 import Footer from './components/Footer';
 import TestimonialModal from './components/TestimonialModal';
 import AdminPanel from './components/AdminPanel';
@@ -100,6 +100,11 @@ export default function App() {
           onOpenModal={() => setIsModalOpen(true)}
           onNavigate={handleNavigate}
         />
+      ) : currentView === 'Media' ? (
+        <MediaPage
+          activeSubTab={activeSubTab}
+          onNavigate={handleNavigate}
+        />
       ) : (
         <>
           {/* Welcome Hero Carousel */}
@@ -125,9 +130,6 @@ export default function App() {
 
             {/* Our Services Section */}
             <ServicesList onNavigate={handleNavigate} />
-
-            {/* What We Do Section */}
-            <WhatWeDoCarousel onNavigate={handleNavigate} />
 
             {/* Our Projects Section (Dynamically updated from Admin Panel) */}
             <ProjectsSlider onNavigate={handleNavigate} />

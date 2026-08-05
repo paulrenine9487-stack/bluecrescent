@@ -1971,9 +1971,11 @@ body,
 /* Card Grid Layout */
 .services-cards-grid {
   display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
   gap: 30px !important;
   width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
 }
 
 .service-card-premium {
@@ -2243,10 +2245,11 @@ body,
 
 .bce-footer-v2 {
   position: relative;
-  background: #3675A1;
-  color: #000000;
+  background: #FFFFFF;
+  color: #333333;
   font-family: 'Space Grotesk', sans-serif;
   overflow: hidden;
+  border-top: 1px solid #E2E8F0;
 }
 
 /* === TOP SECTION: 4 COLUMNS === */
@@ -2262,7 +2265,7 @@ body,
 .bce-footer-v2-heading {
   font-size: 16px;
   font-weight: 700;
-  color: #000000;
+  color: #0055FF;
   margin-bottom: 24px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2278,7 +2281,7 @@ body,
 }
 
 .bce-footer-v2-list a {
-  color: #000000;
+  color: #333333;
   text-decoration: none;
   font-size: 14.5px;
   display: flex;
@@ -2289,7 +2292,7 @@ body,
 }
 
 .bce-footer-v2-col span {
-  color: #000000;
+  color: #333333;
   font-size: 14.5px;
   line-height: 1.5;
   display: block;
@@ -2302,7 +2305,7 @@ body,
 }
 
 .bce-footer-v2-col a:hover {
-  color: #FFFFFF;
+  color: #0055FF;
 }
 
 /* Column 1: Brand */
@@ -2315,7 +2318,7 @@ body,
 .bce-footer-v2-desc {
   font-size: 14.5px;
   line-height: 1.7;
-  color: #000000;
+  color: #555555;
   margin-bottom: 30px;
 }
 
@@ -2328,25 +2331,25 @@ body,
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #0055FF;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: #0055FF;
   transition: all 0.3s ease;
 }
 
 .bce-social-circle:hover {
-  background: #FFFFFF;
-  color: #3675A1;
-  border-color: #FFFFFF;
+  background: #0055FF;
+  color: #FFFFFF;
+  border-color: #0055FF;
 }
 
 /* Icons */
 .bce-list-icon,
 .bce-service-icon,
 .bce-contact-icon {
-  color: #FFFFFF;
+  color: #0055FF;
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -2461,8 +2464,7 @@ body,
 
 /* === BOTTOM SECTION: COPYRIGHT === */
 .bce-footer-v2-bottom {
-  background: rgba(0, 0, 0, 0.15);
-  /* Semi-transparent overlay to slightly darken */
+  background: #0055FF;
   text-align: center;
   padding: 18px 24px;
 }
@@ -2470,11 +2472,11 @@ body,
 .bce-footer-v2-bottom p {
   margin: 0;
   font-size: 13.5px;
-  color: #000000;
+  color: #FFFFFF;
 }
 
 .bce-cyan-text {
-  color: #000000;
+  color: #FFFFFF;
   font-weight: 700;
 }
 

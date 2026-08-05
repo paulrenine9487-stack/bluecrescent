@@ -190,11 +190,7 @@ export default function SidebarContent({ onOpenModal }) {
           </div>
         </div>
 
-        <div className="testimonials-action-row" style={{ marginTop: '32px', textAlign: 'center' }}>
-          <button className="premium-submit-btn" onClick={onOpenModal}>
-            SUBMIT TESTIMONIAL
-          </button>
-        </div>
+
       </section>
     </div>
   );

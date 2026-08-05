@@ -7,21 +7,21 @@ const FALLBACK_DIVISIONS = [
   { division_type: 'Engineering Division',    name: 'BIM Modeling & Coordination',       project_count: 18, description: 'Full BIM modelling and coordination services across disciplines.' },
   { division_type: 'Sustainability Division', name: 'LEED/GSAS Gold Commissioning',      project_count: 12, description: 'Commissioning services achieving LEED and GSAS Gold ratings.' },
   { division_type: 'Sustainability Division', name: 'Energy Audit Works',                 project_count: 9,  description: 'Comprehensive energy auditing for residential and commercial projects.' },
-  { division_type: 'Telecom Division',        name: '5G IBS Design Towers',              project_count: 35, description: 'Indoor and outdoor cellular and fibre-optic solutions.' },
-  { division_type: 'Telecom Division',        name: 'Microwave & Wi-Fi Systems',          project_count: 14, description: 'Microwave links and enterprise Wi-Fi network design.' },
+  { division_type: 'Digital Twin Division',   name: 'Life Cycle Twin Asset Management',  project_count: 12, description: 'Virtual representation of physical assets, integrating real-time IoT sensors and 3D space.' },
+  { division_type: 'Digital Twin Division',   name: 'Remote Work & System Integration',   project_count: 8,  description: 'Industrial automation, control logic simulation, and legacy system SCADA integration.' },
 ];
 
 const TABS = [
   { label: 'Engineering Division',    key: 'Engineering Division',    icon: '⚙' },
   { label: 'Sustainability Division', key: 'Sustainability Division', icon: '🌱' },
-  { label: 'Telecom Division',        key: 'Telecom Division',        icon: '📡' },
+  { label: 'Digital Twin Division',   key: 'Digital Twin Division',   icon: '💻' },
 ];
 
 // Sample project images per division
 const DIVISION_IMAGES = {
   'Engineering Division':    ['/eng_stadium.png', '/eng_tower.png', '/eng_island.png'],
   'Sustainability Division': ['/sust_workshop.png'],
-  'Telecom Division':        [],
+  'Digital Twin Division':   ['/why.png', '/aerial_city_hero.png'],
 };
 
 export default function ProjectsPage({ activeSubTab = 'Engineering Division', onNavigate }) {

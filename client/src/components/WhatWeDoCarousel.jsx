@@ -5,14 +5,6 @@ export default function WhatWeDoCarousel({ onNavigate }) {
   const cards = [
     {
       id: 1,
-      title: 'Specialised Simulation & Analysis',
-      subServiceKey: 'Specialised Simulation & Analysis',
-      icon: <Monitor size={28} className="what-we-do-icon" />,
-      description: 'Advanced fluid dynamics, thermal analysis, structural stress testing, and value engineering simulation.',
-      image: '/simulation.png'
-    },
-    {
-      id: 2,
       title: 'Engineering MEP & Shop Drawings - 2D',
       subServiceKey: 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D',
       icon: <Settings size={28} className="what-we-do-icon" />,
@@ -20,15 +12,7 @@ export default function WhatWeDoCarousel({ onNavigate }) {
       image: '/why.png'
     },
     {
-      id: 3,
-      title: 'BIM Modeling & Coordination - 3D',
-      subServiceKey: 'BIM Modelling - 3D',
-      icon: <Cpu size={28} className="what-we-do-icon" />,
-      description: 'Precision 3D BIM coordination, clash detection, LOD 300/400 models, and digital twins.',
-      image: '/eng_tower.png'
-    },
-    {
-      id: 4,
+      id: 2,
       title: 'GSAS & LEED Sustainability Design',
       subServiceKey: 'GSAS & LEED Sustainability Design Consultancy Services',
       icon: <Globe size={28} className="what-we-do-icon" />,
@@ -36,20 +20,12 @@ export default function WhatWeDoCarousel({ onNavigate }) {
       image: '/sust_workshop.png'
     },
     {
-      id: 5,
+      id: 3,
       title: 'Environmental Impact Assessment',
       subServiceKey: 'Environment Impact Assessment (EIA) Services',
       icon: <FileText size={28} className="what-we-do-icon" />,
       description: 'Air quality, thermal emissions, noise modeling, and regulatory environment compliance audits.',
       image: '/eng_island.png'
-    },
-    {
-      id: 6,
-      title: 'Telecom & IBS Design Services',
-      subServiceKey: 'IBS (In-Building Solution) Design Services',
-      icon: <Signal size={28} className="what-we-do-icon" />,
-      description: 'High-frequency in-building cellular signal coordination and structural tower loading designs.',
-      image: '/eng_stadium.png'
     }
   ];
 

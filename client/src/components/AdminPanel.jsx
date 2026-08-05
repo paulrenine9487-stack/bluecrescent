@@ -53,6 +53,8 @@ export default function AdminPanel({ onNavigate }) {
   const [users, setUsers] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [contactInquiries, setContactInquiries] = useState([]);
+  const [partners, setPartners] = useState([]);
+  const [mediaItems, setMediaItems] = useState([]);
 
   // SEO Management State
   const [seoPages, setSeoPages] = useState({
@@ -257,11 +259,6 @@ export default function AdminPanel({ onNavigate }) {
   };
 
   const saveCompanySettings = async () => {
-    localStorage.setItem('companySettings', JSON.stringify(companySettings));
-    localStorage.setItem('aboutUsVideoUrl', aboutUsVideoUrl);
-    localStorage.setItem('aboutUsHeroType', aboutUsHeroType);
-    localStorage.setItem('aboutUsHeroUrl', aboutUsHeroUrl);
-    
     try {
       const payload = {
         ...companySettings,
@@ -270,11 +267,26 @@ export default function AdminPanel({ onNavigate }) {
         aboutUsHeroUrl
       };
       delete payload.id;
-      await fetch('/api/settings/company', {
+      const res = await fetch('/api/settings/company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          const finalUrl = result.data.aboutUsHeroUrl || '';
+          const finalVideoUrl = result.data.aboutUsVideoUrl || '';
+          
+          setAboutUsHeroUrl(finalUrl);
+          setAboutUsVideoUrl(finalVideoUrl);
+          
+          localStorage.setItem('companySettings', JSON.stringify(companySettings));
+          localStorage.setItem('aboutUsHeroType', aboutUsHeroType);
+          localStorage.setItem('aboutUsHeroUrl', finalUrl);
+          localStorage.setItem('aboutUsVideoUrl', finalVideoUrl);
+        }
+      }
     } catch (err) {
       console.warn('DB save error:', err);
     }
@@ -436,6 +448,8 @@ export default function AdminPanel({ onNavigate }) {
   const [menuForm, setMenuForm] = useState({ name: '', url: '', parent_id: '', order_num: 0 });
   const [footerForm, setFooterForm] = useState({ brand_desc: '', facebook_url: '', instagram_url: '', address: '', phone: '', fax: '', email: '', website: '', copyright: '' });
   const [userForm, setUserForm] = useState({ username: '', password: '', role: 'admin' });
+  const [partnerForm, setPartnerForm] = useState({ name: '', role: 'Working Partner', image: '', order_num: 0 });
+  const [mediaForm, setMediaForm] = useState({ type: 'gallery', title: '', url: '' });
 
   // Pagination mocks
   const [currentPage, setCurrentPage] = useState(1);
@@ -478,6 +492,7 @@ export default function AdminPanel({ onNavigate }) {
     if (route === '/admin/settings/footer') return 'footer';
     if (route === '/admin/backup') return 'backup';
     if (route === '/admin/media') return 'media';
+    if (route === '/admin/partners') return 'partners';
     return route;
   };
 
@@ -554,6 +569,12 @@ export default function AdminPanel({ onNavigate }) {
       } else if (tab === 'projects') {
         const res = await fetch('/api/projects');
         if (res.ok) setProjects(await res.json());
+      } else if (tab === 'partners') {
+        const res = await fetch('/api/partners');
+        if (res.ok) setPartners(await res.json());
+      } else if (tab === 'media') {
+        const res = await fetch('/api/media');
+        if (res.ok) setMediaItems(await res.json());
       } else if (tab === '/admin/settings/company') {
         const res = await fetch('/api/settings/company');
         if (res.ok) {
@@ -635,6 +656,8 @@ export default function AdminPanel({ onNavigate }) {
     setMenuForm({ name: '', url: '', parent_id: '', order_num: 0 });
     setUserForm({ username: '', password: '', role: 'admin' });
     setProjectForm(defaultProjectForm);
+    setPartnerForm({ name: '', role: 'Working Partner', image: '', order_num: 0 });
+    setMediaForm({ type: 'gallery', title: '', url: '' });
   };
 
   // General CRUD handlers
@@ -666,6 +689,10 @@ export default function AdminPanel({ onNavigate }) {
       bodyData = { ...userForm };
     } else if (apiTab === 'projects') {
       bodyData = { ...projectForm };
+    } else if (apiTab === 'partners') {
+      bodyData = { ...partnerForm };
+    } else if (apiTab === 'media') {
+      bodyData = { ...mediaForm };
     }
 
     try {
@@ -851,6 +878,19 @@ export default function AdminPanel({ onNavigate }) {
         project_count: item.project_count || 0,
         description: item.description || '',
         status: item.status || 'Active'
+      });
+    } else if (tab === 'partners') {
+      setPartnerForm({
+        name: item.name,
+        role: item.role || 'Working Partner',
+        image: item.image || '',
+        order_num: item.order_num || 0
+      });
+    } else if (tab === 'media') {
+      setMediaForm({
+        type: item.type || 'gallery',
+        title: item.title || '',
+        url: item.url || ''
       });
     }
     setShowAddModal(true);
@@ -1237,6 +1277,24 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                   {activeTab === '/admin/testimonials' && <div className="admin-nav-indicator" />}
                 </button>
+                <button 
+                  className={`admin-nav-item ${activeTab === '/admin/partners' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('/admin/partners')}
+                >
+                  <div className="admin-nav-item-left">
+                    <Building size={20} /> Working Partners
+                  </div>
+                  {activeTab === '/admin/partners' && <div className="admin-nav-indicator" />}
+                </button>
+                <button 
+                  className={`admin-nav-item ${activeTab === '/admin/media' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('/admin/media')}
+                >
+                  <div className="admin-nav-item-left">
+                    <ImageIcon size={20} /> Media Library
+                  </div>
+                  {activeTab === '/admin/media' && <div className="admin-nav-indicator" />}
+                </button>
               </>
             )}
 
@@ -1395,7 +1453,7 @@ export default function AdminPanel({ onNavigate }) {
           {/* Right Main Pane */}
           <main className="admin-content-pane">
           {/* Conditional Add Button Header */}
-          {['/admin/news', '/admin/services', '/admin/certificates', '/admin/testimonials', '/admin/users', '/admin/projects'].includes(activeTab) && (
+          {['/admin/news', '/admin/services', '/admin/certificates', '/admin/testimonials', '/admin/users', '/admin/projects', '/admin/partners', '/admin/media'].includes(activeTab) && (
             <div className="admin-pane-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
               <button 
                 className="admin-add-btn" 
@@ -1417,6 +1475,8 @@ export default function AdminPanel({ onNavigate }) {
                 {activeTab === '/admin/testimonials' && 'Add Testimonial'}
                 {activeTab === '/admin/users' && 'Create Administrator'}
                 {activeTab === '/admin/projects' && 'Add New Project'}
+                {activeTab === '/admin/partners' && 'Add Partner'}
+                {activeTab === '/admin/media' && 'Add Media'}
               </button>
             </div>
           )}
@@ -1500,8 +1560,8 @@ export default function AdminPanel({ onNavigate }) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}><ImageIcon size={16} /></div>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>About Us — Hero Banner Media</h3>
-                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize the top banner media of the About Us page with either a custom image or background video.</p>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Home — Hero Banner Media</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize the top banner media of the Home page with either a custom image or background video.</p>
                         </div>
                       </div>
                     </div>
@@ -1562,7 +1622,11 @@ export default function AdminPanel({ onNavigate }) {
                               const file = e.target.files[0];
                               if (file) {
                                 setAboutUsHeroFile(file);
-                                setAboutUsHeroUrl(URL.createObjectURL(file));
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setAboutUsHeroUrl(reader.result);
+                                };
+                                reader.readAsDataURL(file);
                               }
                             }}
                           />
@@ -1622,7 +1686,7 @@ export default function AdminPanel({ onNavigate }) {
                             />
                           )}
                         </div>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#94A3B8', textAlign: 'center' }}>Preview on the About Us page top banner</p>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#94A3B8', textAlign: 'center' }}>Preview on the Home page top banner</p>
                       </div>
                     </div>
                   </div>
@@ -1697,7 +1761,11 @@ export default function AdminPanel({ onNavigate }) {
                                   const file = e.target.files[0];
                                   if (file) {
                                     setAboutUsVideoFile(file);
-                                    setAboutUsVideoUrl(URL.createObjectURL(file));
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setAboutUsVideoUrl(reader.result);
+                                    };
+                                    reader.readAsDataURL(file);
                                   }
                                 }}
                               />
@@ -3489,7 +3557,7 @@ export default function AdminPanel({ onNavigate }) {
               <div>
                 {/* Stats strip */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                  {['Engineering Division', 'Sustainability Division', 'Telecom Division'].map(div => (
+                  {['Engineering Division', 'Sustainability Division', 'Digital Twin Division'].map(div => (
                     <div key={div} className="admin-stat-card" style={{ padding: '18px 20px' }}>
                       <p style={{ margin: 0, fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '6px' }}>
                         {div.replace(' Division', '')}
@@ -3555,6 +3623,148 @@ export default function AdminPanel({ onNavigate }) {
                     )}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* PARTNERS WORKSPACE */}
+            {activeTab === '/admin/partners' && (
+              <div>
+                <div className="admin-table-card-header">
+                  <h3>Our Working Partners</h3>
+                  <div className="admin-search-bar">
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search partners..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '40px' }}>#</th>
+                      <th>Logo</th>
+                      <th>Partner Name</th>
+                      <th>Role Description</th>
+                      <th>Sort Order</th>
+                      <th style={{ width: '90px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterList(partners, ['name', 'role']).map((item, idx) => (
+                      <tr key={item.id}>
+                        <td>{idx + 1}</td>
+                        <td>
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="admin-table-preview-img" style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '8px' }} />
+                          ) : (
+                            <div style={{ height: '40px', width: '40px', borderRadius: '8px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#94A3B8', fontWeight: '700' }}>No Logo</div>
+                          )}
+                        </td>
+                        <td style={{ fontWeight: '600' }}>{item.name}</td>
+                        <td style={{ color: '#00B8A0', fontWeight: '600' }}>{item.role}</td>
+                        <td>{item.order_num}</td>
+                        <td>
+                          <div className="admin-actions">
+                            <button className="admin-action-btn" title="Edit" onClick={() => startEdit('partners', item)}>
+                              <Edit size={13} />
+                            </button>
+                            <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('partners', item.id)}>
+                              <Trash size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {partners.length === 0 && (
+                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No partners yet. Click "Add Partner" to get started.</td></tr>
+                    )}
+                </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* MEDIA LIBRARY WORKSPACE */}
+            {activeTab === '/admin/media' && (
+              <div>
+                <div className="admin-table-card-header">
+                  <h3>Media Library</h3>
+                  <div className="admin-search-bar">
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search media..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+                {/* Gallery Section */}
+                <div style={{ marginBottom: '24px' }}>
+                  <h4 style={{ color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '1px' }}>📸 Gallery Images</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
+                    {filterList(mediaItems.filter(m => m.type === 'gallery'), ['title']).map((item) => (
+                      <div key={item.id} style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--card-bg)' }}>
+                        <div style={{ position: 'relative', paddingBottom: '70%', overflow: 'hidden', background: '#0F172A' }}>
+                          <img src={item.url} alt={item.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display='none'; }} />
+                        </div>
+                        <div style={{ padding: '8px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title || 'Untitled'}</div>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={12} /></button>
+                            <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('media', item.id)}><Trash size={12} /></button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {mediaItems.filter(m => m.type === 'gallery').length === 0 && (
+                      <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '14px' }}>No gallery images yet. Click "Add Media" above.</div>
+                    )}
+                  </div>
+                </div>
+                {/* Videos Section */}
+                <div>
+                  <h4 style={{ color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '1px' }}>🎥 YouTube Videos</h4>
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '40px' }}>#</th>
+                        <th style={{ width: '120px' }}>Thumbnail</th>
+                        <th>Title</th>
+                        <th>YouTube URL</th>
+                        <th style={{ width: '90px' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterList(mediaItems.filter(m => m.type === 'video'), ['title', 'url']).map((item, idx) => {
+                        const ytId = item.url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/)?.[1];
+                        return (
+                          <tr key={item.id}>
+                            <td>{idx + 1}</td>
+                            <td>
+                              {ytId ? (
+                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={item.title} style={{ width: '100px', height: '56px', objectFit: 'cover', borderRadius: '6px' }} />
+                              ) : <span style={{ color: '#94A3B8', fontSize: '12px' }}>No Thumb</span>}
+                            </td>
+                            <td style={{ fontWeight: 600 }}>{item.title}</td>
+                            <td style={{ color: '#00B8A0', fontSize: '13px', wordBreak: 'break-all' }}>{item.url}</td>
+                            <td>
+                              <div className="admin-actions">
+                                <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={13} /></button>
+                                <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('media', item.id)}><Trash size={13} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {mediaItems.filter(m => m.type === 'video').length === 0 && (
+                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No videos yet. Click "Add Media" above.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -4157,7 +4367,7 @@ export default function AdminPanel({ onNavigate }) {
                       >
                         <option value="Engineering Division">Engineering Division</option>
                         <option value="Sustainability Division">Sustainability Division</option>
-                        <option value="Telecom Division">Telecom Division</option>
+                        <option value="Digital Twin Division">Digital Twin Division</option>
                       </select>
                     </div>
 
@@ -4310,6 +4520,146 @@ export default function AdminPanel({ onNavigate }) {
                       />
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* partners form */}
+              {activeTab === '/admin/partners' && (
+                <div>
+                  <div className="admin-form-group">
+                    <label>Partner Company Name</label>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. TEKNIK Group"
+                      value={partnerForm.name}
+                      onChange={e => setPartnerForm(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="admin-form-grid">
+                    <div className="admin-form-group">
+                      <label>Role / Relationship</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. Engineering Partner"
+                        value={partnerForm.role}
+                        onChange={e => setPartnerForm(prev => ({ ...prev, role: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>Sort Order Index</label>
+                      <input
+                        type="number"
+                        className="admin-input"
+                        value={partnerForm.order_num}
+                        onChange={e => setPartnerForm(prev => ({ ...prev, order_num: parseInt(e.target.value) || 0 }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="admin-form-group">
+                    <label>Partner Logo / Image</label>
+                    <div className="admin-file-upload">
+                      <label className="admin-file-label">
+                        <span>Select image file...</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleImageUpload(e.target.files[0], setPartnerForm, 'image')}
+                        />
+                      </label>
+                    </div>
+                    {partnerForm.image && (
+                      <div className="admin-upload-preview" style={{ marginTop: '10px' }}>
+                        <img src={partnerForm.image} alt="Partner Logo Preview" style={{ maxHeight: '100px', objectFit: 'contain' }} />
+                        <button className="admin-upload-preview-remove" onClick={() => setPartnerForm(prev => ({ ...prev, image: '' }))}>✕</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* media form */}
+              {activeTab === '/admin/media' && (
+                <div>
+                  <div className="admin-form-group">
+                    <label>Media Type</label>
+                    <select
+                      className="admin-input"
+                      value={mediaForm.type}
+                      onChange={e => setMediaForm(prev => ({ ...prev, type: e.target.value }))}
+                    >
+                      <option value="gallery">📸 Gallery Image</option>
+                      <option value="video">🎥 YouTube Video</option>
+                    </select>
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Title / Caption</label>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder={mediaForm.type === 'gallery' ? 'e.g. Project Site Photo' : 'e.g. Company Overview Video'}
+                      value={mediaForm.title}
+                      onChange={e => setMediaForm(prev => ({ ...prev, title: e.target.value }))}
+                    />
+                  </div>
+                  {mediaForm.type === 'gallery' ? (
+                    <div className="admin-form-group">
+                      <label>Upload Image or Paste Image URL</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="https://... or upload below"
+                        value={mediaForm.url}
+                        onChange={e => setMediaForm(prev => ({ ...prev, url: e.target.value }))}
+                      />
+                      <div style={{ marginTop: '10px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: 'var(--bg-primary)', border: '2px dashed var(--border)', borderRadius: '10px', padding: '14px 20px', fontSize: '14px', color: 'var(--text-muted)' }}>
+                          <ImageIcon size={20} /> Drop image here or click to upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onloadend = () => setMediaForm(prev => ({ ...prev, url: reader.result }));
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {mediaForm.url && (
+                        <div className="admin-upload-preview" style={{ marginTop: '10px' }}>
+                          <img src={mediaForm.url} alt="Preview" style={{ maxHeight: '120px', objectFit: 'contain', borderRadius: '8px' }} />
+                          <button className="admin-upload-preview-remove" onClick={() => setMediaForm(prev => ({ ...prev, url: '' }))}>✕</button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="admin-form-group">
+                      <label>YouTube Video URL</label>
+                      <input
+                        type="url"
+                        className="admin-input"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={mediaForm.url}
+                        onChange={e => setMediaForm(prev => ({ ...prev, url: e.target.value }))}
+                      />
+                      {mediaForm.url && (() => {
+                        const ytId = mediaForm.url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/)?.[1];
+                        return ytId ? (
+                          <div style={{ marginTop: '10px', borderRadius: '8px', overflow: 'hidden' }}>
+                            <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="YouTube Thumbnail" style={{ width: '100%', maxWidth: '280px', borderRadius: '8px' }} />
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
                 </div>
               )}
 

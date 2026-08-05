@@ -848,3 +848,169 @@
     font-size: 16px;
   }
 }
+
+/* =====================================================================
+   OUR WORKING PARTNERS SECTION
+   ===================================================================== */
+
+.working-partners-section {
+  padding: 80px 0 60px;
+  background: #ffffff;
+}
+
+/* Carousel wrapper: arrows + track */
+.partners-carousel-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+}
+
+/* Overflow clipping track container */
+.partners-track-outer {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sliding row of cards */
+.partners-track {
+  display: flex;
+  transition: transform 420ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* Individual partner card — matching sample design */
+.partner-card {
+  flex: 0 0 calc(100% / 4);
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.partner-img-wrap {
+  background: #f1f5f9;
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 3 / 3.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(11, 61, 145, 0.08);
+  transition: box-shadow 300ms ease, transform 300ms ease;
+}
+
+.partner-card:hover .partner-img-wrap {
+  box-shadow: 0 12px 40px rgba(11, 61, 145, 0.16);
+  transform: translateY(-4px);
+}
+
+.partner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 400ms ease;
+}
+
+.partner-card:hover .partner-img {
+  transform: scale(1.04);
+}
+
+.partner-card-body {
+  padding: 16px 4px 8px;
+  text-align: center;
+}
+
+.partner-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0B1F3A;
+  margin: 0 0 4px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.partner-role {
+  font-size: 13px;
+  font-weight: 600;
+  color: #00B8A0;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+/* Navigation arrow buttons */
+.partner-arrow {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #374151;
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 0;
+}
+
+.partner-arrow:hover:not(:disabled) {
+  background: #0B3D91;
+  border-color: #0B3D91;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(11, 61, 145, 0.30);
+}
+
+.partner-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Dot indicators */
+.partners-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.partner-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: #cbd5e1;
+  cursor: pointer;
+  padding: 0;
+  transition: background 250ms ease, transform 250ms ease;
+}
+
+.partner-dot.active {
+  background: #0B3D91;
+  transform: scale(1.25);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .partner-card {
+    flex: 0 0 calc(100% / 2);
+  }
+}
+
+@media (max-width: 560px) {
+  .partner-card {
+    flex: 0 0 100%;
+  }
+
+  .partner-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+}

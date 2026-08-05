@@ -5,6 +5,7 @@ import logoWhiteImg from '../assets/logo1_transparent_white.png';
 export default function Header({ currentView = 'Home', activeSubTab = '', onNavigate }) {
   const [projectsDropdownOpen, setProjectsDropdownOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [mediaDropdownOpen, setMediaDropdownOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -53,34 +54,32 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   }, [currentView]);
 
   // Fallbacks
-  const defaultNavItems = ['Home', 'About Us', 'Services', 'Projects', 'Contact Us'];
-  const defaultProjectSubItems = ['Engineering Division', 'Sustainability Division', 'Telecom Division'];
+  const defaultNavItems = ['Home', 'About Us', 'Services', 'Projects', 'Media', 'Contact Us'];
+  const defaultProjectSubItems = ['Engineering Division', 'Sustainability Division', 'Digital Twin Division'];
   const defaultServiceCategories = [
     {
       name: 'Engineering Services',
       items: [
-        'Engineering Design support Services',
-        'Specialised Simulation & Analysis',
-        'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D',
-        'BIM Modelling - 3D',
+        'BIM Services',
+        '2D CAD Drafting Services',
         'Outsourcing Technical Experts'
       ]
     },
     {
       name: 'Sustainability Services',
       items: [
-        'Energy Auditing',
-        'Commissioning LEED & GSAS',
-        'Green Building Facilitation'
+        'GSAS Service',
+        'LEED Consulting Services',
+        'Energy Audit and Analysis',
+        'ISO 14064 Consulting Services'
       ]
     },
     {
-      name: 'Telecom Services',
+      name: 'Digital Twin Services',
       items: [
-        'Fiber Optic (Indoor & Outdoor)',
-        'Cellular (IBS & Outdoor Sites)',
-        'Microwave Links',
-        'Wi-Fi Systems'
+        'Life Cycle Twin Asset Management',
+        'Remote Work Automation',
+        'System Integration and Analysis'
       ]
     }
   ];
@@ -95,7 +94,9 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
 
     const projectsMenu = rootMenus.find(m => m.name.toLowerCase() === 'projects');
     if (projectsMenu) {
-      const subMenus = dynamicMenus.filter(m => m.parent_id === projectsMenu.id).sort((a, b) => a.order_num - b.order_num);
+      const subMenus = dynamicMenus
+        .filter(m => m.parent_id === projectsMenu.id)
+        .sort((a, b) => a.order_num - b.order_num);
       if (subMenus.length > 0) {
         projectSubItems = subMenus.map(m => m.name);
       }
@@ -106,16 +107,50 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   let serviceCategories = defaultServiceCategories;
   if (dynamicServices.length > 0) {
     const categoriesMap = {};
-    dynamicServices.forEach(s => {
-      if (!categoriesMap[s.category]) {
-        categoriesMap[s.category] = [];
-      }
-      categoriesMap[s.category].push(s.title);
-    });
-    serviceCategories = Object.keys(categoriesMap).map(catName => ({
+    dynamicServices
+      .filter(s => !s.category.toLowerCase().includes('telecom'))
+      .filter(s => !['Engineering Design support Services', 'Specialised Simulation & Analysis', 'BIM Modelling - 3D', 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D'].includes(s.title))
+      .forEach(s => {
+        if (!categoriesMap[s.category]) {
+          categoriesMap[s.category] = [];
+        }
+        categoriesMap[s.category].push(s.title);
+      });
+
+    // Build dynamic categories from API data
+    const dynamicCategories = Object.keys(categoriesMap).map(catName => ({
       name: catName,
       items: categoriesMap[catName]
     }));
+
+    // Always guarantee Engineering Services with exactly these two items
+    const hasEngineering = dynamicCategories.some(c => c.name === 'Engineering Services');
+    if (!hasEngineering) {
+      dynamicCategories.unshift({
+        name: 'Engineering Services',
+        items: ['BIM Services', '2D CAD Drafting Services', 'Outsourcing Technical Experts']
+      });
+    } else {
+      const engCat = dynamicCategories.find(c => c.name === 'Engineering Services');
+      if (!engCat.items.includes('BIM Services')) engCat.items.unshift('BIM Services');
+      if (!engCat.items.includes('2D CAD Drafting Services')) engCat.items.splice(1, 0, '2D CAD Drafting Services');
+      if (!engCat.items.includes('Outsourcing Technical Experts')) engCat.items.push('Outsourcing Technical Experts');
+    }
+
+    // Always guarantee Digital Twin Services
+    const hasDigitalTwin = dynamicCategories.some(c => c.name === 'Digital Twin Services');
+    if (!hasDigitalTwin) {
+      dynamicCategories.push({
+        name: 'Digital Twin Services',
+        items: [
+          'Life Cycle Twin Asset Management',
+          'Remote Work Automation',
+          'System Integration and Analysis'
+        ]
+      });
+    }
+
+    serviceCategories = dynamicCategories;
   }
 
   const isProjectsActive = currentView === 'Projects' || projectSubItems.includes(currentView);
@@ -249,6 +284,60 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                               </a>
                             </li>
                           ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                }
+
+                // Media Dropdown with Gallery & Videos
+                if (item === 'Media') {
+                  return (
+                    <li
+                      key={item}
+                      className="nav-item-dropdown"
+                      onMouseEnter={() => setMediaDropdownOpen(true)}
+                      onMouseLeave={() => setMediaDropdownOpen(false)}
+                    >
+                      <a
+                        href="#"
+                        className={`nav-link ${currentView === 'Media' ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (onNavigate) onNavigate('Media', 'Gallery');
+                        }}
+                      >
+                        MEDIA <span className="dropdown-arrow">▾</span>
+                      </a>
+
+                      {mediaDropdownOpen && (
+                        <ul className="dropdown-menu">
+                          <li className="dropdown-item">
+                            <a
+                              href="#"
+                              className={`dropdown-item-link ${currentView === 'Media' && activeSubTab === 'Gallery' ? 'active-sub' : ''}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setMediaDropdownOpen(false);
+                                if (onNavigate) onNavigate('Media', 'Gallery');
+                              }}
+                            >
+                              📸 Gallery
+                            </a>
+                          </li>
+                          <li className="dropdown-item">
+                            <a
+                              href="#"
+                              className={`dropdown-item-link ${currentView === 'Media' && activeSubTab === 'Videos' ? 'active-sub' : ''}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setMediaDropdownOpen(false);
+                                if (onNavigate) onNavigate('Media', 'Videos');
+                              }}
+                            >
+                              🎥 Videos (YouTube)
+                            </a>
+                          </li>
                         </ul>
                       )}
                     </li>

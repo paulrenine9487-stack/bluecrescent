@@ -39,9 +39,64 @@ app.get('/api/settings/company', async (req, res) => {
   return res.json({});
 });
 
+// Helper to save base64 to file and return static path
+const saveBase64File = (base64Str, prefix) => {
+  if (!base64Str || !base64Str.startsWith('data:')) {
+    return base64Str; // already a path or empty
+  }
+  
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const matches = base64Str.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return base64Str;
+    }
+    
+    const mimeType = matches[1];
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Determine file extension
+    let ext = 'bin';
+    if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
+    else if (mimeType.includes('png')) ext = 'png';
+    else if (mimeType.includes('webp')) ext = 'webp';
+    else if (mimeType.includes('mp4')) ext = 'mp4';
+    else if (mimeType.includes('webm')) ext = 'webm';
+    else if (mimeType.includes('quicktime') || mimeType.includes('mov')) ext = 'mov';
+    
+    const filename = `${prefix}_${Date.now()}.${ext}`;
+    const publicDir = path.join(__dirname, '..', 'client', 'public', 'uploads');
+    
+    // Ensure dir exists
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+    
+    const filePath = path.join(publicDir, filename);
+    fs.writeFileSync(filePath, buffer);
+    
+    console.log(`Successfully saved Base64 upload to file: ${filePath}`);
+    return `/uploads/${filename}`;
+  } catch (err) {
+    console.error('Error saving base64 to file:', err);
+    return base64Str;
+  }
+};
+
 app.post('/api/settings/company', async (req, res) => {
   const settings = req.body;
   try {
+    // Process base64 uploads and save to disk
+    if (settings.aboutUsHeroUrl && settings.aboutUsHeroUrl.startsWith('data:')) {
+      settings.aboutUsHeroUrl = saveBase64File(settings.aboutUsHeroUrl, 'hero_banner');
+    }
+    if (settings.aboutUsVideoUrl && settings.aboutUsVideoUrl.startsWith('data:')) {
+      settings.aboutUsVideoUrl = saveBase64File(settings.aboutUsVideoUrl, 'section_video');
+    }
+
     const pool = getPool();
     if (getIsConnected() && pool) {
       const [rows] = await pool.query('SELECT id FROM company_settings LIMIT 1');
@@ -51,14 +106,14 @@ app.post('/api/settings/company', async (req, res) => {
         const setQuery = keys.map(k => `${k} = ?`).join(', ');
         const values = keys.map(k => settings[k]);
         await pool.query(`UPDATE company_settings SET ${setQuery} WHERE id = ?`, [...values, id]);
-        return res.json({ success: true, message: 'Settings updated.' });
+        return res.json({ success: true, message: 'Settings updated.', data: settings });
       } else {
         const keys = Object.keys(settings);
         const colNames = keys.join(', ');
         const placeholders = keys.map(() => '?').join(', ');
         const values = keys.map(k => settings[k]);
         await pool.query(`INSERT INTO company_settings (${colNames}) VALUES (${placeholders})`, values);
-        return res.json({ success: true, message: 'Settings inserted.' });
+        return res.json({ success: true, message: 'Settings inserted.', data: settings });
       }
     }
   } catch (err) {
@@ -443,7 +498,7 @@ app.get('/api/menus', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query('SELECT * FROM menus ORDER BY order_num ASC');
+      const [rows] = await pool.query("SELECT * FROM menus ORDER BY order_num ASC");
       return res.json(rows);
     }
   } catch (err) {
@@ -561,7 +616,7 @@ app.get('/api/services', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query('SELECT * FROM services ORDER BY category ASC, id ASC');
+      const [rows] = await pool.query("SELECT * FROM services WHERE category NOT LIKE '%Telecom%' AND title NOT IN ('Engineering Design support Services', 'Specialised Simulation & Analysis', 'BIM Modelling - 3D') ORDER BY category ASC, id ASC");
       return res.json(rows);
     }
   } catch (err) {
@@ -809,7 +864,7 @@ const fallbackProjects = [
   { id: 1, name: 'Engineering Design Support Works', division_type: 'Engineering Division', project_count: 24, description: '', image: '', status: 'Active' },
   { id: 2, name: 'BIM Modeling & Coordination',       division_type: 'Engineering Division', project_count: 18, description: '', image: '', status: 'Active' },
   { id: 3, name: 'LEED/GSAS Gold Commissioning',      division_type: 'Sustainability Division', project_count: 12, description: '', image: '', status: 'Active' },
-  { id: 4, name: '5G IBS Design Towers',              division_type: 'Telecom Division',    project_count: 35, description: '', image: '', status: 'Active' },
+  { id: 4, name: 'Life Cycle Twin Asset Management',  division_type: 'Digital Twin Division', project_count: 12, description: '', image: '', status: 'Active' },
 ];
 
 // GET all projects
@@ -817,7 +872,7 @@ app.get('/api/projects', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query('SELECT * FROM projects ORDER BY id ASC');
+      const [rows] = await pool.query("SELECT * FROM projects ORDER BY id ASC");
       if (rows.length > 0) return res.json(rows);
     }
   } catch (err) { console.error(err); }
@@ -871,6 +926,160 @@ app.delete('/api/projects/:id', async (req, res) => {
   return res.status(503).json({ error: 'Database not connected.' });
 });
 
+// ==========================================
+// PARTNERS API
+// ==========================================
+
+
+// GET all partners
+app.get('/api/partners', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM partners ORDER BY order_num ASC, id ASC');
+      return res.json(rows);
+    }
+  } catch (err) {
+    console.error('Error fetching partners:', err);
+  }
+  return res.json([]);
+});
+
+// POST create partner
+app.post('/api/partners', async (req, res) => {
+  const { name, role, image, order_num } = req.body;
+  if (!name) return res.status(400).json({ error: 'Partner name is required.' });
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [result] = await pool.query(
+        'INSERT INTO partners (name, role, image, order_num) VALUES (?, ?, ?, ?)',
+        [name, role || 'Working Partner', image || '', order_num || 0]
+      );
+      const [rows] = await pool.query('SELECT * FROM partners WHERE id = ?', [result.insertId]);
+      return res.status(201).json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error creating partner:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// PUT update partner
+app.put('/api/partners/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, role, image, order_num } = req.body;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query(
+        'UPDATE partners SET name=?, role=?, image=?, order_num=? WHERE id=?',
+        [name, role, image, order_num || 0, id]
+      );
+      const [rows] = await pool.query('SELECT * FROM partners WHERE id = ?', [id]);
+      return res.json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error updating partner:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// DELETE partner
+app.delete('/api/partners/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query('DELETE FROM partners WHERE id = ?', [id]);
+      return res.json({ success: true });
+    }
+  } catch (err) {
+    console.error('Error deleting partner:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// ==========================================
+// MEDIA ITEMS API
+// ==========================================
+
+// GET all media items
+app.get('/api/media', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM media_items ORDER BY id DESC');
+      return res.json(rows);
+    }
+  } catch (err) {
+    console.error('Error fetching media items:', err);
+  }
+  return res.json([]);
+});
+
+// POST add media item
+app.post('/api/media', async (req, res) => {
+  const { type, title, url } = req.body;
+  if (!type || !title || !url) return res.status(400).json({ error: 'Type, title, and url are required.' });
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [result] = await pool.query(
+        'INSERT INTO media_items (type, title, url) VALUES (?, ?, ?)',
+        [type, title, url]
+      );
+      const [rows] = await pool.query('SELECT * FROM media_items WHERE id = ?', [result.insertId]);
+      return res.status(201).json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error adding media item:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// PUT update media item
+app.put('/api/media/:id', async (req, res) => {
+  const { id } = req.params;
+  const { type, title, url } = req.body;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query(
+        'UPDATE media_items SET type=?, title=?, url=? WHERE id=?',
+        [type, title, url, id]
+      );
+      const [rows] = await pool.query('SELECT * FROM media_items WHERE id = ?', [id]);
+      return res.json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error updating media item:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// DELETE media item
+app.delete('/api/media/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query('DELETE FROM media_items WHERE id = ?', [id]);
+      return res.json({ success: true });
+    }
+  } catch (err) {
+    console.error('Error deleting media item:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Blue Crescent Express Server running on port ${PORT}`);
 });
+

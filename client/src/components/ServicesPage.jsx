@@ -59,7 +59,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         ['STAAD.Pro', 'Revit MEP']
       ]
     },
-    'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D': {
+    '2D CAD Drafting Services': {
       description: 'High-precision 2D CAD drafting and shop drawing development for Mechanical, Electrical, Plumbing (MEP) systems, civil infrastructure networks, and transportation corridors.',
       bulletsTitle: 'Key Shop Drawing Deliverables Include:',
       bullets: [
@@ -74,19 +74,22 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         ['MicroStation', 'Civil 3D']
       ]
     },
-    'BIM Modelling - 3D': {
-      description: 'Advanced Building Information Modeling (BIM) services up to LOD 500, enabling clash-free multi-disciplinary coordination, 4D construction scheduling, and 5D quantity extraction.',
+    'BIM Services': {
+      description: 'Advanced Building Information Modeling (BIM) services up to LOD 500, enabling clash-free multi-disciplinary coordination, 4D construction scheduling, and 5D quantity extraction. Blue Crescent Engineering delivers BIM solutions that reduce rework, improve collaboration, and drive data-rich handovers across the full project lifecycle.',
       bulletsTitle: 'Key BIM Capabilities Include:',
       bullets: [
-        'Multi-Disciplinary 3D BIM Model Creation (Architectural, Structural, MEP).',
-        'Automated Clash Detection & Matrix Resolution (Navisworks Manage).',
-        '4D Construction Sequencing & Phasing Visualizations.',
-        '5D Quantity Take-off (QTO) & Cost Estimation Integration.',
-        'COBie Data Integration & Scan-to-BIM Point Cloud Modeling.'
+        'Multi-Disciplinary 3D BIM Model Creation (Architectural, Structural, MEP) to LOD 500.',
+        'Automated Clash Detection & Matrix Resolution using Navisworks Manage.',
+        '4D Construction Sequencing & Phasing Visualizations linked to project schedules.',
+        '5D Quantity Take-off (QTO) & Cost Estimation Integration with project controls.',
+        'COBie Data Integration & Scan-to-BIM Point Cloud Modeling for existing structures.',
+        'BIM Execution Plan (BEP) preparation and Common Data Environment (CDE) management.',
+        'ISO 19650 compliant BIM delivery and digital handover documentation.'
       ],
       tools: [
         ['Autodesk Revit', 'Navisworks Manage'],
-        ['Solibri Model Checker', 'BIM 360 / Autodesk Construction Cloud']
+        ['Solibri Model Checker', 'BIM 360 / Autodesk Construction Cloud'],
+        ['Autodesk Civil 3D', 'Bentley OpenBuildings']
       ]
     },
     'Outsourcing Technical Experts': {
@@ -104,109 +107,115 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         ['Immediate Site Mobilization', 'Full Regulatory Compliance']
       ]
     },
-    'Energy Auditing': {
-      description: 'Comprehensive energy audit services tailored for commercial, residential, healthcare, and industrial facilities to maximize energy efficiency and comply with Qatar National Sustainability Standards.',
-      bulletsTitle: 'Key Energy Audit Services Include:',
+    'GSAS Service': {
+      description: 'GSAS (Global Sustainability Assessment System) certification management, green building compliance facilitation, and design and construction consulting for commercial, residential, and institutional projects.',
+      bulletsTitle: 'GSAS Services Include:',
       bullets: [
-        'ASHRAE Level 1 (Walk-Through), Level 2 (Energy Survey), and Level 3 (Investment Grade) Audits.',
-        'HVAC System Thermal Performance & Chiller Plant Efficiency Audits.',
-        'Building Envelope Thermal Imaging (Infrared Thermography) & Blower Door Testing.',
-        'Power Quality Analysis, Power Factor Correction & Electrical Peak Demand Management.',
-        'Renewable Energy (Solar PV) Feasibility & Energy Conservation Measure (ECM) ROI Reports.'
-      ],
-      tools: [
-        ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
-        ['Data Loggers', 'eQUEST / EnergyPlus']
-      ]
-    },
-    'Commissioning LEED & GSAS': {
-      description: 'Independent 3rd-Party Commissioning Authority (CxA) services ensuring building systems operate according to design intent and satisfy LEED & GSAS sustainability requirements.',
-      bulletsTitle: 'Commissioning Scope & Deliverables:',
-      bullets: [
-        'Fundamental & Enhanced Commissioning for LEED (BD+C, ID+C, O+M).',
-        'GSAS (Global Sustainability Assessment System) Mandatory Cx Certification.',
-        'Re-Commissioning & Retro-Commissioning of Existing Operational Buildings.',
-        'Pre-Functional Checklists, Functional Performance Testing (FPT), and Integrated Systems Testing (IST).',
-        'O&M Manual Verification, Staff Training Supervision, and 10-Month Warranty Reviews.'
-      ],
-      tools: [
-        ['GSAS 2019 / 2022 Guidelines', 'USGBC LEED v4 / v4.1 Standards'],
-        ['CxAlloy Commissioning Platform', 'Calibrated Testing Instruments']
-      ]
-    },
-    'Green Building Facilitation': {
-      description: 'Full lifecycle green building consulting, facilitating GSAS & LEED certifications from concept design stage through to final award and handover.',
-      bulletsTitle: 'Green Building Facilitation Services Include:',
-      bullets: [
-        'GSAS 1-Star to 5-Star Rating Facilitation & Documentation Management.',
-        'LEED Certified, Silver, Gold & Platinum Certification Management.',
-        'Life Cycle Assessment (LCA) & Embodied Carbon Footprint Calculations.',
-        'Indoor Environmental Quality (IEQ) Studies, Daylight & Views Simulation.',
-        'Water Conservation Strategy & Stormwater Management Consulting.'
+        'GSAS Design & Build Certification management (1-Star to 5-Star).',
+        'GSAS Construction Management facilitation and site auditing.',
+        'Energy & Water optimization studies conforming to GSAS standards.',
+        'Indoor Environmental Quality (IEQ) assessment and daylight simulation.',
+        'Materials & lifecycle assessment (LCA) matching GSAS requirements.'
       ],
       tools: [
         ['GSAS Gate Tool', 'IES VE'],
         ['Sefaira', 'One Click LCA']
       ]
     },
-    'Fiber Optic (Indoor & Outdoor)': {
-      description: 'Turnkey fiber optic network engineering, encompassing indoor structured cabling, outdoor long-haul backbone networks, and FTTH (Fiber-To-The-Home) deployment.',
-      bulletsTitle: 'Fiber Optic Engineering Capabilities:',
+    'LEED Consulting Services': {
+      description: 'LEED (Leadership in Energy and Environmental Design) consulting and certification management from concept design through to final USGBC audit and commissioning.',
+      bulletsTitle: 'LEED Services Include:',
       bullets: [
-        'Single-Mode (OS2) and Multi-Mode (OM3/OM4/OM5) Fiber Infrastructure Design.',
-        'Outdoor Duct Network, Handhole & Manhole Infrastructure Routing.',
-        'Fusion Splicing, Termination, and OTDR Trace Testing & Certification.',
-        'FTTH (Fiber-to-the-Home) & FTTB (Fiber-to-the-Building) Passive Optical Networks.',
-        'Ooredoo & Vodafone Qatar Service Provider Interface Coordination.'
+        'LEED BD+C, ID+C, and O+M certification facilitation.',
+        'Fundamental & Enhanced Commissioning (Cx) satisfying USGBC standards.',
+        'Thermal comfort modeling, building energy simulation, and daylight calculations.',
+        'Indoor air quality testing and green materials sourcing strategies.',
+        'LEED Online portal management and submittal documentation compilation.'
       ],
       tools: [
-        ['EXFO OTDR Testers', 'Fujikura Fusion Splicers'],
-        ['Fluke Networks Cable Analyzer', 'AutoCAD Telecom']
+        ['USGBC LEED v4/v4.1 Guidelines', 'IES VE'],
+        ['CxAlloy Commissioning Platform', 'EnergyPlus']
       ]
     },
-    'Cellular (IBS & Outdoor Sites)': {
-      description: 'In-Building Solutions (IBS) and Outdoor Cell Site engineering for seamless 4G LTE & 5G NR mobile coverage across Qatar’s iconic towers, stadiums, and infrastructure.',
-      bulletsTitle: 'Cellular Engineering Services Include:',
+    'Energy Audit and Analysis': {
+      description: 'Comprehensive energy auditing and diagnostic analysis services to maximize operational energy efficiency and achieve regulatory sustainability compliance.',
+      bulletsTitle: 'Energy Audit & Analysis Scope:',
       bullets: [
-        'Active & Passive Distributed Antenna System (DAS) Design for IBS.',
-        'Small Cell & Femtocell Indoor Coverage Planning for High-Rise Buildings.',
-        'Outdoor Macro Cell Tower Foundation, Pole Mount & Monopole Engineering.',
-        'RF Field Survey, CW Propagation Testing & Drive Test Optimization.',
-        'Service Provider (Ooredoo / Vodafone) Approval & Site Integration.'
+        'ASHRAE Level 1, 2, and 3 (Investment Grade) Energy Audits.',
+        'HVAC system thermal efficiency and central chiller plant optimization.',
+        'Building envelope thermal imaging (infrared thermography) and testing.',
+        'Electrical demand management, power quality analysis, and power factor correction.',
+        'Renewable energy (Solar PV) integration and economic feasibility analysis.'
       ],
       tools: [
-        ['iBwave Design', 'TEMS Investigation'],
-        ['Anritsu Site Master', 'NEMO Outdoor']
+        ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
+        ['Data Loggers', 'eQUEST / EnergyPlus']
       ]
     },
-    'Microwave Links': {
-      description: 'High-capacity Wireless Backhaul Point-to-Point (P2P) and Point-to-Multipoint (P2MP) microwave network design and line-of-sight validation.',
-      bulletsTitle: 'Microwave Engineering Capabilities:',
+    'ISO 14064 Consulting Services': {
+      description: 'Consulting services for Greenhouse Gas (GHG) inventory compilation, validation, and verification conforming to ISO 14064 international standards for carbon footprint auditing.',
+      bulletsTitle: 'ISO 14064 Consulting Scope:',
       bullets: [
-        'Line-of-Sight (LOS) Path Survey & Fresnel Zone Clearance Analysis.',
-        'Microwave Link Budget Calculation, Availability & Rain Fade Modeling.',
-        'High-Frequency (6GHz to 80GHz E-Band) Microwave Equipment Specification.',
-        'Antenna Mounting Structure, Tower Wind Load & Structural Stress Analysis.',
-        'Regulatory Spectrum Licensing & Frequency Coordination Support.'
+        'ISO 14064-1: Organizational carbon footprint inventory and reporting.',
+        'ISO 14064-2: Project-level GHG emission reduction quantification.',
+        'ISO 14064-3: Validation and verification of GHG assertions.',
+        'Product carbon footprinting and corporate sustainability auditing.',
+        'Carbon offset and decarbonization roadmap strategy development.'
       ],
       tools: [
-        ['Pathloss 5', 'Planet RF'],
-        ['TEMS Microwave', 'Pathfinder']
+        ['GHG Protocol Suite', 'ISO 14064 Guidelines'],
+        ['Carbon Calculation Tools', 'Decarbonization Models']
       ]
     },
-    'Wi-Fi Systems': {
-      description: 'High-density enterprise Wi-Fi 6 / 6E / 7 wireless network architecture for commercial offices, luxury hotels, educational campuses, and industrial facilities.',
-      bulletsTitle: 'Wi-Fi System Engineering Services:',
+    'Life Cycle Twin Asset Management': {
+      description: 'Our Life Cycle Twin Asset Management service leverages Digital Twin technology to monitor, simulate, and optimize physical assets across their entire lifecycle — from design and construction through operation and decommissioning — delivering unprecedented visibility and control over asset performance.',
+      bulletsTitle: 'Key Life Cycle Twin Capabilities:',
       bullets: [
-        'Predictive & On-Site Active Wi-Fi Heatmap Survey (Ekahau AI Pro).',
-        'Access Point (AP) Location Optimization & Channel Allocation Planning.',
-        'Enterprise WLAN Controller Configuration & High-Availability Mesh Architecture.',
-        'Guest Portal, Captive Portal & Bandwidth Management Integration.',
-        'Post-Deployment Validation, Signal Strength (RSSI) & SNR Optimization.'
+        'Real-time asset health monitoring using IoT sensor integration and AI-driven analytics.',
+        'Predictive maintenance scheduling based on twin simulation data to reduce downtime.',
+        'Asset performance benchmarking against design intent across full operational lifespan.',
+        'Digital handover documentation (COBie, IFC) linked to live twin models.',
+        'End-of-life decommissioning simulations for cost-effective asset retirement planning.',
+        'Integration with CMMS/EAM platforms for seamless facility management workflows.'
       ],
       tools: [
-        ['Ekahau AI Pro', 'Sidekick 2'],
-        ['AirMagnet WiFi Analyzer', 'Cisco Catalyst Center']
+        ['Autodesk Tandem', 'Bentley iTwin Platform'],
+        ['Azure Digital Twins', 'IBM Maximo / SAP PM'],
+        ['Siemens MindSphere', 'AVEVA Asset Performance Management']
+      ]
+    },
+    'Remote Work Automation': {
+      description: 'Blue Crescent Engineering\'s Remote Work Automation service harnesses Digital Twin environments to automate complex operational workflows, remote inspections, and process controls — enabling engineering teams to manage assets and systems from anywhere in the world with precision and confidence.',
+      bulletsTitle: 'Remote Work Automation Services Include:',
+      bullets: [
+        'Automated remote inspection workflows using drone integration and twin-synchronized imagery.',
+        'Virtual commissioning and remote FAT (Factory Acceptance Testing) through Digital Twin replicas.',
+        'Remote SCADA/PLC simulation and control via Digital Twin dashboards.',
+        'Automated anomaly detection and alert escalation using AI-powered twin analytics.',
+        'Cloud-based collaborative engineering workspaces eliminating on-site constraints.',
+        'Remote training simulation environments for field technicians and operators.'
+      ],
+      tools: [
+        ['AVEVA System Platform', 'Emerson DeltaV Digital Twin'],
+        ['Honeywell Connected Plant', 'GE Digital APM'],
+        ['PTC ThingWorx', 'Rockwell FactoryTalk']
+      ]
+    },
+    'System Integration and Analysis': {
+      description: 'Our System Integration and Analysis service provides end-to-end connectivity between heterogeneous engineering systems, IoT platforms, operational technology (OT), and enterprise IT — creating a unified Digital Twin ecosystem that drives smarter decisions, faster responses, and optimized performance.',
+      bulletsTitle: 'System Integration & Analysis Scope:',
+      bullets: [
+        'OT/IT convergence architecture design connecting PLCs, SCADA, BMS, and ERP systems.',
+        'API-driven integration of multi-vendor IoT platforms and sensor data streams.',
+        'Digital Twin federated model management across BIM, GIS, and simulation platforms.',
+        'Data normalization, cleansing, and real-time analytics pipeline configuration.',
+        'Interoperability compliance with ISO 19650, IEC 62443, and MQTT/OPC-UA protocols.',
+        'Custom dashboard and reporting toolchain development for stakeholder visibility.'
+      ],
+      tools: [
+        ['Microsoft Azure IoT Hub', 'AWS IoT Greengrass'],
+        ['MuleSoft / Boomi Integration', 'OPC-UA / MQTT Brokers'],
+        ['Esri ArcGIS Digital Twin', 'Trimble Connect']
       ]
     }
   };
@@ -255,34 +264,56 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   const categoryGroups = {
     'Engineering Services': [],
     'Sustainability Services': [],
-    'Telecom Services': []
+    'Digital Twin Services': []
   };
 
   if (dynamicServices.length > 0) {
-    dynamicServices.forEach(s => {
-      if (!categoryGroups[s.category]) {
-        categoryGroups[s.category] = [];
-      }
-      categoryGroups[s.category].push(s.title);
-    });
+    dynamicServices
+      .filter(s => !s.category.toLowerCase().includes('telecom'))
+      .filter(s => !['Engineering Design support Services', 'Specialised Simulation & Analysis', 'BIM Modelling - 3D', 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D'].includes(s.title))
+      .forEach(s => {
+        if (!categoryGroups[s.category]) {
+          categoryGroups[s.category] = [];
+        }
+        categoryGroups[s.category].push(s.title);
+      });
+
+    // Always guarantee Engineering Services has exactly these two items
+    if (categoryGroups['Engineering Services'].length === 0) {
+      categoryGroups['Engineering Services'] = ['BIM Services', '2D CAD Drafting Services', 'Outsourcing Technical Experts'];
+    } else {
+      if (!categoryGroups['Engineering Services'].includes('BIM Services'))
+        categoryGroups['Engineering Services'].unshift('BIM Services');
+      if (!categoryGroups['Engineering Services'].includes('2D CAD Drafting Services'))
+        categoryGroups['Engineering Services'].splice(1, 0, '2D CAD Drafting Services');
+      if (!categoryGroups['Engineering Services'].includes('Outsourcing Technical Experts'))
+        categoryGroups['Engineering Services'].push('Outsourcing Technical Experts');
+    }
+
+    // Always ensure Digital Twin Services items appear
+    if (categoryGroups['Digital Twin Services'].length === 0) {
+      categoryGroups['Digital Twin Services'] = [
+        'Life Cycle Twin Asset Management',
+        'Remote Work Automation',
+        'System Integration and Analysis'
+      ];
+    }
   } else {
     categoryGroups['Engineering Services'] = [
-      'Engineering Design support Services',
-      'Specialised Simulation & Analysis',
-      'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D',
-      'BIM Modelling - 3D',
+      'BIM Services',
+      '2D CAD Drafting Services',
       'Outsourcing Technical Experts'
     ];
     categoryGroups['Sustainability Services'] = [
-      'Energy Auditing',
-      'Commissioning LEED & GSAS',
-      'Green Building Facilitation'
+      'GSAS Service',
+      'LEED Consulting Services',
+      'Energy Audit and Analysis',
+      'ISO 14064 Consulting Services'
     ];
-    categoryGroups['Telecom Services'] = [
-      'Fiber Optic (Indoor & Outdoor)',
-      'Cellular (IBS & Outdoor Sites)',
-      'Microwave Links',
-      'Wi-Fi Systems'
+    categoryGroups['Digital Twin Services'] = [
+      'Life Cycle Twin Asset Management',
+      'Remote Work Automation',
+      'System Integration and Analysis'
     ];
   }
 
@@ -291,6 +322,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>;
     } else if (category.toLowerCase().includes('sustainability')) {
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>;
+    } else if (category.toLowerCase().includes('digital twin')) {
+      return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg>;
     } else {
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16M4 18h.01"/></svg>;
     }
@@ -345,6 +378,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                     </div>
                   ))}
                 </div>
+
+
                 {/* Business Areas Section (Matches Screenshot 3) */}
                 {/* Business Areas Section */}
                 <div className="premium-business-card">
@@ -567,6 +602,22 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                 ) : selectedDetails ? (
                   /* Custom Dedicated Page View for Sub-Services */
                   <div style={{ marginTop: '20px' }}>
+                    {/* Digital Twin sub-service badge */}
+                    {['Life Cycle Twin Asset Management', 'Remote Work Automation', 'System Integration and Analysis'].includes(currentServiceTitle) && (
+                      <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '10px',
+                        background: 'linear-gradient(90deg, #0B3D91, #0066FF)',
+                        color: '#fff', borderRadius: '8px',
+                        padding: '8px 18px', marginBottom: '20px',
+                        fontSize: '12px', fontWeight: 700, letterSpacing: '1.4px', textTransform: 'uppercase'
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="2" y="3" width="9" height="9" rx="1.5"/><rect x="13" y="3" width="9" height="9" rx="1.5"/>
+                          <rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/>
+                        </svg>
+                        Digital Twin Services
+                      </div>
+                    )}
                     <p className="paragraph-text">
                       {selectedDetails.description}
                     </p>
@@ -815,12 +866,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
             </div>
           </div>
 
-          {/* Submit Testimonial Button */}
-          <div className="testimonials-action-row" style={{ marginTop: '32px', textAlign: 'center' }}>
-            <button className="premium-submit-btn" onClick={() => { if (onOpenModal) onOpenModal('testimonial'); }}>
-              SUBMIT TESTIMONIAL
-            </button>
-          </div>
+
         </section>
       </div>
     </div>

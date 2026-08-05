@@ -339,6 +339,19 @@ button.cert-close-btn,
   align-items: center;
   text-decoration: none;
   gap: 16px;
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .logo-brand {
+    margin-left: -15px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .logo-brand {
+    margin-left: -30px;
+  }
 }
 
 .header-logo-img {

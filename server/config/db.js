@@ -257,9 +257,9 @@ async function initDB() {
         value4Desc TEXT,
         value5Title VARCHAR(255),
         value5Desc TEXT,
-        aboutUsVideoUrl TEXT,
+        aboutUsVideoUrl LONGTEXT,
         aboutUsHeroType VARCHAR(50),
-        aboutUsHeroUrl TEXT
+        aboutUsHeroUrl LONGTEXT
       );
     `);
 
@@ -283,7 +283,55 @@ async function initDB() {
       );
     `);
 
+    // 14. Partners Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS partners (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        role VARCHAR(255) NOT NULL DEFAULT 'Working Partner',
+        image LONGTEXT,
+        order_num INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 15. Media Items Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS media_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        type VARCHAR(50) NOT NULL, -- 'gallery' or 'video'
+        title VARCHAR(255) NOT NULL,
+        url LONGTEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+
+    // Seed default partners if empty
+    const [partnerCountRows] = await pool.query('SELECT COUNT(*) as count FROM partners');
+    if (partnerCountRows[0].count === 0) {
+      console.log('Seeding default partners...');
+      await pool.query(`
+        INSERT INTO partners (name, role, image, order_num) VALUES
+        ('TEKNIK Group',         'Engineering Partner',     '/partner_teknik.png',    1),
+        ('ARCANA Build',         'Construction Partner',    '/partner_arcana.png',    2),
+        ('NEXAGEN Solutions',    'Sustainability Partner',  '/partner_nexagen.png',   3),
+        ('QAFrame Technologies', 'BIM Partner',            '/partner_qaframe.png',   4),
+        ('MERIDIAN MEP',         'MEP Partner',            '/partner_meridian.png',  5),
+        ('VISTARA Infrastructure','Infrastructure Partner', '/partner_vistara.png',   6)
+      `);
+    }
+
+
     // Migrations: Alter tables if columns are missing
+    try {
+      console.log('Altering company_settings columns to LONGTEXT...');
+      await pool.query("ALTER TABLE company_settings MODIFY COLUMN aboutUsHeroUrl LONGTEXT");
+      await pool.query("ALTER TABLE company_settings MODIFY COLUMN aboutUsVideoUrl LONGTEXT");
+    } catch (err) {
+      console.warn('Altering company_settings columns warning:', err.message);
+    }
+
     try {
       await pool.query("SELECT status FROM testimonials LIMIT 1");
     } catch (err) {
@@ -359,13 +407,106 @@ async function initDB() {
       const [r2] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('About Us', 'About Us', 2)");
       const [r3] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Services', 'Services', 3)");
       const [r4] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Projects', 'Projects', 4)");
-      const [r5] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Contact Us', 'Contact Us', 5)");
+      const [r5] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Media', 'Media', 5)");
+      const [r6] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Contact Us', 'Contact Us', 6)");
       
       const projectsId = r4.insertId;
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Engineering Division', 'Engineering Division', ?, 1)", [projectsId]);
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Sustainability Division', 'Sustainability Division', ?, 2)", [projectsId]);
-      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Telecom Division', 'Telecom Division', ?, 3)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Digital Twin Division', 'Digital Twin Division', ?, 3)", [projectsId]);
+    } else {
+      // Dynamic migration for existing databases: ensure 'Media' exists
+      const [hasMedia] = await pool.query("SELECT id FROM menus WHERE name = 'Media'");
+      if (hasMedia.length === 0) {
+        console.log('Migrating database: Adding Media menu item...');
+        await pool.query("UPDATE menus SET order_num = 6 WHERE name = 'Contact Us'");
+        await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Media', 'Media', 5)");
+      }
+      // Migrate Telecom Division to Digital Twin Division
+      await pool.query("UPDATE menus SET name = 'Digital Twin Division', url = 'Digital Twin Division' WHERE name = 'Telecom Division'");
+      await pool.query("UPDATE projects SET division_type = 'Digital Twin Division' WHERE division_type = 'Telecom Division'");
+
+      // Migrate / Seed Digital Twin Services if missing
+      const [dtRows] = await pool.query("SELECT COUNT(*) as count FROM services WHERE category = 'Digital Twin Services'");
+      if (dtRows[0].count === 0) {
+        console.log('Migrating database: Seeding Digital Twin Services...');
+        const dtSeeds = [
+          {
+            category: 'Digital Twin Services',
+            title: 'Life Cycle Twin Asset Management',
+            description: 'Virtual representation of physical assets, integrating real-time IoT sensors and 3D space for facilities management and predictive maintenance.',
+            bullets: JSON.stringify([
+              'Real-time IoT sensor telemetry integration with 3D BIM models.',
+              'Predictive maintenance schedules and asset health monitoring dashboard.',
+              'Immersive virtual inspections and operational analytics overlay.',
+              'COBie data integration and digital operations handover.'
+            ]),
+            tools: JSON.stringify([
+              ['Autodesk Tandem', 'Azure Digital Twins'],
+              ['Matterport 3D Pro', 'ThingWorx IoT']
+            ]),
+            banner_image: '/service1.png'
+          },
+          {
+            category: 'Digital Twin Services',
+            title: 'Remote Work Automation',
+            description: 'Industrial automation, control logic simulation, and remote work validation platforms for distributed teams.',
+            bullets: JSON.stringify([
+              'SCADA and PLC control systems logic simulation and remote testing.',
+              'Collaborative virtual control room environments for remote operators.',
+              'Safety training and hazard simulation in interactive 3D spaces.',
+              'Cloud-based process monitoring and diagnostics pipeline.'
+            ]),
+            tools: JSON.stringify([
+              ['Siemens SIMIT', 'Unity Industrial'],
+              ['Wonderware SCADA', 'AWS IoT RoboRunner']
+            ]),
+            banner_image: '/service1.png'
+          },
+          {
+            category: 'Digital Twin Services',
+            title: 'System Integration and Analysis',
+            description: 'Pipelining heterogeneous system APIs, legacy database schemas, and spatial maps into a unified enterprise operations hub.',
+            bullets: JSON.stringify([
+              'REST/GraphQL API middleware development for legacy system connectivity.',
+              'Data ingestion and normalization pipelines from raw log streams.',
+              'Cross-platform analytics dashboards and operational reports.',
+              'Cybersecurity isolation and secure tunnel architecture for remote nodes.'
+            ]),
+            tools: JSON.stringify([
+              ['Node-RED', 'Apache Kafka'],
+              ['Grafana', 'Docker / Kubernetes']
+            ]),
+            banner_image: '/service1.png'
+          }
+        ];
+        for (const s of dtSeeds) {
+          await pool.query(
+            'INSERT INTO services (category, title, description, bullets, tools, banner_image) VALUES (?, ?, ?, ?, ?, ?)',
+            [s.category, s.title, s.description, s.bullets, s.tools, s.banner_image]
+          );
+        }
+      }
     }
+
+    // Seed default media items (Gallery & Videos) if empty
+    const [mediaCountRows] = await pool.query('SELECT COUNT(*) as count FROM media_items');
+    if (mediaCountRows[0].count === 0) {
+      console.log('Seeding default media items...');
+      await pool.query(`
+        INSERT INTO media_items (type, title, url) VALUES
+        ('gallery', 'BIM Modelling Design Review', 'https://images.unsplash.com/photo-1581094288338-2314dddb7eed?auto=format&fit=crop&w=600&q=80'),
+        ('gallery', 'MEP Infrastructure Coordination', 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80'),
+        ('gallery', 'Sustainability Solar Site Survey', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=600&q=80'),
+        ('gallery', 'Fiber Optic Telecom Installation', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=600&q=80'),
+        ('gallery', 'Acoustic Sound Simulation Analysis', 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80'),
+        ('gallery', 'GSAS Green Building Site Visit', 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80'),
+        ('video', 'BIM Modelling & LOD 500 Virtual Tour', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
+        ('video', 'Sustainability & GSAS Green Design Methods', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
+        ('video', 'Telecom Network Rollout Showcase', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
+      `);
+    }
+
 
     // Seed Footer
     const [footerRows] = await pool.query('SELECT COUNT(*) as count FROM footer_settings');
@@ -384,6 +525,89 @@ async function initDB() {
           '© 2026 BLUE CRESCENT ENGINEERING. All Rights Reserved. A Solution for your Vision.'
         )
       `);
+    }
+
+    // Clean up old and seed new Sustainability Services
+    const [sustRows] = await pool.query("SELECT COUNT(*) as count FROM services WHERE category = 'Sustainability Services' AND title IN ('GSAS Service', 'LEED Consulting Services', 'Energy Audit and Analysis', 'ISO 14064 Consulting Services')");
+    if (sustRows[0].count < 4) {
+      console.log('Migrating Sustainability Services in MySQL database...');
+      await pool.query("DELETE FROM services WHERE category = 'Sustainability Services'");
+      const sustSeeds = [
+        {
+          category: 'Sustainability Services',
+          title: 'GSAS Service',
+          description: 'GSAS (Global Sustainability Assessment System) certification management, green building compliance facilitation, and design and construction consulting for commercial, residential, and institutional projects.',
+          bullets: JSON.stringify([
+            'GSAS Design & Build Certification management (1-Star to 5-Star).',
+            'GSAS Construction Management facilitation and site auditing.',
+            'Energy & Water optimization studies conforming to GSAS standards.',
+            'Indoor Environmental Quality (IEQ) assessment and daylight simulation.',
+            'Materials & lifecycle assessment (LCA) matching GSAS requirements.'
+          ]),
+          tools: JSON.stringify([
+            ['GSAS Gate Tool', 'IES VE'],
+            ['Sefaira', 'One Click LCA']
+          ]),
+          banner_image: '/service1.png'
+        },
+        {
+          category: 'Sustainability Services',
+          title: 'LEED Consulting Services',
+          description: 'LEED (Leadership in Energy and Environmental Design) consulting and certification management from concept design through to final USGBC audit and commissioning.',
+          bullets: JSON.stringify([
+            'LEED BD+C, ID+C, and O+M certification facilitation.',
+            'Fundamental & Enhanced Commissioning (Cx) satisfying USGBC standards.',
+            'Thermal comfort modeling, building energy simulation, and daylight calculations.',
+            'Indoor air quality testing and green materials sourcing strategies.',
+            'LEED Online portal management and submittal documentation compilation.'
+          ]),
+          tools: JSON.stringify([
+            ['USGBC LEED v4/v4.1 Guidelines', 'IES VE'],
+            ['CxAlloy Commissioning Platform', 'EnergyPlus']
+          ]),
+          banner_image: '/service1.png'
+        },
+        {
+          category: 'Sustainability Services',
+          title: 'Energy Audit and Analysis',
+          description: 'Comprehensive energy auditing and diagnostic analysis services to maximize operational energy efficiency and achieve regulatory sustainability compliance.',
+          bullets: JSON.stringify([
+            'ASHRAE Level 1, 2, and 3 (Investment Grade) Energy Audits.',
+            'HVAC system thermal efficiency and central chiller plant optimization.',
+            'Building envelope thermal imaging (infrared thermography) and testing.',
+            'Electrical demand management, power quality analysis, and power factor correction.',
+            'Renewable energy (Solar PV) integration and economic feasibility analysis.'
+          ]),
+          tools: JSON.stringify([
+            ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
+            ['Data Loggers', 'eQUEST / EnergyPlus']
+          ]),
+          banner_image: '/service1.png'
+        },
+        {
+          category: 'Sustainability Services',
+          title: 'ISO 14064 Consulting Services',
+          description: 'Consulting services for Greenhouse Gas (GHG) inventory compilation, validation, and verification conforming to ISO 14064 international standards for carbon footprint auditing.',
+          bullets: JSON.stringify([
+            'ISO 14064-1: Organizational carbon footprint inventory and reporting.',
+            'ISO 14064-2: Project-level GHG emission reduction quantification.',
+            'ISO 14064-3: Validation and verification of GHG assertions.',
+            'Product carbon footprinting and corporate sustainability auditing.',
+            'Carbon offset and decarbonization roadmap strategy development.'
+          ]),
+          tools: JSON.stringify([
+            ['GHG Protocol Suite', 'ISO 14064 Guidelines'],
+            ['Carbon Calculation Tools', 'Decarbonization Models']
+          ]),
+          banner_image: '/service1.png'
+        }
+      ];
+      for (const s of sustSeeds) {
+        await pool.query(
+          'INSERT INTO services (category, title, description, bullets, tools, banner_image) VALUES (?, ?, ?, ?, ?, ?)',
+          [s.category, s.title, s.description, s.bullets, s.tools, s.banner_image]
+        );
+      }
     }
 
     // Seed Services

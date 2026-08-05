@@ -60,3 +60,22 @@ INSERT INTO services (category, title) VALUES
 ('Telecom Services', 'Cellular (IBS & Outdoor Sites)'),
 ('Telecom Services', 'Microwave Links'),
 ('Telecom Services', 'Wi-Fi Systems');
+
+-- 5. Partners Table
+CREATE TABLE IF NOT EXISTS partners (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(255) NOT NULL DEFAULT 'Working Partner',
+    image LONGTEXT,
+    order_num INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO partners (name, role, image, order_num) VALUES
+('TEKNIK Group',         'Engineering Partner',     '/partner_teknik.png',    1),
+('ARCANA Build',         'Construction Partner',    '/partner_arcana.png',    2),
+('NEXAGEN Solutions',    'Sustainability Partner',  '/partner_nexagen.png',   3),
+('QAFrame Technologies', 'BIM Partner',            '/partner_qaframe.png',   4),
+('MERIDIAN MEP',         'MEP Partner',            '/partner_meridian.png',  5),
+('VISTARA Infrastructure','Infrastructure Partner', '/partner_vistara.png',   6);
+

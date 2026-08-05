@@ -8,6 +8,15 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
   const [submitting, setSubmitting] = useState(false);
   const [submittedMessage, setSubmittedMessage] = useState('');
   const [activeCardId, setActiveCardId] = useState(null);
+  const [partnerIdx, setPartnerIdx] = useState(0);
+  const [partners, setPartners] = useState([
+    { id: 1, image: '/partner_teknik.png',   name: 'TEKNIK Group',          role: 'Engineering Partner'    },
+    { id: 2, image: '/partner_arcana.png',   name: 'ARCANA Build',          role: 'Construction Partner'   },
+    { id: 3, image: '/partner_nexagen.png',  name: 'NEXAGEN Solutions',     role: 'Sustainability Partner' },
+    { id: 4, image: '/partner_qaframe.png',  name: 'QAFrame Technologies',  role: 'BIM Partner'            },
+    { id: 5, image: '/partner_meridian.png', name: 'MERIDIAN MEP',          role: 'MEP Partner'            },
+    { id: 6, image: '/partner_vistara.png',  name: 'VISTARA Infrastructure',role: 'Infrastructure Partner' },
+  ]);
   const [newTestimonial, setNewTestimonial] = useState({
     title: '',
     body: '',
@@ -96,6 +105,14 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         }
       })
       .catch(err => console.warn('Company settings DB fetch warning:', err));
+
+    // Fetch partners from API
+    fetch('/api/partners')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (data && data.length > 0) setPartners(data);
+      })
+      .catch(err => console.warn('Partners fetch warning:', err));
   }, []);
 
   useEffect(() => {
@@ -218,6 +235,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                 <div className="who-we-are-video-portrait">
                   <video
                     key={aboutUsVideoUrl}
+                    src={aboutUsVideoUrl}
                     className="who-we-are-video"
                     autoPlay
                     muted
@@ -225,7 +243,6 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                     playsInline
                     controls
                   >
-                    <source src={aboutUsVideoUrl} />
                     Your browser does not support the video tag.
                   </video>
                 </div>
@@ -363,6 +380,58 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
             </div>
           </div>
         </section>
+
+        {/* SECTION 3B: OUR WORKING PARTNERS */}
+        {(() => {
+          const visible = Math.min(4, partners.length);
+          const max = Math.max(0, partners.length - visible);
+          const prev = () => setPartnerIdx(i => Math.max(0, i - 1));
+          const next = () => setPartnerIdx(i => Math.min(max, i + 1));
+          return (
+            <section className="working-partners-section">
+              <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+                <h2 className="bce-heading-primary" style={{ fontSize: '36px' }}>OUR WORKING PARTNERS</h2>
+                <div className="bce-underline-gradient" style={{ margin: '12px auto 16px auto' }}></div>
+                <p style={{ fontSize: '16px', color: '#64748b', maxWidth: '520px', margin: '0 auto' }}>
+                  Trusted collaborations that drive excellence across every project we deliver.
+                </p>
+              </div>
+
+              {partners.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#94a3b8', padding: '40px 0' }}>No partners added yet.</p>
+              ) : (
+                <>
+                  <div className="partners-carousel-wrap">
+                    <button className="partner-arrow partner-arrow-left" onClick={prev} disabled={partnerIdx === 0} aria-label="Previous">&#8249;</button>
+                    <div className="partners-track-outer">
+                      <div className="partners-track" style={{ transform: `translateX(calc(-${partnerIdx} * (100% / ${visible})))` }}>
+                        {partners.map((p) => (
+                          <div key={p.id} className="partner-card">
+                            <div className="partner-img-wrap">
+                              <img src={p.image} alt={p.name} className="partner-img" />
+                            </div>
+                            <div className="partner-card-body">
+                              <p className="partner-name">{p.name}</p>
+                              <p className="partner-role">{p.role}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <button className="partner-arrow partner-arrow-right" onClick={next} disabled={partnerIdx >= max} aria-label="Next">&#8250;</button>
+                  </div>
+                  {max > 0 && (
+                    <div className="partners-dots">
+                      {Array.from({ length: max + 1 }).map((_, i) => (
+                        <button key={i} className={`partner-dot ${i === partnerIdx ? 'active' : ''}`} onClick={() => setPartnerIdx(i)} aria-label={`Slide ${i + 1}`} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          );
+        })()}
 
         {/* SECTION 4: LATEST NEWS (FULL-WIDTH 2-COLUMN) */}
         <section className="latest-news-section">
@@ -521,12 +590,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
             </div>
           </div>
 
-          {/* Submit Testimonial Button */}
-          <div className="testimonials-action-row" style={{ marginTop: '32px', textAlign: 'center' }}>
-            <button className="premium-submit-btn" onClick={() => { if (onOpenModal) onOpenModal(); }}>
-              SUBMIT TESTIMONIAL
-            </button>
-          </div>
+
         </section>
 
         {/* SECTION 7: FOOTER SPACING */}
