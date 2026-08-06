@@ -1079,7 +1079,31 @@ app.delete('/api/media/:id', async (req, res) => {
   return res.status(503).json({ error: 'Database not connected.' });
 });
 
+// ==========================================
+// 12. SERVE STATIC ASSETS & FRONTEND IN PRODUCTION
+// ==========================================
+const path = require('path');
+
+// Serve dynamic user uploads
+app.use('/uploads', express.static(path.join(__dirname, '..', 'client', 'public', 'uploads')));
+
+// Serve React production build files
+app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
+
+// Wildcard route to serve index.html for any SPA routes
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'), (err) => {
+    if (err) {
+      res.status(404).send('Frontend client build is not found. Please compile the app first.');
+    }
+  });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Blue Crescent Express Server running on port ${PORT}`);
 });
+
 
