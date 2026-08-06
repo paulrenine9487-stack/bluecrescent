@@ -176,23 +176,11 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
     <div className="about-us-page-wrapper">
       {/* SECTION 1: ABOUT US HERO BANNER */}
       <section className="about-hero-banner-wrap">
-        {aboutUsHeroType === 'video' && aboutUsHeroUrl ? (
-          <video
-            src={aboutUsHeroUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="about-hero-banner-img"
-            style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', display: 'block' }}
-          />
-        ) : (
-          <img
-            src={aboutUsHeroUrl || aboutBanner}
-            alt="About Us Banner - Blue Crescent Engineering"
-            className="about-hero-banner-img"
-          />
-        )}
+        <img
+          src={aboutBanner}
+          alt="About Us Banner - Blue Crescent Engineering"
+          className="about-hero-banner-img"
+        />
       </section>
 
       <div className="bce-container">
