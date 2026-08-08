@@ -77,6 +77,8 @@ export default function HeroSlider({ onNavigate }) {
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
+    v.muted = true;
+    v.defaultMuted = true;
     v.play().catch(() => {});
   }, [activeIdx, slides, heroUrl, heroType]);
 
@@ -107,6 +109,7 @@ export default function HeroSlider({ onNavigate }) {
           src={heroUrl || '/hero2.mp4'}
           autoPlay
           muted
+          defaultMuted
           loop
           playsInline
         />

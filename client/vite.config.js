@@ -23,6 +23,12 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true
+      },
+      // Proxy /uploads to backend so local dev matches production exactly.
+      // Uploaded files are stored in server/uploads/ (not client/public/).
+      '/uploads': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true
       }
     }
   }

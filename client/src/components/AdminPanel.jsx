@@ -649,7 +649,7 @@ export default function AdminPanel({ onNavigate }) {
   // Reset forms helper
   const resetForms = () => {
     setHeroForm({ title: '', subtitle: '', btn1_text: '', btn2_text: '', image: '', status: 'published', order_num: 1 });
-    setServiceForm({ category: 'Engineering Services', title: 'Engineering Design support Services', description: '', bullets: [''], tools: [['', '']], banner_image: '/service1.png' });
+    setServiceForm({ category: 'Engineering Services', title: 'Engineering Design support Services', description: '', bullets: [''], tools: [['', '']], banner_image: '/servicepage1.png' });
     setCertForm({ title: '', org: '', licenseNo: '', territory: '', validity: 'Valid & Recognized', borderColor: 'border-blue', badgeText: 'CERTIFIED', image: '', scope: '' });
     setNewsForm({ title: '', content: '', category: 'NEWS', image: '', date: '' });
     setTestimonialForm({ title: '', content: '', author_name: '', company_name: '', status: 'approved' });
@@ -828,7 +828,7 @@ export default function AdminPanel({ onNavigate }) {
         description: item.description || '',
         bullets: bulletsParsed,
         tools: toolsParsed,
-        banner_image: item.banner_image || '/service1.png'
+        banner_image: item.banner_image || '/servicepage1.png'
       });
     } else if (tab === 'certificates') {
       setCertForm({

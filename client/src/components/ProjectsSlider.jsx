@@ -11,6 +11,13 @@ const FALLBACK_PROJECT_IMAGES = [
 export default function ProjectsSlider({ onNavigate }) {
   const [projects, setProjects] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetch('/api/projects')
@@ -24,6 +31,14 @@ export default function ProjectsSlider({ onNavigate }) {
       .catch(err => console.warn('Projects slider fetch warning:', err));
   }, []);
 
+  const getCardsToShow = () => {
+    if (windowWidth < 640) return 1;
+    if (windowWidth < 1024) return 2;
+    return 3;
+  };
+
+  const cardsToShow = getCardsToShow();
+
   if (projects.length === 0) return null;
 
   const handlePrev = () => {
@@ -31,7 +46,7 @@ export default function ProjectsSlider({ onNavigate }) {
   };
 
   const handleNext = () => {
-    setStartIndex((prev) => (prev < projects.length - 3 ? prev + 1 : prev));
+    setStartIndex((prev) => (prev < projects.length - cardsToShow ? prev + 1 : prev));
   };
 
   return (
@@ -42,7 +57,7 @@ export default function ProjectsSlider({ onNavigate }) {
           <div className="title-underline-yellow" style={{ background: '#00A198', boxShadow: '0 0 10px #00A198' }}></div>
         </div>
 
-        {projects.length > 3 && (
+        {projects.length > cardsToShow && (
           <div className="carousel-nav-arrows">
             <button 
               className="carousel-arrow-btn" 
@@ -61,12 +76,12 @@ export default function ProjectsSlider({ onNavigate }) {
             <button 
               className="carousel-arrow-btn" 
               onClick={handleNext}
-              disabled={startIndex >= projects.length - 3}
+              disabled={startIndex >= projects.length - cardsToShow}
               style={{
                 borderColor: 'rgba(11, 31, 58, 0.2)',
                 color: '#0B1F3A',
-                background: startIndex >= projects.length - 3 ? 'rgba(0,0,0,0.02)' : 'transparent',
-                opacity: startIndex >= projects.length - 3 ? 0.4 : 1
+                background: startIndex >= projects.length - cardsToShow ? 'rgba(0,0,0,0.02)' : 'transparent',
+                opacity: startIndex >= projects.length - cardsToShow ? 0.4 : 1
               }}
               aria-label="Next projects"
             >
@@ -81,7 +96,7 @@ export default function ProjectsSlider({ onNavigate }) {
         <div 
           style={{
             display: 'flex',
-            transform: `translateX(-${startIndex * (100 / 3)}%)`,
+            transform: `translateX(-${startIndex * (100 / cardsToShow)}%)`,
             transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             gap: '24px'
           }}
@@ -93,7 +108,7 @@ export default function ProjectsSlider({ onNavigate }) {
                 key={project.id || idx}
                 className="card-item"
                 style={{
-                  flex: '0 0 calc(33.333% - 16px)',
+                  flex: `0 0 calc(${100 / cardsToShow}% - ${(24 * (cardsToShow - 1)) / cardsToShow}px)`,
                   boxSizing: 'border-box',
                   background: '#FFFFFF',
                   borderRadius: '16px',

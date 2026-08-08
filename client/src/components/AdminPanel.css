@@ -1752,3 +1752,78 @@
 }
 
 
+/* ==========================================================================
+   ADMIN PANEL MOBILE RESPONSIVENESS OVERRIDES
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  /* Allow admin panel wrapper to stack or scroll */
+  .admin-panel-layout {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  .admin-sidebar {
+    width: 100% !important;
+    height: auto !important;
+    border-right: none !important;
+    border-bottom: 1.5px solid rgba(0, 184, 255, 0.15) !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+  }
+
+  .admin-main-wrapper {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .admin-topbar {
+    padding: 16px 20px !important;
+    border-bottom: 1.5px solid rgba(0, 184, 255, 0.1) !important;
+  }
+
+  .admin-content {
+    padding: 20px !important;
+    overflow: visible !important;
+  }
+
+  /* Metric cards grid wrap */
+  .admin-metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Form groups wrap */
+  .admin-form-row {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Scrollable tables for mobile */
+  .admin-table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 20px !important;
+    border: 1px solid rgba(0, 184, 255, 0.15) !important;
+    border-radius: 12px !important;
+  }
+
+  .admin-table {
+    min-width: 600px !important; /* Ensure columns don't squish too much */
+  }
+
+  /* Modal responsive sizing */
+  .cert-modal-card,
+  .admin-modal-card {
+    width: calc(100% - 32px) !important;
+    margin: 16px !important;
+    max-height: calc(100vh - 32px) !important;
+  }
+}
+
+

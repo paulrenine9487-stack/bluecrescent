@@ -445,7 +445,7 @@ async function initDB() {
               ['Autodesk Tandem', 'Azure Digital Twins'],
               ['Matterport 3D Pro', 'ThingWorx IoT']
             ]),
-            banner_image: '/service1.png'
+            banner_image: '/servicepage1.png'
           },
           {
             category: 'Digital Twin Services',
@@ -461,7 +461,7 @@ async function initDB() {
               ['Siemens SIMIT', 'Unity Industrial'],
               ['Wonderware SCADA', 'AWS IoT RoboRunner']
             ]),
-            banner_image: '/service1.png'
+            banner_image: '/servicepage1.png'
           },
           {
             category: 'Digital Twin Services',
@@ -477,7 +477,7 @@ async function initDB() {
               ['Node-RED', 'Apache Kafka'],
               ['Grafana', 'Docker / Kubernetes']
             ]),
-            banner_image: '/service1.png'
+            banner_image: '/servicepage1.png'
           }
         ];
         for (const s of dtSeeds) {
@@ -548,7 +548,7 @@ async function initDB() {
             ['GSAS Gate Tool', 'IES VE'],
             ['Sefaira', 'One Click LCA']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Sustainability Services',
@@ -565,7 +565,7 @@ async function initDB() {
             ['USGBC LEED v4/v4.1 Guidelines', 'IES VE'],
             ['CxAlloy Commissioning Platform', 'EnergyPlus']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Sustainability Services',
@@ -582,7 +582,7 @@ async function initDB() {
             ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
             ['Data Loggers', 'eQUEST / EnergyPlus']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Sustainability Services',
@@ -599,7 +599,7 @@ async function initDB() {
             ['GHG Protocol Suite', 'ISO 14064 Guidelines'],
             ['Carbon Calculation Tools', 'Decarbonization Models']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         }
       ];
       for (const s of sustSeeds) {
@@ -631,7 +631,7 @@ async function initDB() {
             ['ETABS', 'SAFE'],
             ['STAAD.Pro', 'Revit MEP']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Engineering Services',
@@ -649,7 +649,7 @@ async function initDB() {
             ['Open Cascade', 'Bentley PLUS'],
             ['ANSYS FLUENT', 'Bentley AUTOPIPE']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Engineering Services',
@@ -666,7 +666,7 @@ async function initDB() {
             ['AutoCAD Electrical', 'AutoCAD MEP'],
             ['MicroStation', 'Civil 3D']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Engineering Services',
@@ -683,7 +683,7 @@ async function initDB() {
             ['Autodesk Revit', 'Navisworks Manage'],
             ['Solibri Model Checker', 'BIM 360 / Autodesk Construction Cloud']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Engineering Services',
@@ -700,7 +700,7 @@ async function initDB() {
             ['On-Demand Talent Scaling', 'Deep Local Qatar Market Expertise'],
             ['Immediate Site Mobilization', 'Full Regulatory Compliance']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Sustainability Services',
@@ -717,7 +717,7 @@ async function initDB() {
             ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
             ['Data Loggers', 'eQUEST / EnergyPlus']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Sustainability Services',
@@ -734,7 +734,7 @@ async function initDB() {
             ['GSAS 2019 / 2022 Guidelines', 'USGBC LEED v4 / v4.1 Standards'],
             ['CxAlloy Commissioning Platform', 'Calibrated Testing Instruments']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Sustainability Services',
@@ -751,7 +751,7 @@ async function initDB() {
             ['GSAS Gate Tool', 'IES VE'],
             ['Sefaira', 'One Click LCA']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Telecom Services',
@@ -768,7 +768,7 @@ async function initDB() {
             ['EXFO OTDR Testers', 'Fujikura Fusion Splicers'],
             ['Fluke Networks Cable Analyzer', 'AutoCAD Telecom']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Telecom Services',
@@ -785,7 +785,7 @@ async function initDB() {
             ['iBwave Design', 'TEMS Investigation'],
             ['Anritsu Site Master', 'NEMO Outdoor']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Telecom Services',
@@ -802,7 +802,7 @@ async function initDB() {
             ['Pathloss 5', 'Planet RF'],
             ['TEMS Microwave', 'Pathfinder']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         },
         {
           category: 'Telecom Services',
@@ -819,7 +819,7 @@ async function initDB() {
             ['Ekahau AI Pro', 'Sidekick 2'],
             ['AirMagnet WiFi Analyzer', 'Cisco Catalyst Center']
           ]),
-          banner_image: '/service1.png'
+          banner_image: '/servicepage1.png'
         }
       ];
 

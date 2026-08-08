@@ -63,13 +63,13 @@ export default function ProjectsPage({ activeSubTab = 'Engineering Division', on
         <img
           src={projectBanner}
           alt="Projects Banner"
-          style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
+          style={{ width: '100%', height: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
         />
       </section>
 
       {/* Sub-menu Tab Bar */}
       <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E9F0', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div className="container" style={{ display: 'flex', gap: '0', padding: '0 24px' }}>
+        <div className="container" style={{ display: 'flex', gap: '0', padding: '0 24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {TABS.map(tab => (
             <button
               key={tab.key}
@@ -88,7 +88,8 @@ export default function ProjectsPage({ activeSubTab = 'Engineering Division', on
                 whiteSpace: 'nowrap',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                flexShrink: 0
               }}
             >
               <span style={{ fontSize: '16px' }}>{tab.icon}</span>

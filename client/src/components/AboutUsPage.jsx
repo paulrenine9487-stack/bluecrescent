@@ -227,6 +227,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                     className="who-we-are-video"
                     autoPlay
                     muted
+                    defaultMuted
                     loop
                     playsInline
                     controls

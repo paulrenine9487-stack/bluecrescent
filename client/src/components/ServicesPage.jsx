@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import serviceBanner from '../assets/service1.png';
+import serviceBanner from '../assets/servicepage1.png';
 import aboutBanner from '../assets/about.png';
 import projectBanner from '../assets/project1.png';
 import './AboutUsPage.css';
@@ -336,7 +336,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         <img
           src={bannerToDisplay}
           alt="Services Banner"
-          style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
+          style={{ width: '100%', height: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
         />
       </section>
 

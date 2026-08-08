@@ -1,0 +1,3 @@
+# This directory stores user-uploaded files (videos, images).
+# It is intentionally kept outside of client/dist so uploads
+# survive across production builds and deployments.

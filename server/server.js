@@ -39,6 +39,15 @@ app.get('/api/settings/company', async (req, res) => {
   return res.json({});
 });
 
+const fs = require('fs');
+const path = require('path');
+
+// Uploads directory lives inside /server/uploads/ so it survives client rebuilds
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
 // Helper to save base64 to file and return static path
 const saveBase64File = (base64Str, prefix) => {
   if (!base64Str || !base64Str.startsWith('data:')) {
@@ -46,9 +55,6 @@ const saveBase64File = (base64Str, prefix) => {
   }
   
   try {
-    const fs = require('fs');
-    const path = require('path');
-    
     const matches = base64Str.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
       return base64Str;
@@ -68,17 +74,10 @@ const saveBase64File = (base64Str, prefix) => {
     else if (mimeType.includes('quicktime') || mimeType.includes('mov')) ext = 'mov';
     
     const filename = `${prefix}_${Date.now()}.${ext}`;
-    const publicDir = path.join(__dirname, '..', 'client', 'public', 'uploads');
-    
-    // Ensure dir exists
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-    
-    const filePath = path.join(publicDir, filename);
+    const filePath = path.join(UPLOADS_DIR, filename);
     fs.writeFileSync(filePath, buffer);
     
-    console.log(`Successfully saved Base64 upload to file: ${filePath}`);
+    console.log(`Successfully saved Base64 upload to: ${filePath}`);
     return `/uploads/${filename}`;
   } catch (err) {
     console.error('Error saving base64 to file:', err);
@@ -638,7 +637,7 @@ app.post('/api/services', async (req, res) => {
           description || '',
           bullets ? (typeof bullets === 'string' ? bullets : JSON.stringify(bullets)) : '[]',
           tools ? (typeof tools === 'string' ? tools : JSON.stringify(tools)) : '[]',
-          banner_image || '/service1.png'
+          banner_image || '/servicepage1.png'
         ]
       );
       return res.status(201).json({ id: result.insertId, category, title, description, bullets, tools, banner_image });
@@ -1082,9 +1081,11 @@ app.delete('/api/media/:id', async (req, res) => {
 // ==========================================
 // 12. SERVE STATIC ASSETS & FRONTEND IN PRODUCTION
 // ==========================================
-const path = require('path');
 
-// Serve dynamic user uploads
+// Serve dynamic user uploads from the persistent server/uploads/ directory
+// This directory is outside client/dist so uploads survive production builds
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Also serve from legacy client/public/uploads for backward compatibility
 app.use('/uploads', express.static(path.join(__dirname, '..', 'client', 'public', 'uploads')));
 
 // Serve React production build files

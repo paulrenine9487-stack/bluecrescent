@@ -272,7 +272,7 @@ export default function ContactUsPage({ onNavigate }) {
         <img
           src={contactBanner}
           alt="Contact Us Banner"
-          style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
+          style={{ width: '100%', height: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
         />
       </section>
 

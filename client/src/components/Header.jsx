@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
 import logoWhiteImg from '../assets/logo1_transparent_white.png';
 
@@ -8,6 +9,9 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   const [mediaDropdownOpen, setMediaDropdownOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeMobileDropdown, setActiveMobileDropdown] = useState(null); // 'Services', 'Projects', 'Media'
+  const [activeMobileCategory, setActiveMobileCategory] = useState(null); // For mobile services sub-categories
 
   // Dynamic Navigation & Services data states
   const [dynamicMenus, setDynamicMenus] = useState([]);
@@ -169,6 +173,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
             className="logo-brand"
             onClick={(e) => {
               e.preventDefault();
+              setIsMobileMenuOpen(false);
               if (onNavigate) onNavigate('Home');
             }}
           >
@@ -180,7 +185,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
             />
           </a>
 
-          <nav>
+          <nav className="desktop-nav">
             <ul className="nav-menu">
               {navItems.map((item) => {
                 // Services Multi-Level Dropdown
@@ -362,8 +367,181 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
               })}
             </ul>
           </nav>
+
+          {/* Mobile Hamburger Toggle Button */}
+          <button
+            className="mobile-nav-toggle"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle Navigation Menu"
+          >
+            {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
         </div>
       </header>
+
+      {/* Mobile Drawer Menu */}
+      <div className={`mobile-menu-drawer ${isMobileMenuOpen ? 'is-open' : ''}`}>
+        <nav className="mobile-nav-content">
+          <ul className="mobile-nav-list">
+            {navItems.map((item) => {
+              // Services accordion
+              if (item === 'Services') {
+                const isOpen = activeMobileDropdown === 'Services';
+                return (
+                  <li key={item} className="mobile-dropdown-item">
+                    <button
+                      className={`mobile-dropdown-trigger ${isServicesActive ? 'active' : ''}`}
+                      onClick={() => setActiveMobileDropdown(isOpen ? null : 'Services')}
+                    >
+                      <span>SERVICES</span>
+                      {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                    {isOpen && (
+                      <ul className="mobile-submenu-lvl1">
+                        {serviceCategories.map((cat) => {
+                          const isCatOpen = activeMobileCategory === cat.name;
+                          return (
+                            <li key={cat.name} className="mobile-submenu-cat-item">
+                              <button
+                                className="mobile-submenu-cat-trigger"
+                                onClick={() => setActiveMobileCategory(isCatOpen ? null : cat.name)}
+                              >
+                                <span>{cat.name}</span>
+                                {isCatOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              </button>
+
+                              {isCatOpen && (
+                                <ul className="mobile-submenu-lvl2">
+                                  {cat.items.map((sub) => (
+                                    <li key={sub}>
+                                      <a
+                                        href="#"
+                                        className={activeSubTab === sub ? 'active-sub' : ''}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setIsMobileMenuOpen(false);
+                                          if (onNavigate) onNavigate('Services', sub);
+                                        }}
+                                      >
+                                        {sub}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              }
+
+              // Projects accordion
+              if (item === 'Projects') {
+                const isOpen = activeMobileDropdown === 'Projects';
+                return (
+                  <li key={item} className="mobile-dropdown-item">
+                    <button
+                      className={`mobile-dropdown-trigger ${isProjectsActive ? 'active' : ''}`}
+                      onClick={() => setActiveMobileDropdown(isOpen ? null : 'Projects')}
+                    >
+                      <span>PROJECTS</span>
+                      {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                    {isOpen && (
+                      <ul className="mobile-submenu-lvl1">
+                        {projectSubItems.map((sub) => (
+                          <li key={sub}>
+                            <a
+                              href="#"
+                              className={activeSubTab === sub ? 'active-sub' : ''}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setIsMobileMenuOpen(false);
+                                if (onNavigate) onNavigate('Projects', sub);
+                              }}
+                            >
+                              {sub}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              }
+
+              // Media accordion
+              if (item === 'Media') {
+                const isOpen = activeMobileDropdown === 'Media';
+                return (
+                  <li key={item} className="mobile-dropdown-item">
+                    <button
+                      className={`mobile-dropdown-trigger ${currentView === 'Media' ? 'active' : ''}`}
+                      onClick={() => setActiveMobileDropdown(isOpen ? null : 'Media')}
+                    >
+                      <span>MEDIA</span>
+                      {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                    {isOpen && (
+                      <ul className="mobile-submenu-lvl1">
+                        <li>
+                          <a
+                            href="#"
+                            className={currentView === 'Media' && activeSubTab === 'Gallery' ? 'active-sub' : ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsMobileMenuOpen(false);
+                              if (onNavigate) onNavigate('Media', 'Gallery');
+                            }}
+                          >
+                            📸 Gallery
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            href="#"
+                            className={currentView === 'Media' && activeSubTab === 'Videos' ? 'active-sub' : ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsMobileMenuOpen(false);
+                              if (onNavigate) onNavigate('Media', 'Videos');
+                            }}
+                          >
+                            🎥 Videos (YouTube)
+                          </a>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+                );
+              }
+
+              // Standard Link
+              return (
+                <li key={item}>
+                  <a
+                    href="#"
+                    className={`mobile-nav-link ${currentView === item ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsMobileMenuOpen(false);
+                      if (onNavigate) onNavigate(item);
+                    }}
+                  >
+                    {item.toUpperCase()}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 }

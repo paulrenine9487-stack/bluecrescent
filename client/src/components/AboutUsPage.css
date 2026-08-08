@@ -41,7 +41,7 @@
 
 .about-hero-banner-img {
   width: 100%;
-  max-height: 420px;
+  height: 420px;
   object-fit: cover;
   object-position: center center;
   display: block;
@@ -1012,5 +1012,55 @@
     width: 36px;
     height: 36px;
     font-size: 20px;
+  }
+}
+
+
+/* Custom Mobile Responsiveness Overrides */
+@media (max-width: 960px) {
+  .who-we-are-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+
+  .latest-news-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+
+  .who-we-are-video-portrait {
+    max-width: 280px !important;
+    margin: 0 auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .bce-heading-primary {
+    font-size: 28px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .bce-underline-gradient {
+    margin-bottom: 20px !important;
+  }
+
+  .bce-section-subtitle {
+    font-size: 15px !important;
+    margin-bottom: 24px !important;
+  }
+
+  /* Reset testimonial offset transforms on mobile to prevent layout distortion */
+  .testimonial-glass-card.odd-card,
+  .testimonial-glass-card.even-card {
+    transform: none !important;
+  }
+
+  .testimonial-glass-card {
+    padding: 24px 20px !important;
+  }
+
+  .testimonials-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
   }
 }

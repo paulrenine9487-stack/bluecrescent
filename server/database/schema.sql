@@ -38,29 +38,6 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert Default Seed Data from Blue Crescent Website Screenshots
-
-INSERT INTO testimonials (title, content, author_name, company_name) VALUES 
-('Excellent Work', 'Blue Crescent has provided us with complete support for MEP drawings, all design Calculations in MEP & Stress Analysis etc in our projects. They are one of the best Engineering company who can be trusted for complete solutions of all Design & Engineering issues. I visited their office & fully satisfied with the Engineering & design team who delivered the works for us on time & also they provided complete support to get approval from various authorities for some woks in very short time. You are Excellent Blue crescent & keep going. Thanks for your works delivered.', 'Gokulraj Chakaravarthy', 'Diplomat Group W.L.L');
-
-INSERT INTO news (title, content) VALUES
-('KAHRAMAA Project Tarsheed 2022', 'Blue Crescent Sustainability division is awarded with prestigious KAHRAMAA Project Tarsheed 2022. Blue Crescent is assigned to conduct Energy Audit for 22 schools as a part of Tarsheed 2022 campaign'),
-('GSAS Recognition', 'Blue Crescent awarded with GSAS (Global Sustainability Assessment System) recognition for outstanding green building facilitation.');
-
-INSERT INTO services (category, title) VALUES
-('Engineering Services', 'Engineering Design support Services'),
-('Engineering Services', 'Specialised Simulation & Analysis'),
-('Engineering Services', 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D'),
-('Engineering Services', 'BIM Modelling - 3D'),
-('Engineering Services', 'Outsourcing Technical Experts'),
-('Sustainability Services', 'Energy Auditing'),
-('Sustainability Services', 'Commissioning of LEED & GSAS'),
-('Sustainability Services', 'Green Building Facilitation'),
-('Telecom Services', 'Fiber Optic (Indoor & Outdoor)'),
-('Telecom Services', 'Cellular (IBS & Outdoor Sites)'),
-('Telecom Services', 'Microwave Links'),
-('Telecom Services', 'Wi-Fi Systems');
-
 -- 5. Partners Table
 CREATE TABLE IF NOT EXISTS partners (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -70,12 +47,3 @@ CREATE TABLE IF NOT EXISTS partners (
     order_num INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-INSERT INTO partners (name, role, image, order_num) VALUES
-('TEKNIK Group',         'Engineering Partner',     '/partner_teknik.png',    1),
-('ARCANA Build',         'Construction Partner',    '/partner_arcana.png',    2),
-('NEXAGEN Solutions',    'Sustainability Partner',  '/partner_nexagen.png',   3),
-('QAFrame Technologies', 'BIM Partner',            '/partner_qaframe.png',   4),
-('MERIDIAN MEP',         'MEP Partner',            '/partner_meridian.png',  5),
-('VISTARA Infrastructure','Infrastructure Partner', '/partner_vistara.png',   6);
-

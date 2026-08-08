@@ -36,3 +36,12 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Server uploaded files (large binaries - must not be committed)
+# The directory itself is tracked via server/uploads/.gitkeep
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Also ignore legacy client/public/uploads (in case any old files are there)
+client/public/uploads/*
+!client/public/uploads/.gitkeep
