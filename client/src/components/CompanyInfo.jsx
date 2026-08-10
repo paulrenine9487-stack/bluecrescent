@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Target, Eye, Shield, Leaf, ArrowRight } from 'lucide-react';
+import { Award, Users, Globe, Layers, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CompanyInfo({ onNavigate }) {
-  const [activeIndex, setActiveIndex] = useState(4); // Start at middle Mission card (index 4)
+  const [activeIndex, setActiveIndex] = useState(4); // Start at middle card (index 4)
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -10,10 +10,6 @@ export default function CompanyInfo({ onNavigate }) {
 
   const [companySettings, setCompanySettings] = useState(() => {
     const DEFAULT_COMPANY = {
-      mission: '“With the sustainable approach in all activities that are undertaken and an uncompromising commitment to quality in all the process and deliverable that are undertaken”',
-      vision: 'Become the leading support services provider and become a recognized reputed company in the following fields: Engineering Support Services, Contracting Support Services, and Trading Services.',
-      qaqc: '“Establishing and enhancing on a continuous basis an uncompromising quality assured and controlled procedures resulting in the most Client satisfied deliverables, in time”',
-      hse: '“Establishing a Healthier, Safe and Environmentally Friendly procedure that is embedded into all business processes and deliverables”',
       whyIntro1: 'Guided by the best team leaders, supported by skilled staff, corporate commitment to deliver the services at their best quality while controlling the costs and time components.',
       whyIntro2: 'Solutions are provided in various options and supported with recommendations that best suit the Clients requirements.',
       whyIntro3: 'Supported by team of specialists in the areas of MEP design, Acoustics, Stress and Hydraulics, all engineering calculations.',
@@ -35,31 +31,31 @@ export default function CompanyInfo({ onNavigate }) {
 
   const cards = [
     {
-      id: 'mission',
-      title: 'Mission',
-      icon: <Target size={40} className="company-card-icon" />,
-      text: companySettings.mission,
+      id: 'experience',
+      title: '13+ Years of Experience',
+      icon: <Award size={40} className="company-card-icon" />,
+      text: 'Engineering experience since 2013, continuously evolving with the construction and digital technology industry.',
       themeClass: 'theme-blue'
     },
     {
-      id: 'vision',
-      title: 'Vision',
-      icon: <Eye size={40} className="company-card-icon" />,
-      text: companySettings.vision,
+      id: 'experts',
+      title: '150+ Technical Experts',
+      icon: <Users size={40} className="company-card-icon" />,
+      text: 'Multidisciplinary technical professionals delivering engineering, BIM, digital and sustainability solutions.',
       themeClass: 'theme-green'
     },
     {
-      id: 'qaqc',
-      title: 'QA & QC',
-      icon: <Shield size={40} className="company-card-icon" />,
-      text: companySettings.qaqc,
+      id: 'presence',
+      title: 'GCC & India Presence',
+      icon: <Globe size={40} className="company-card-icon" />,
+      text: 'Supporting projects and clients across Qatar, UAE, Kuwait, Saudi Arabia and India.',
       themeClass: 'theme-pink'
     },
     {
-      id: 'hse',
-      title: 'HSE Policy',
-      icon: <Leaf size={40} className="company-card-icon" />,
-      text: companySettings.hse,
+      id: 'solutions',
+      title: 'End-to-End Solutions',
+      icon: <Layers size={40} className="company-card-icon" />,
+      text: 'From engineering design and construction support to digital transformation and asset lifecycle management.',
       themeClass: 'theme-lavender'
     }
   ];
@@ -110,7 +106,7 @@ export default function CompanyInfo({ onNavigate }) {
   // Snapping/loop adjustment
   useEffect(() => {
     if (activeIndex === 8) {
-      // Snaps back from Mission (index 8) to Mission (index 4)
+      // Snaps back from index 8 to index 4
       const timer = setTimeout(() => {
         setIsTransitioning(false);
         setActiveIndex(4);
@@ -118,7 +114,7 @@ export default function CompanyInfo({ onNavigate }) {
       return () => clearTimeout(timer);
     }
     if (activeIndex === 3) {
-      // Snaps forward from HSE (index 3) to HSE (index 7)
+      // Snaps forward from index 3 to index 7
       const timer = setTimeout(() => {
         setIsTransitioning(false);
         setActiveIndex(7);
@@ -142,12 +138,23 @@ export default function CompanyInfo({ onNavigate }) {
     setActiveIndex(index);
   };
 
+  const handlePrev = () => {
+    setIsTransitioning(true);
+    setActiveIndex((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    setIsTransitioning(true);
+    setActiveIndex((prev) => prev + 1);
+  };
+
   const currentDotIndex = activeIndex % 4;
 
   return (
     <div 
-      className="why-bce-redesign-container" 
+      className={`why-bce-redesign-container ${isVisible ? 'is-visible' : ''}`}
       ref={sectionRef}
+      id="why-blue-crescent"
     >
       {/* LEFT SIDE - Stays fixed */}
       <div className={`why-bce-info-block ${isVisible ? 'is-visible' : ''}`}>
@@ -155,26 +162,18 @@ export default function CompanyInfo({ onNavigate }) {
           Why Blue Crescent?
         </h2>
         <div className="why-bce-divider-line"></div>
-        {companySettings.whyIntro1 && (
-          <p className="why-bce-desc-para">
-            {companySettings.whyIntro1}
-          </p>
-        )}
-        {companySettings.whyIntro2 && (
-          <p className="why-bce-desc-para">
-            {companySettings.whyIntro2}
-          </p>
-        )}
-        {companySettings.whyIntro3 && (
-          <p className="why-bce-desc-para">
-            {companySettings.whyIntro3}
-          </p>
-        )}
-        {companySettings.whyIntro4 && (
-          <p className="why-bce-desc-para">
-            {companySettings.whyIntro4}
-          </p>
-        )}
+        <p className="why-bce-desc-para">
+          {companySettings.whyIntro1 || 'Guided by the best team leaders, supported by skilled staff, corporate commitment to deliver the services at their best quality while controlling the costs and time components.'}
+        </p>
+        <p className="why-bce-desc-para">
+          {companySettings.whyIntro2 || 'Solutions are provided in various options and supported with recommendations that best suit the Clients requirements.'}
+        </p>
+        <p className="why-bce-desc-para">
+          {companySettings.whyIntro3 || 'Supported by team of specialists in the areas of MEP design, Acoustics, Stress and Hydraulics, all engineering calculations.'}
+        </p>
+        <p className="why-bce-desc-para">
+          {companySettings.whyIntro4 || 'Services are applicable for Owners, Designers, Contractors and Operators.'}
+        </p>
         <button 
           className="btn-blue-premium"
           onClick={() => {
@@ -192,6 +191,22 @@ export default function CompanyInfo({ onNavigate }) {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
+          {/* Manual Navigation Buttons */}
+          <button 
+            className="why-bce-nav-btn prev-btn" 
+            onClick={handlePrev}
+            aria-label="Previous slide"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <button 
+            className="why-bce-nav-btn next-btn" 
+            onClick={handleNext}
+            aria-label="Next slide"
+          >
+            <ChevronRight size={22} />
+          </button>
+
           <div 
             className="why-bce-slider-track"
             style={{

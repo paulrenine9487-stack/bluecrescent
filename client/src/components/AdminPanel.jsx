@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, CheckSquare, X,
   LayoutDashboard, Newspaper, Briefcase, Wrench, Star, FolderTree,
   Mail, Send, History, Sliders, Database, Terminal, ChevronDown, FileCode,
-  Building, MapPin, Phone, Map, Clock
+  Building, MapPin, Phone, Map, Clock, Cpu
 } from 'lucide-react';
 import './AdminPanel.css';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
@@ -380,6 +380,47 @@ export default function AdminPanel({ onNavigate }) {
     value4Desc: 'Together we achieve more through collaborative engineering.',
     value5Title: 'Innovation',
     value5Desc: 'Pioneering green technology and sustainable design.',
+    aboutUsMapImg: '/map1.png',
+    aboutUsCapaImg: '/capa.png',
+    aboutUsDigitalImg: '/digital.png',
+    aboutUsFlowchartBg: '#F1F7FF',
+    aboutUsCountriesJson: JSON.stringify([
+      { id: 'qatar', name: 'QATAR', desc: 'Regional Head Office and core operations.', accentColor: '#0057B8' },
+      { id: 'kuwait', name: 'KUWAIT', desc: 'Project support & technical advisory office.', accentColor: '#00A896' },
+      { id: 'uae', name: 'UAE', desc: 'Specialized design and consultancy services.', accentColor: '#F05454' },
+      { id: 'saudi', name: 'SAUDI ARABIA', desc: 'Regional operations & infrastructure support.', accentColor: '#00B896' },
+      { id: 'india', name: 'INDIA', desc: 'Technical delivery & design production center.', accentColor: '#8A3FFC' }
+    ]),
+    aboutUsDisciplinesJson: JSON.stringify([
+      { name: 'CAD Documentation', icon: 'Building2' },
+      { name: 'BIM Modeling & Coordination', icon: 'Layers' },
+      { name: 'Reality Capture & Laser Scanning', icon: 'Radio' },
+      { name: 'Specialized Engineering support', icon: 'Wrench' },
+      { name: 'Computational fluid dynamics (CFD)', icon: 'Wind' },
+      { name: 'Acoustic & Vibration Analysis', icon: 'Volume2' },
+      { name: 'Advanced Hydraulic Analysis', icon: 'Droplet' },
+      { name: 'Stress Analysis (Piping & Static)', icon: 'Activity' },
+      { name: 'Energy Auditing & Commissioning', icon: 'Zap' },
+      { name: 'Green Building Facilitation', icon: 'Leaf' },
+      { name: 'Technical experts outsourcing', icon: 'Users' }
+    ]),
+    aboutUsFlowchartJson: JSON.stringify([
+      { num: '01', title: 'PHYSICAL ASSET', desc: 'The tangible operational environment.', icon: 'Building2' },
+      { num: '02', title: 'BIM', desc: 'Structured spatial & technical information model.', icon: 'Layers' },
+      { num: '03', title: 'DIGITAL TWIN', desc: 'Operational representation connecting physics with data.', icon: 'Cpu' },
+      { num: '04', title: 'INTELLIGENT OPERATIONS', desc: 'Smarter lifecycle management and real-time visualization.', icon: 'Monitor' }
+    ]),
+    aboutUsCapabilitiesJson: JSON.stringify([
+      { title: 'Common Data Environment', desc: 'Unified and secure data across the asset lifecycle.', icon: 'Cloud' },
+      { title: 'Real-Time Monitoring', desc: 'Live data insights for better situational awareness.', icon: 'Monitor' },
+      { title: 'Predictive Maintenance', desc: 'AI-driven predictions to minimize downtime.', icon: 'Settings' },
+      { title: 'Operational Optimization', desc: 'Optimize performance and reduce operational costs.', icon: 'TrendingUp' },
+      { title: 'Scenario Simulation', desc: 'Simulate scenarios for smarter decision making.', icon: 'Share2' },
+      { title: 'Automated Issue Management', desc: 'Detect, track and resolve issues efficiently.', icon: 'ClipboardCheck' },
+      { title: 'Asset Health Analysis', desc: 'Continuous assessment of asset health and risk.', icon: 'Heart' },
+      { title: 'Energy Optimization', desc: 'Improve energy efficiency and sustainability.', icon: 'Zap' },
+      { title: 'Lifecycle Management', desc: 'Manage the asset lifecycle from design to decommission.', icon: 'RefreshCw' }
+    ])
   };
 
   // State hooks loading from localStorage
@@ -1933,6 +1974,370 @@ export default function AdminPanel({ onNavigate }) {
                       ))}
                     </div>
                   </div>
+
+                  {/* SECTION 6: Custom Section Backgrounds */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7C3AED' }}><ImageIcon size={16} /></div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Custom Section Backgrounds</h3>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Configure background images and color schemes for About Us page sections</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                      
+                      {/* Geographical Presence Map Image */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Geographical Presence Map Image</label>
+                        <div className="admin-file-upload">
+                          <label className="admin-file-label">
+                            <span>Select map image file...</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={e => handleImageUpload(e.target.files[0], setCompanySettings, 'aboutUsMapImg')}
+                            />
+                          </label>
+                        </div>
+                        {companySettings.aboutUsMapImg && (
+                          <div className="admin-upload-preview" style={{ marginTop: '10px' }}>
+                            <img src={companySettings.aboutUsMapImg} alt="Map Preview" style={{ maxHeight: '100px', objectFit: 'contain' }} />
+                            <button className="admin-upload-preview-remove" onClick={() => updateCompanyField('aboutUsMapImg', '')}>✕</button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Capacity Card Background Image */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Capacity Left Card Background Image</label>
+                        <div className="admin-file-upload">
+                          <label className="admin-file-label">
+                            <span>Select capacity background image...</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={e => handleImageUpload(e.target.files[0], setCompanySettings, 'aboutUsCapaImg')}
+                            />
+                          </label>
+                        </div>
+                        {companySettings.aboutUsCapaImg && (
+                          <div className="admin-upload-preview" style={{ marginTop: '10px' }}>
+                            <img src={companySettings.aboutUsCapaImg} alt="Capacity Preview" style={{ maxHeight: '100px', objectFit: 'contain' }} />
+                            <button className="admin-upload-preview-remove" onClick={() => updateCompanyField('aboutUsCapaImg', '')}>✕</button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Digital Twin Section Background Image */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Digital Twin Section Background Image</label>
+                        <div className="admin-file-upload">
+                          <label className="admin-file-label">
+                            <span>Select digital twin background image...</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={e => handleImageUpload(e.target.files[0], setCompanySettings, 'aboutUsDigitalImg')}
+                            />
+                          </label>
+                        </div>
+                        {companySettings.aboutUsDigitalImg && (
+                          <div className="admin-upload-preview" style={{ marginTop: '10px' }}>
+                            <img src={companySettings.aboutUsDigitalImg} alt="Digital Twin Preview" style={{ maxHeight: '100px', objectFit: 'contain' }} />
+                            <button className="admin-upload-preview-remove" onClick={() => updateCompanyField('aboutUsDigitalImg', '')}>✕</button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Digital Twin Flowchart Background Color */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Flowchart Container Background Color</label>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <input 
+                            type="color" 
+                            value={companySettings.aboutUsFlowchartBg || '#F1F7FF'} 
+                            onChange={e => updateCompanyField('aboutUsFlowchartBg', e.target.value)} 
+                            style={{ width: '48px', height: '38px', padding: '0', border: '1px solid #CBD5E1', borderRadius: '6px', cursor: 'pointer' }}
+                          />
+                          <input 
+                            type="text" 
+                            value={companySettings.aboutUsFlowchartBg || '#F1F7FF'} 
+                            onChange={e => updateCompanyField('aboutUsFlowchartBg', e.target.value)} 
+                            style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* SECTION 7: Dynamic GCC Countries list editor */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}><Globe size={16} /></div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>GCC Geographical Presence Offices (CRUD)</h3>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize the texts, accent colors, and statuses of your GCC regional office cards</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {(() => {
+                        let list = [];
+                        try {
+                          const val = companySettings.aboutUsCountriesJson;
+                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCountriesJson);
+                          if (!Array.isArray(list) || list.length === 0) {
+                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCountriesJson);
+                          }
+                        } catch(e) {
+                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCountriesJson);
+                        }
+                        return list.map((item, idx) => (
+                          <div key={item.id || idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 100px', gap: '12px', padding: '14px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '4px' }}>Country Name</label>
+                              <input type="text" value={item.name || ''} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].name = e.target.value;
+                                updateCompanyField('aboutUsCountriesJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '4px' }}>Office Status / Year</label>
+                              <input type="text" value={item.status || ''} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].status = e.target.value;
+                                updateCompanyField('aboutUsCountriesJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '4px' }}>Short Description</label>
+                              <input type="text" value={item.desc || ''} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].desc = e.target.value;
+                                updateCompanyField('aboutUsCountriesJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '4px' }}>Color</label>
+                              <input type="color" value={item.accentColor || '#0057B8'} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].accentColor = e.target.value;
+                                updateCompanyField('aboutUsCountriesJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', height: '30px', padding: 0, border: '1px solid #CBD5E1', borderRadius: '6px', cursor: 'pointer' }} />
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* SECTION 8: Dynamic Capacity Disciplines CRUD */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}><Star size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Capacity Disciplines (CRUD)</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Add, edit, or remove discipline cards displayed under "Our Capacity" section</p>
+                        </div>
+                      </div>
+                      <button style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }} onClick={() => {
+                        let list = [];
+                        try {
+                          const val = companySettings.aboutUsDisciplinesJson;
+                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
+                          if (!Array.isArray(list) || list.length === 0) {
+                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
+                          }
+                        } catch(e) {
+                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
+                        }
+                        list.push({ name: 'New Discipline', icon: 'Building2' });
+                        updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(list));
+                      }}>+ Add Card</button>
+                    </div>
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                      {(() => {
+                        let list = [];
+                        try {
+                          const val = companySettings.aboutUsDisciplinesJson;
+                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
+                          if (!Array.isArray(list) || list.length === 0) {
+                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
+                          }
+                        } catch(e) {
+                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
+                        }
+                        return list.map((item, idx) => (
+                          <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#F8FAFC', padding: '10px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ flex: 1 }}>
+                              <input type="text" value={item.name || ''} placeholder="Discipline Name" onChange={e => {
+                                const copy = [...list];
+                                copy[idx].name = e.target.value;
+                                updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                            </div>
+                            <div style={{ width: '120px' }}>
+                              <select value={item.icon || 'Building2'} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].icon = e.target.value;
+                                updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }}>
+                                {['Building2', 'Layers', 'Radio', 'Wrench', 'Wind', 'Volume2', 'Droplet', 'Activity', 'Zap', 'Leaf', 'Users', 'Cpu'].map(i => (
+                                  <option key={i} value={i}>{i}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <button style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => {
+                              const copy = [...list];
+                              copy.splice(idx, 1);
+                              updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
+                            }}>✕</button>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* SECTION 9: Dynamic Flowchart Steps CRUD */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F5F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7C3AED' }}><Cpu size={16} /></div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Flowchart Steps Configuration (CRUD)</h3>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize flowchart milestone names, descriptions and indicators</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {(() => {
+                        let list = [];
+                        try {
+                          const val = companySettings.aboutUsFlowchartJson;
+                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsFlowchartJson);
+                          if (!Array.isArray(list) || list.length === 0) {
+                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsFlowchartJson);
+                          }
+                        } catch(e) {
+                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsFlowchartJson);
+                        }
+                        return list.map((item, idx) => (
+                          <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 3fr 150px', gap: '12px', padding: '12px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '9px', fontWeight: '700', color: '#64748B', marginBottom: '3px' }}>STEP</label>
+                              <input type="text" value={item.num || ''} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].num = e.target.value;
+                                updateCompanyField('aboutUsFlowchartJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px', textAlign: 'center' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '9px', fontWeight: '700', color: '#64748B', marginBottom: '3px' }}>TITLE</label>
+                              <input type="text" value={item.title || ''} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].title = e.target.value;
+                                updateCompanyField('aboutUsFlowchartJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '9px', fontWeight: '700', color: '#64748B', marginBottom: '3px' }}>DESCRIPTION</label>
+                              <input type="text" value={item.desc || ''} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].desc = e.target.value;
+                                updateCompanyField('aboutUsFlowchartJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '9px', fontWeight: '700', color: '#64748B', marginBottom: '3px' }}>ICON</label>
+                              <select value={item.icon || 'Building2'} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].icon = e.target.value;
+                                updateCompanyField('aboutUsFlowchartJson', JSON.stringify(copy));
+                              }} style={{ width: '100%', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }}>
+                                {['Building2', 'Layers', 'Cpu', 'Monitor'].map(i => (
+                                  <option key={i} value={i}>{i}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* SECTION 10: Dynamic Digital Twin Capabilities CRUD */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EA580C' }}><Layers size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Digital Twin Capabilities (CRUD)</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize the capability cards shown inside the Digital Twin section</p>
+                        </div>
+                      </div>
+                      <button style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }} onClick={() => {
+                        let list = [];
+                        try {
+                          const val = companySettings.aboutUsCapabilitiesJson;
+                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
+                          if (!Array.isArray(list) || list.length === 0) {
+                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
+                          }
+                        } catch(e) {
+                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
+                        }
+                        list.push({ title: 'New Capability', desc: 'Description of capability', icon: 'Cloud' });
+                        updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(list));
+                      }}>+ Add Card</button>
+                    </div>
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                      {(() => {
+                        let list = [];
+                        try {
+                          const val = companySettings.aboutUsCapabilitiesJson;
+                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
+                          if (!Array.isArray(list) || list.length === 0) {
+                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
+                          }
+                        } catch(e) {
+                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
+                        }
+                        return list.map((item, idx) => (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                              <input type="text" value={item.title || ''} placeholder="Capability Title" onChange={e => {
+                                const copy = [...list];
+                                copy[idx].title = e.target.value;
+                                updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
+                              }} style={{ flex: 1, padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                              
+                              <select value={item.icon || 'Cloud'} onChange={e => {
+                                const copy = [...list];
+                                copy[idx].icon = e.target.value;
+                                updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
+                              }} style={{ width: '130px', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }}>
+                                {['Cloud', 'Monitor', 'Settings', 'TrendingUp', 'Share2', 'ClipboardCheck', 'Heart', 'Zap', 'RefreshCw'].map(i => (
+                                  <option key={i} value={i}>{i}</option>
+                                ))}
+                              </select>
+
+                              <button style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => {
+                                const copy = [...list];
+                                copy.splice(idx, 1);
+                                updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
+                              }}>✕</button>
+                            </div>
+                            <textarea rows="2" value={item.desc || ''} placeholder="Capability Description" onChange={e => {
+                              const copy = [...list];
+                              copy[idx].desc = e.target.value;
+                              updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
+                            }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '12.5px', resize: 'vertical' }} />
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
 
                   {/* Bottom Save */}
                   <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '12px' }}>
@@ -4048,33 +4453,26 @@ export default function AdminPanel({ onNavigate }) {
                       <select
                         className="admin-input"
                         value={serviceForm.category}
-                        onChange={(e) => {
-                          const newCat = e.target.value;
-                          const submenus = serviceSubmenuOptions[newCat] || [];
-                          setServiceForm(prev => ({ 
-                            ...prev, 
-                            category: newCat, 
-                            title: submenus[0] || '' 
-                          }));
-                        }}
+                        onChange={(e) => setServiceForm(prev => ({ ...prev, category: e.target.value }))}
                       >
-                        <option value="Engineering Services">Engineering Services</option>
-                        <option value="Sustainability Services">Sustainability Services</option>
-                        <option value="Telecom Services">Telecom Services</option>
+                        <option value="CAD & Engineering Documentation">CAD & Engineering Documentation</option>
+                        <option value="BIM & Digital Construction">BIM & Digital Construction</option>
+                        <option value="Laser Scanning & Reality Capture">Laser Scanning & Reality Capture</option>
+                        <option value="Digital Twin & Asset Lifecycle">Digital Twin & Asset Lifecycle</option>
+                        <option value="Sustainability Consultancy">Sustainability Consultancy</option>
+                        <option value="Remote Construction Solutions">Remote Construction Solutions</option>
                       </select>
                     </div>
 
                     <div className="admin-form-group">
-                      <label>Submenu Service Title</label>
-                      <select
+                      <label>Service Title</label>
+                      <input
+                        type="text"
                         className="admin-input"
+                        placeholder="e.g. BIM & Digital Construction"
                         value={serviceForm.title}
                         onChange={(e) => setServiceForm(prev => ({ ...prev, title: e.target.value }))}
-                      >
-                        {(serviceSubmenuOptions[serviceForm.category] || []).map((submenu) => (
-                          <option key={submenu} value={submenu}>{submenu}</option>
-                        ))}
-                      </select>
+                      />
                     </div>
                   </div>
 

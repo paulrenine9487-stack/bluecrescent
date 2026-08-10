@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ChevronRight, MapPin, Phone, Mail, Globe, Send,
-  ShieldCheck, Award, Handshake, Leaf, RadioTower, Factory, Layers
+  ChevronRight, MapPin, Phone, Mail, Globe,
+  Leaf, Layers, Cpu, Compass, Radio, Building2
 } from 'lucide-react';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
 
 export default function Footer({ onNavigate }) {
-  const [email, setEmail] = useState('');
   const [footerData, setFooterData] = useState({
-    brand_desc: 'Delivering innovative engineering solutions with excellence, integrity and sustainability. Building a better future together.',
+    brand_desc: 'Engineering and digital transformation solutions connecting design, construction and asset lifecycle management.',
     facebook_url: 'https://www.facebook.com/pages/Blue%20Crescent%20Engineering,%20Trading%20&%20Contracting/107539580965764/',
     instagram_url: '#',
     address: '9th Floor, Tower 3, Gate Mall, Doha, Qatar',
@@ -22,7 +21,13 @@ export default function Footer({ onNavigate }) {
     fetch('/api/footer')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data) setFooterData(data);
+        if (data) {
+          setFooterData(prev => ({
+            ...prev,
+            ...data,
+            brand_desc: 'Engineering and digital transformation solutions connecting design, construction and asset lifecycle management.'
+          }));
+        }
       })
       .catch(err => console.warn('Footer fetch warning:', err));
   }, []);
@@ -34,30 +39,18 @@ export default function Footer({ onNavigate }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubscribe = async (e) => {
+  const handleRemoteNav = (e) => {
     e.preventDefault();
-    if (!email) return;
-    try {
-      const res = await fetch('/api/subscribers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      if (res.ok) {
-        alert('Thank you for subscribing to our newsletter!');
-        setEmail('');
-      } else {
-        alert('Subscription failed. Please check your email.');
-      }
-    } catch (err) {
-      console.warn(err);
-      alert('Subscription succeeded.');
-    }
+    if (onNavigate) onNavigate('Home');
+    setTimeout(() => {
+      const el = document.getElementById('remote-construction');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   return (
     <footer className="bce-footer-v2">
-      {/* Top Section: 5 Columns */}
+      {/* Top Section: 4 Columns */}
       <div className="bce-footer-v2-top">
 
         {/* Column 1: Brand & Socials */}
@@ -105,18 +98,33 @@ export default function Footer({ onNavigate }) {
           <h4 className="bce-footer-v2-heading">OUR SERVICES</h4>
           <ul className="bce-footer-v2-list services-list">
             <li>
-              <a href="#services-engineering" onClick={(e) => { e.preventDefault(); handleNav('Services', 'BIM Services'); }}>
-                <Factory size={18} className="bce-service-icon" /> Engineering Services
+              <a href="#services-cad" onClick={(e) => { e.preventDefault(); handleNav('Services', '2D CAD Drafting Services'); }}>
+                <Building2 size={16} className="bce-service-icon" /> CAD & Engineering
               </a>
             </li>
             <li>
-              <a href="#services-sustainability" onClick={(e) => { e.preventDefault(); handleNav('Services', 'GSAS Service'); }}>
-                <Leaf size={18} className="bce-service-icon" /> Sustainability Services
+              <a href="#services-bim" onClick={(e) => { e.preventDefault(); handleNav('Services', 'BIM Services'); }}>
+                <Compass size={16} className="bce-service-icon" /> BIM & Digital Construction
+              </a>
+            </li>
+            <li>
+              <a href="#services-reality-capture" onClick={(e) => { e.preventDefault(); handleNav('Services', 'BIM Services'); }}>
+                <Radio size={16} className="bce-service-icon" /> Reality Capture
               </a>
             </li>
             <li>
               <a href="#services-digital-twin" onClick={(e) => { e.preventDefault(); handleNav('Services', 'Life Cycle Twin Asset Management'); }}>
-                <Layers size={18} className="bce-service-icon" /> Digital Twin Services
+                <Layers size={16} className="bce-service-icon" /> Digital Twin
+              </a>
+            </li>
+            <li>
+              <a href="#services-sustainability" onClick={(e) => { e.preventDefault(); handleNav('Services', 'GSAS Service'); }}>
+                <Leaf size={16} className="bce-service-icon" /> Sustainability
+              </a>
+            </li>
+            <li>
+              <a href="#remote-construction" onClick={handleRemoteNav}>
+                <Cpu size={16} className="bce-service-icon" /> Remote Construction
               </a>
             </li>
           </ul>
@@ -147,10 +155,9 @@ export default function Footer({ onNavigate }) {
 
       </div>
 
-
       {/* Bottom Section: Copyright */}
       <div className="bce-footer-v2-bottom">
-        <p>
+        <p style={{ color: '#FFFFFF', margin: 0 }}>
           {footerData.copyright}
         </p>
       </div>

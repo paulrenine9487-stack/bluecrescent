@@ -60,10 +60,10 @@ export default function CredentialsSection({ onNavigate }) {
             <span className="credentials-sub-badge">OUR GLOBAL CERTIFICATIONS</span>
             <h2 className="credentials-main-heading">
               Certified. Trusted. <br />
-              Committed to <span className="gradient-excellence-text">Excellence.</span>
+              Built for <span className="gradient-excellence-text">Excellence.</span>
             </h2>
             <p className="credentials-desc-text">
-              We are recognized by international bodies for our commitment to quality, sustainability and engineering excellence.
+              Our commitment to quality, sustainability and engineering excellence is supported by internationally recognized standards and certification frameworks.
             </p>
             <button 
               className="btn-cyan-premium"

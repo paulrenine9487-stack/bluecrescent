@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import HeroSlider from './components/HeroSlider';
 import CredentialsSection from './components/CredentialsSection';
+import WhoWeAreSection from './components/WhoWeAreSection';
 import CompanyInfo from './components/CompanyInfo';
 import SidebarContent from './components/SidebarContent';
 import ServicesList from './components/ServicesList';
@@ -12,6 +13,7 @@ import ProjectsPage from './components/ProjectsPage';
 import ContactUsPage from './components/ContactUsPage';
 import CertificationsPage from './components/CertificationsPage';
 import MediaPage from './components/MediaPage';
+import OurJourneyPage from './components/OurJourneyPage';
 import Footer from './components/Footer';
 import TestimonialModal from './components/TestimonialModal';
 import AdminPanel from './components/AdminPanel';
@@ -23,16 +25,19 @@ export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Sync state with URL pathname on mount and handle back/forward navigation
-  React.useEffect(() => {
+  useEffect(() => {
     if (window.location.pathname === '/manager') {
       setCurrentView('Admin');
+    } else if (window.location.pathname === '/our-journey') {
+      setCurrentView('Our Journey');
     }
 
     const handlePopState = () => {
       if (window.location.pathname === '/manager') {
         setCurrentView('Admin');
+      } else if (window.location.pathname === '/our-journey') {
+        setCurrentView('Our Journey');
       } else {
-        // Simple fallback
         setCurrentView('Home');
         setActiveSubTab('');
       }
@@ -53,6 +58,8 @@ export default function App() {
     // Sync URL path
     if (view === 'Admin') {
       window.history.pushState({}, '', '/manager');
+    } else if (view === 'Our Journey' || view === 'Journey') {
+      window.history.pushState({}, '', '/our-journey');
     } else {
       window.history.pushState({}, '', '/');
     }
@@ -105,34 +112,41 @@ export default function App() {
           activeSubTab={activeSubTab}
           onNavigate={handleNavigate}
         />
+      ) : (currentView === 'Our Journey' || currentView === 'Journey') ? (
+        <OurJourneyPage
+          onNavigate={handleNavigate}
+        />
       ) : (
         <>
           {/* Welcome Hero Carousel */}
           <HeroSlider onNavigate={handleNavigate} />
 
-          {/* OUR CREDENTIALS Section (Full Width between Hero Slider and Why Blue Crescent) */}
+          {/* OUR CREDENTIALS / CERTIFICATIONS Section */}
           <CredentialsSection onNavigate={handleNavigate} />
+
+          {/* NEW WHO WE ARE SECTION */}
+          <WhoWeAreSection onNavigate={handleNavigate} />
 
           {/* Main Container with Company Info & Sidebar */}
           <main className="container">
-            {/* Why Blue Crescent Redesigned Section */}
+            {/* Why Blue Crescent Redesigned Section - UNCHANGED */}
             <div className="why-bce-section-wrap" style={{ marginBottom: '80px' }}>
               <CompanyInfo onNavigate={handleNavigate} />
             </div>
 
-            {/* News and Testimonials placed downside */}
+            {/* Our Services Section */}
+            <ServicesList onNavigate={handleNavigate} />
+
+            {/* Our Projects Section */}
+            <ProjectsSlider onNavigate={handleNavigate} />
+
+            {/* News and Testimonials */}
             <div className="main-content-layout-downside" style={{ marginBottom: '80px' }}>
               <SidebarContent 
                 key={refreshKey} 
                 onOpenModal={() => setIsModalOpen(true)} 
               />
             </div>
-
-            {/* Our Services Section */}
-            <ServicesList onNavigate={handleNavigate} />
-
-            {/* Our Projects Section (Dynamically updated from Admin Panel) */}
-            <ProjectsSlider onNavigate={handleNavigate} />
           </main>
         </>
       )}

@@ -95,6 +95,15 @@ app.post('/api/settings/company', async (req, res) => {
     if (settings.aboutUsVideoUrl && settings.aboutUsVideoUrl.startsWith('data:')) {
       settings.aboutUsVideoUrl = saveBase64File(settings.aboutUsVideoUrl, 'section_video');
     }
+    if (settings.aboutUsMapImg && settings.aboutUsMapImg.startsWith('data:')) {
+      settings.aboutUsMapImg = saveBase64File(settings.aboutUsMapImg, 'about_map');
+    }
+    if (settings.aboutUsCapaImg && settings.aboutUsCapaImg.startsWith('data:')) {
+      settings.aboutUsCapaImg = saveBase64File(settings.aboutUsCapaImg, 'about_capa');
+    }
+    if (settings.aboutUsDigitalImg && settings.aboutUsDigitalImg.startsWith('data:')) {
+      settings.aboutUsDigitalImg = saveBase64File(settings.aboutUsDigitalImg, 'about_digital');
+    }
 
     const pool = getPool();
     if (getIsConnected() && pool) {
@@ -609,13 +618,78 @@ app.put('/api/footer', async (req, res) => {
 });
 
 // ==========================================
-// 7. SERVICES DETAILS API
+// 7. SERVICES DETAILS & CATEGORIES API
 // ==========================================
+
+app.get('/api/service-categories', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query("SELECT * FROM service_categories ORDER BY display_order ASC, id ASC");
+      return res.json(rows);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  return res.json([]);
+});
+
+app.post('/api/service-categories', async (req, res) => {
+  const { name, slug, short_description, icon, display_order, status, featured } = req.body;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const catSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const [result] = await pool.query(
+        'INSERT INTO service_categories (name, slug, short_description, icon, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [name, catSlug, short_description || '', icon || 'Building2', display_order || 0, status || 'Active', featured !== undefined ? featured : 1]
+      );
+      return res.status(201).json({ id: result.insertId, name, slug: catSlug, short_description, icon, display_order, status, featured });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/service-categories/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, slug, short_description, icon, display_order, status, featured } = req.body;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const catSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      await pool.query(
+        'UPDATE service_categories SET name = ?, slug = ?, short_description = ?, icon = ?, display_order = ?, status = ?, featured = ? WHERE id = ?',
+        [name, catSlug, short_description, icon, display_order || 0, status || 'Active', featured !== undefined ? featured : 1, id]
+      );
+      return res.json({ id, name, slug: catSlug, short_description, icon, display_order, status, featured });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/service-categories/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query('DELETE FROM service_categories WHERE id = ?', [id]);
+      return res.json({ success: true, id });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/services', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query("SELECT * FROM services WHERE category NOT LIKE '%Telecom%' AND title NOT IN ('Engineering Design support Services', 'Specialised Simulation & Analysis', 'BIM Modelling - 3D') ORDER BY category ASC, id ASC");
+      const [rows] = await pool.query("SELECT * FROM services WHERE status = 'Active' ORDER BY display_order ASC, id ASC");
       return res.json(rows);
     }
   } catch (err) {

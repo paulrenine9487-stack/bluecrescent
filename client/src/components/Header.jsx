@@ -62,29 +62,34 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   const defaultProjectSubItems = ['Engineering Division', 'Sustainability Division', 'Digital Twin Division'];
   const defaultServiceCategories = [
     {
-      name: 'Engineering Services',
-      items: [
-        'BIM Services',
-        '2D CAD Drafting Services',
-        'Outsourcing Technical Experts'
-      ]
+      name: 'CAD & Engineering Documentation',
+      slug: 'cad-engineering-documentation',
+      items: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination']
     },
     {
-      name: 'Sustainability Services',
-      items: [
-        'GSAS Service',
-        'LEED Consulting Services',
-        'Energy Audit and Analysis',
-        'ISO 14064 Consulting Services'
-      ]
+      name: 'BIM & Digital Construction',
+      slug: 'bim-digital-construction',
+      items: ['3D BIM', '4D / 5D', 'Architectural BIM', 'Structural BIM', 'MEP BIM', 'Infrastructure BIM', 'Clash Coordination', 'COBie', 'As-Built BIM']
     },
     {
-      name: 'Digital Twin Services',
-      items: [
-        'Life Cycle Twin Asset Management',
-        'Remote Work Automation',
-        'System Integration and Analysis'
-      ]
+      name: 'Laser Scanning & Reality Capture',
+      slug: 'laser-scanning-reality-capture',
+      items: ['3D Laser Scanning', 'Point Cloud Processing', 'Scan-to-BIM', 'Existing Condition Modeling', 'As-Built Verification']
+    },
+    {
+      name: 'Digital Twin & Asset Lifecycle',
+      slug: 'digital-twin-asset-lifecycle',
+      items: ['Digital Twin', 'BIM Integration', 'GIS', 'CAFM / IWMS', 'CMMS', 'BAS / BMS', 'ERP', 'EDMS', 'Asset Information Management']
+    },
+    {
+      name: 'Sustainability Consultancy',
+      slug: 'sustainability-consultancy',
+      items: ['GSAS', 'LEED', 'Energy Audits', 'Green Building Gap Analysis', 'Carbon Footprint Management', 'ISO 14064', 'Environmental Consultancy']
+    },
+    {
+      name: 'Remote Construction Solutions',
+      slug: 'remote-construction-solutions',
+      items: ['Remote Site Support', 'AR Solutions', '360° Site Documentation', 'Remote Inspection', 'Digital Collaboration', 'Robotic Integration']
     }
   ];
 
@@ -107,54 +112,34 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
     }
   }
 
-  // Resolve service categories dynamically from the services table!
+  // Resolve service categories dynamically from API or fallbacks
   let serviceCategories = defaultServiceCategories;
   if (dynamicServices.length > 0) {
     const categoriesMap = {};
-    dynamicServices
-      .filter(s => !s.category.toLowerCase().includes('telecom'))
-      .filter(s => !['Engineering Design support Services', 'Specialised Simulation & Analysis', 'BIM Modelling - 3D', 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D'].includes(s.title))
-      .forEach(s => {
-        if (!categoriesMap[s.category]) {
-          categoriesMap[s.category] = [];
+    dynamicServices.forEach(s => {
+      if (!categoriesMap[s.category]) {
+        categoriesMap[s.category] = {
+          name: s.category,
+          slug: s.slug || s.category.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          items: []
+        };
+      }
+      try {
+        const subList = typeof s.bullets === 'string' ? JSON.parse(s.bullets) : (s.bullets || []);
+        if (Array.isArray(subList)) {
+          subList.forEach(item => {
+            if (!categoriesMap[s.category].items.includes(item)) {
+              categoriesMap[s.category].items.push(item);
+            }
+          });
         }
-        categoriesMap[s.category].push(s.title);
-      });
+      } catch (e) {}
+    });
 
-    // Build dynamic categories from API data
-    const dynamicCategories = Object.keys(categoriesMap).map(catName => ({
-      name: catName,
-      items: categoriesMap[catName]
-    }));
-
-    // Always guarantee Engineering Services with exactly these two items
-    const hasEngineering = dynamicCategories.some(c => c.name === 'Engineering Services');
-    if (!hasEngineering) {
-      dynamicCategories.unshift({
-        name: 'Engineering Services',
-        items: ['BIM Services', '2D CAD Drafting Services', 'Outsourcing Technical Experts']
-      });
-    } else {
-      const engCat = dynamicCategories.find(c => c.name === 'Engineering Services');
-      if (!engCat.items.includes('BIM Services')) engCat.items.unshift('BIM Services');
-      if (!engCat.items.includes('2D CAD Drafting Services')) engCat.items.splice(1, 0, '2D CAD Drafting Services');
-      if (!engCat.items.includes('Outsourcing Technical Experts')) engCat.items.push('Outsourcing Technical Experts');
+    const parsedCats = Object.values(categoriesMap);
+    if (parsedCats.length > 0) {
+      serviceCategories = parsedCats;
     }
-
-    // Always guarantee Digital Twin Services
-    const hasDigitalTwin = dynamicCategories.some(c => c.name === 'Digital Twin Services');
-    if (!hasDigitalTwin) {
-      dynamicCategories.push({
-        name: 'Digital Twin Services',
-        items: [
-          'Life Cycle Twin Asset Management',
-          'Remote Work Automation',
-          'System Integration and Analysis'
-        ]
-      });
-    }
-
-    serviceCategories = dynamicCategories;
   }
 
   const isProjectsActive = currentView === 'Projects' || projectSubItems.includes(currentView);
@@ -208,7 +193,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                           if (onNavigate) onNavigate('Services');
                         }}
                       >
-                        SERVICES <span className="dropdown-arrow">▾</span>
+                        Services <span className="dropdown-arrow">▾</span>
                       </a>
 
                       {servicesDropdownOpen && (
@@ -269,7 +254,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                           if (onNavigate) onNavigate('Projects');
                         }}
                       >
-                        PROJECTS <span className="dropdown-arrow">▾</span>
+                        Projects <span className="dropdown-arrow">▾</span>
                       </a>
 
                       {projectsDropdownOpen && (
@@ -312,7 +297,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                           if (onNavigate) onNavigate('Media', 'Gallery');
                         }}
                       >
-                        MEDIA <span className="dropdown-arrow">▾</span>
+                        Media <span className="dropdown-arrow">▾</span>
                       </a>
 
                       {mediaDropdownOpen && (
@@ -360,7 +345,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                         if (onNavigate) onNavigate(item);
                       }}
                     >
-                      {item.toUpperCase()}
+                      {item}
                     </a>
                   </li>
                 );
@@ -393,7 +378,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                       className={`mobile-dropdown-trigger ${isServicesActive ? 'active' : ''}`}
                       onClick={() => setActiveMobileDropdown(isOpen ? null : 'Services')}
                     >
-                      <span>SERVICES</span>
+                      <span>Services</span>
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
 
@@ -448,7 +433,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                       className={`mobile-dropdown-trigger ${isProjectsActive ? 'active' : ''}`}
                       onClick={() => setActiveMobileDropdown(isOpen ? null : 'Projects')}
                     >
-                      <span>PROJECTS</span>
+                      <span>Projects</span>
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
 
@@ -484,7 +469,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                       className={`mobile-dropdown-trigger ${currentView === 'Media' ? 'active' : ''}`}
                       onClick={() => setActiveMobileDropdown(isOpen ? null : 'Media')}
                     >
-                      <span>MEDIA</span>
+                      <span>Media</span>
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
 
@@ -534,7 +519,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                       if (onNavigate) onNavigate(item);
                     }}
                   >
-                    {item.toUpperCase()}
+                    {item}
                   </a>
                 </li>
               );

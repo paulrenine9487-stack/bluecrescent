@@ -220,8 +220,54 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     }
   };
 
+  // Map core 6 categories
+  const coreServiceMap = {
+    'cad-engineering-documentation': {
+      title: 'CAD & Engineering Documentation',
+      description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
+      bulletsTitle: 'Key Scope & Deliverables Include:',
+      bullets: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'],
+      tools: [['AutoCAD', 'MicroStation'], ['DraftSight', 'Revit CAD']]
+    },
+    'bim-digital-construction': {
+      title: 'BIM & Digital Construction',
+      description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
+      bulletsTitle: 'Key Scope & Deliverables Include:',
+      bullets: ['3D BIM', '4D / 5D', 'Architectural BIM', 'Structural BIM', 'MEP BIM', 'Infrastructure BIM', 'Clash Coordination', 'COBie', 'As-Built BIM'],
+      tools: [['Revit', 'Navisworks'], ['BIM 360', 'Solibri']]
+    },
+    'laser-scanning-reality-capture': {
+      title: 'Laser Scanning & Reality Capture',
+      description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
+      bulletsTitle: 'Key Scope & Deliverables Include:',
+      bullets: ['3D Laser Scanning', 'Point Cloud Processing', 'Scan-to-BIM', 'Existing Condition Modeling', 'As-Built Verification'],
+      tools: [['Leica Cyclone', 'Faro Scene'], ['Recap Pro', 'CloudCompare']]
+    },
+    'digital-twin-asset-lifecycle': {
+      title: 'Digital Twin & Asset Lifecycle',
+      description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
+      bulletsTitle: 'Key Scope & Deliverables Include:',
+      bullets: ['Digital Twin', 'BIM Integration', 'GIS', 'CAFM / IWMS', 'CMMS', 'BAS / BMS', 'ERP', 'EDMS', 'Asset Information Management'],
+      tools: [['Autodesk Tandem', 'Bentley iTwin'], ['Maximo', 'ArcGIS']]
+    },
+    'sustainability-consultancy': {
+      title: 'Sustainability Consultancy',
+      description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
+      bulletsTitle: 'Key Scope & Deliverables Include:',
+      bullets: ['GSAS', 'LEED', 'Energy Audits', 'Green Building Gap Analysis', 'Carbon Footprint Management', 'ISO 14064', 'Environmental Consultancy'],
+      tools: [['eQUEST', 'EnergyPlus'], ['IES VE', 'One Click LCA']]
+    },
+    'remote-construction-solutions': {
+      title: 'Remote Construction Solutions',
+      description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
+      bulletsTitle: 'Key Scope & Deliverables Include:',
+      bullets: ['Remote Site Support', 'AR Solutions', '360° Site Documentation', 'Remote Inspection', 'Digital Collaboration', 'Robotic Integration'],
+      tools: [['OpenSpace 360', 'Matterport'], ['HoloLens AR', 'Procore Remote']]
+    }
+  };
+
   // Convert dynamicServices database list to map structure
-  const resolvedServiceDetailsMap = {};
+  const resolvedServiceDetailsMap = { ...staticServiceDetailsMap };
   dynamicServices.forEach(s => {
     let bulletsParsed = [];
     let toolsParsed = null;
@@ -231,17 +277,25 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     } catch (e) {
       console.error('Error parsing bullets/tools in ServicesPage:', e);
     }
-    resolvedServiceDetailsMap[s.title] = {
+    const itemData = {
+      title: s.title,
       description: s.description,
       bulletsTitle: 'Key Scope & Deliverables Include:',
       bullets: bulletsParsed,
       tools: toolsParsed,
       banner_image: s.banner_image || ''
     };
+    resolvedServiceDetailsMap[s.title] = itemData;
+    if (s.slug) resolvedServiceDetailsMap[s.slug] = itemData;
+    resolvedServiceDetailsMap[s.category] = itemData;
   });
 
-  const serviceDetailsMap = dynamicServices.length > 0 ? resolvedServiceDetailsMap : staticServiceDetailsMap;
-  const selectedDetails = serviceDetailsMap[currentServiceTitle];
+  const selectedDetails = resolvedServiceDetailsMap[activeSubTab] 
+    || coreServiceMap[activeSubTab] 
+    || Object.values(coreServiceMap).find(c => c.title.toLowerCase() === (activeSubTab || '').toLowerCase())
+    || resolvedServiceDetailsMap[currentServiceTitle] 
+    || staticServiceDetailsMap[currentServiceTitle]
+    || coreServiceMap['cad-engineering-documentation'];
 
   // Resolve banner image dynamically
   const getBannerForService = (title) => {

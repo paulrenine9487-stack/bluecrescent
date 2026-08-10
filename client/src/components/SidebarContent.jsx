@@ -36,7 +36,7 @@ export default function SidebarContent({ onOpenModal }) {
     return () => { isMounted = false; };
   }, []);
 
-  // Map API news or use mock items that match the screenshot layout exactly
+  // Map API news or use mock items
   const displayNews = news.length > 0 ? news.map((item, idx) => {
     const categories = ['PROJECTS', 'NEWS', 'AWARDS'];
     const images = ['/project1.png', '/sust_workshop.png', '/simulation.png'];
@@ -75,7 +75,7 @@ export default function SidebarContent({ onOpenModal }) {
             <h2 className="news-main-heading">Latest News</h2>
             <div className="why-bce-divider-line" style={{ margin: '16px 0 24px 0' }}></div>
             <p className="news-desc-para">
-              Discover our latest achievements, announcements, and updates from Blue Crescent Engineering.
+              Stay updated with our latest achievements, project developments, technology initiatives and company announcements.
             </p>
           </div>
           <div className="news-header-right">
@@ -125,6 +125,9 @@ export default function SidebarContent({ onOpenModal }) {
         <div className="testimonials-header-row" style={{ marginBottom: '32px' }}>
           <h2 className="news-main-heading">What Our Clients Say</h2>
           <div className="why-bce-divider-line" style={{ margin: '16px 0 24px 0' }}></div>
+          <p className="news-desc-para" style={{ maxWidth: '780px' }}>
+            Hear from clients and partners who have experienced our engineering, digital transformation and sustainability solutions.
+          </p>
         </div>
 
         {/* Content grid */}
@@ -169,7 +172,7 @@ export default function SidebarContent({ onOpenModal }) {
                   <div className="testimonial-author-wrapper">
                     <div className="author-avatar">
                       <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                       </svg>
                     </div>
                     <div className="premium-testimonial-author">
@@ -189,8 +192,6 @@ export default function SidebarContent({ onOpenModal }) {
             </div>
           </div>
         </div>
-
-
       </section>
     </div>
   );

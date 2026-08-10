@@ -1,15 +1,76 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Briefcase } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Briefcase, ArrowRight, Building2, Compass, Radio, Layers, Leaf, Cpu } from 'lucide-react';
 
-const FALLBACK_PROJECT_IMAGES = [
-  'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1590069261209-f8e9b8642343?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=600&q=80'
+const CATEGORIES = [
+  'ALL',
+  'ENGINEERING & BIM',
+  'DIGITAL TWIN',
+  'REALITY CAPTURE',
+  'SUSTAINABILITY',
+  'REMOTE CONSTRUCTION',
+  'INFRASTRUCTURE'
+];
+
+const FALLBACK_PROJECTS = [
+  {
+    id: 'p1',
+    name: 'Advanced BIM Coordination & MEP Engineering',
+    division_type: 'ENGINEERING & BIM',
+    icon: 'Building2',
+    description: 'Advanced engineering, BIM coordination and digital construction solutions for complex building and infrastructure projects.',
+    project_count: 24,
+    image: '/project1.png'
+  },
+  {
+    id: 'p2',
+    name: 'Integrated Life Cycle Digital Twin Platform',
+    division_type: 'DIGITAL TWIN',
+    icon: 'Compass',
+    description: 'Connected digital asset solutions supporting smarter operations, monitoring and asset lifecycle management.',
+    project_count: 15,
+    image: '/why.png'
+  },
+  {
+    id: 'p3',
+    name: '3D Laser Scanning & Scan-to-BIM As-Built Verification',
+    division_type: 'REALITY CAPTURE',
+    icon: 'Radio',
+    description: 'Reality capture and point-cloud processing solutions for accurate existing-condition documentation and Scan-to-BIM workflows.',
+    project_count: 18,
+    image: '/simulation.png'
+  },
+  {
+    id: 'p4',
+    name: 'GSAS & LEED Sustainable Building Certification',
+    division_type: 'SUSTAINABILITY',
+    icon: 'Leaf',
+    description: 'Sustainable engineering solutions supporting energy efficiency, environmental performance and internationally recognized sustainability objectives.',
+    project_count: 12,
+    image: '/sust_workshop.png'
+  },
+  {
+    id: 'p5',
+    name: 'Remote Construction Site Documentation & Inspection',
+    division_type: 'REMOTE CONSTRUCTION',
+    icon: 'Cpu',
+    description: 'Digital technologies connecting project teams, sites and technical specialists for improved collaboration, inspection and decision-making.',
+    project_count: 9,
+    image: '/eng_tower.png'
+  },
+  {
+    id: 'p6',
+    name: 'Major Infrastructure & Transportation Engineering',
+    division_type: 'INFRASTRUCTURE',
+    icon: 'Layers',
+    description: 'Engineering and digital solutions supporting complex infrastructure, transportation, utilities and large-scale development projects.',
+    project_count: 20,
+    image: '/eng_stadium.png'
+  }
 ];
 
 export default function ProjectsSlider({ onNavigate }) {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(FALLBACK_PROJECTS);
+  const [activeCategory, setActiveCategory] = useState('ALL');
   const [startIndex, setStartIndex] = useState(0);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -21,15 +82,24 @@ export default function ProjectsSlider({ onNavigate }) {
 
   useEffect(() => {
     fetch('/api/projects')
-      .then(res => res.ok ? res.json() : [])
+      .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data.length > 0) {
-          // Only show Active projects
-          setProjects(data.filter(p => p.status !== 'Inactive'));
+          const activeProjects = data.filter(p => p.status !== 'Inactive');
+          if (activeProjects.length > 0) {
+            setProjects(activeProjects);
+          }
         }
       })
       .catch(err => console.warn('Projects slider fetch warning:', err));
   }, []);
+
+  // Filter projects by active category
+  const filteredProjects = activeCategory === 'ALL'
+    ? projects
+    : projects.filter(p => (p.division_type || '').toUpperCase().includes(activeCategory) || activeCategory.includes((p.division_type || '').toUpperCase()));
+
+  const displayProjects = filteredProjects.length > 0 ? filteredProjects : projects;
 
   const getCardsToShow = () => {
     if (windowWidth < 640) return 1;
@@ -39,216 +109,299 @@ export default function ProjectsSlider({ onNavigate }) {
 
   const cardsToShow = getCardsToShow();
 
-  if (projects.length === 0) return null;
-
   const handlePrev = () => {
     setStartIndex((prev) => (prev > 0 ? prev - 1 : 0));
   };
 
   const handleNext = () => {
-    setStartIndex((prev) => (prev < projects.length - cardsToShow ? prev + 1 : prev));
+    setStartIndex((prev) => (prev < displayProjects.length - cardsToShow ? prev + 1 : prev));
+  };
+
+  const getCategoryIcon = (divType) => {
+    const upper = (divType || '').toUpperCase();
+    if (upper.includes('BIM') || upper.includes('ENGINEERING')) return <Building2 size={20} color="#FFFFFF" />;
+    if (upper.includes('TWIN')) return <Compass size={20} color="#FFFFFF" />;
+    if (upper.includes('REALITY') || upper.includes('SCAN')) return <Radio size={20} color="#FFFFFF" />;
+    if (upper.includes('SUSTAINABILITY')) return <Leaf size={20} color="#FFFFFF" />;
+    if (upper.includes('REMOTE')) return <Cpu size={20} color="#FFFFFF" />;
+    return <Layers size={20} color="#FFFFFF" />;
   };
 
   return (
-    <section className="what-we-do-section" style={{ marginTop: '48px', marginBottom: '80px' }}>
-      <div className="what-we-do-header">
-        <div className="what-we-do-title-wrap">
-          <h2 className="what-we-do-title" style={{ color: '#0B1F3A' }}>Our Projects</h2>
-          <div className="title-underline-yellow" style={{ background: '#00A198', boxShadow: '0 0 10px #00A198' }}></div>
+    <section 
+      className="projects-section-staggered" 
+      style={{ 
+        marginTop: '64px', 
+        marginBottom: '100px',
+        background: 'linear-gradient(180deg, #F0F7FF 0%, #E6F0FA 100%)',
+        padding: '50px 24px 60px 24px',
+        borderRadius: '32px',
+        border: '1px solid #BAE6FD'
+      }}
+    >
+      <div className="projects-container-inner">
+        {/* Centered Section Header */}
+        <div className="projects-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '36px', padding: '0 100px' }}>
+          <h2 style={{ margin: '0 0 10px 0', color: '#063B73', fontSize: '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
+            Our Projects
+          </h2>
+          <div style={{ width: '48px', height: '4px', background: 'linear-gradient(90deg, #087CFF, #00B8FF)', borderRadius: '2px', margin: '0 auto 14px auto' }} />
+          <p style={{ margin: '0 auto', maxWidth: '760px', color: '#475569', fontSize: '15px', lineHeight: 1.6, fontWeight: '400' }}>
+            Explore our engineering, BIM coordination, digital twin, and sustainability portfolio across key industry sectors.
+          </p>
+
+          {/* Navigation Controls */}
+          {displayProjects.length > cardsToShow && (
+            <div className="carousel-nav-arrows" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '10px' }}>
+              <button
+                className="carousel-arrow-btn"
+                onClick={handlePrev}
+                disabled={startIndex === 0}
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  border: '1px solid rgba(6, 59, 115, 0.2)',
+                  color: '#063B73',
+                  background: startIndex === 0 ? 'rgba(0,0,0,0.02)' : '#FFFFFF',
+                  opacity: startIndex === 0 ? 0.4 : 1,
+                  cursor: startIndex === 0 ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)'
+                }}
+                aria-label="Previous projects"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                className="carousel-arrow-btn"
+                onClick={handleNext}
+                disabled={startIndex >= displayProjects.length - cardsToShow}
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  border: '1px solid rgba(6, 59, 115, 0.2)',
+                  color: '#063B73',
+                  background: startIndex >= displayProjects.length - cardsToShow ? 'rgba(0,0,0,0.02)' : '#FFFFFF',
+                  opacity: startIndex >= displayProjects.length - cardsToShow ? 0.4 : 1,
+                  cursor: startIndex >= displayProjects.length - cardsToShow ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)'
+                }}
+                aria-label="Next projects"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
 
-        {projects.length > cardsToShow && (
-          <div className="carousel-nav-arrows">
-            <button 
-              className="carousel-arrow-btn" 
-              onClick={handlePrev} 
-              disabled={startIndex === 0}
-              style={{
-                borderColor: 'rgba(11, 31, 58, 0.2)',
-                color: '#0B1F3A',
-                background: startIndex === 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
-                opacity: startIndex === 0 ? 0.4 : 1
-              }}
-              aria-label="Previous projects"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button 
-              className="carousel-arrow-btn" 
-              onClick={handleNext}
-              disabled={startIndex >= projects.length - cardsToShow}
-              style={{
-                borderColor: 'rgba(11, 31, 58, 0.2)',
-                color: '#0B1F3A',
-                background: startIndex >= projects.length - cardsToShow ? 'rgba(0,0,0,0.02)' : 'transparent',
-                opacity: startIndex >= projects.length - cardsToShow ? 0.4 : 1
-              }}
-              aria-label="Next projects"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Viewport for slider */}
-      <div style={{ width: '100%', overflow: 'hidden', padding: '12px 4px' }}>
-        <div 
+        {/* 6 Category Pill Filter Bar */}
+        <div
+          className="projects-category-tab-bar"
           style={{
             display: 'flex',
-            transform: `translateX(-${startIndex * (100 / cardsToShow)}%)`,
-            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            gap: '24px'
+            justifyContent: 'center',
+            gap: '8px',
+            overflowX: 'auto',
+            paddingBottom: '12px',
+            marginBottom: '40px',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none'
           }}
         >
-          {projects.map((project, idx) => {
-            const projectImg = project.image || FALLBACK_PROJECT_IMAGES[idx % FALLBACK_PROJECT_IMAGES.length];
-            return (
-              <div 
-                key={project.id || idx}
-                className="card-item"
-                style={{
-                  flex: `0 0 calc(${100 / cardsToShow}% - ${(24 * (cardsToShow - 1)) / cardsToShow}px)`,
-                  boxSizing: 'border-box',
-                  background: '#FFFFFF',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(11, 31, 58, 0.08)',
-                  boxShadow: '0 4px 20px rgba(11, 31, 58, 0.04)',
-                  padding: '24px',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 161, 152, 0.15)';
-                  e.currentTarget.style.borderColor = '#00A198';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(11, 31, 58, 0.04)';
-                  e.currentTarget.style.borderColor = 'rgba(11, 31, 58, 0.08)';
-                }}
-                onClick={() => {
-                  if (onNavigate) {
-                    onNavigate('Projects', project.division_type);
-                  }
-                }}
-              >
-                {/* Image */}
-                <div 
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => {
+                setActiveCategory(cat);
+                setStartIndex(0);
+              }}
+              style={{
+                padding: '9px 18px',
+                borderRadius: '20px',
+                border: activeCategory === cat ? '1px solid #087CFF' : '1px solid rgba(6, 59, 115, 0.12)',
+                background: activeCategory === cat ? '#087CFF' : '#FFFFFF',
+                color: activeCategory === cat ? '#FFFFFF' : '#475569',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.25s ease',
+                flexShrink: 0,
+                boxShadow: activeCategory === cat ? '0 4px 14px rgba(8, 124, 255, 0.25)' : 'none'
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Alternating Staggered Cards Track */}
+        <div style={{ width: '100%', overflow: 'hidden', padding: '16px 4px 24px 4px' }}>
+          <div
+            style={{
+              display: 'flex',
+              transform: `translateX(-${startIndex * (100 / cardsToShow)}%)`,
+              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              gap: '24px',
+              alignItems: 'flex-start'
+            }}
+          >
+            {displayProjects.map((project, idx) => {
+              const isStaggered = idx % 2 === 1; // Alternating card offset
+              return (
+                <div
+                  key={project.id || idx}
+                  className="staggered-project-card"
                   style={{
-                    width: '100%',
-                    height: '190px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    marginBottom: '18px',
-                    position: 'relative',
-                    background: '#0B1F3A'
+                    flex: `0 0 calc(${100 / cardsToShow}% - ${(24 * (cardsToShow - 1)) / cardsToShow}px)`,
+                    boxSizing: 'border-box',
+                    background: '#FFFFFF',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(6, 59, 115, 0.1)',
+                    boxShadow: '0 8px 30px rgba(6, 59, 115, 0.06)',
+                    padding: '16px 16px 24px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                    cursor: 'pointer',
+                    minHeight: '350px',
+                    marginTop: isStaggered ? '36px' : '0px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = isStaggered ? 'translateY(28px)' : 'translateY(-8px)';
+                    e.currentTarget.style.boxShadow = '0 20px 44px rgba(8, 124, 255, 0.16)';
+                    e.currentTarget.style.borderColor = '#087CFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(6, 59, 115, 0.06)';
+                    e.currentTarget.style.borderColor = 'rgba(6, 59, 115, 0.1)';
+                  }}
+                  onClick={() => {
+                    if (onNavigate) {
+                      onNavigate('Projects', project.division_type);
+                    }
                   }}
                 >
-                  <img 
-                    src={projectImg} 
-                    alt={project.name} 
+                  <div>
+                    {/* Image Thumbnail Block with Top-Left Icon Badge */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '230px',
+                        borderRadius: '18px',
+                        overflow: 'hidden',
+                        marginBottom: '20px',
+                        position: 'relative',
+                        background: '#F8FAFC'
+                      }}
+                    >
+                      <img
+                        src={project.image || '/project1.png'}
+                        alt={project.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'transform 0.5s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.08)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      />
+
+                      {/* Top-Left Green Icon Badge */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '12px',
+                          background: '#22C55E',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+                          border: '2px solid #FFFFFF'
+                        }}
+                      >
+                        {getCategoryIcon(project.division_type)}
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h4
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: '20px',
+                        fontWeight: '800',
+                        color: '#063B73',
+                        margin: '0 0 10px 0',
+                        lineHeight: 1.35,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        minHeight: '52px'
+                      }}
+                    >
+                      {project.name}
+                    </h4>
+
+                  </div>
+
+                  {/* Card Footer */}
+                  <div
                     style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      transition: 'transform 0.5s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.08)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  />
-                  <div 
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      left: '12px',
-                      background: 'rgba(11, 31, 58, 0.85)',
-                      backdropFilter: 'blur(4px)',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      color: '#FFFFFF',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderTop: '1px solid rgba(6, 59, 115, 0.08)',
+                      paddingTop: '16px'
                     }}
                   >
-                    {project.division_type}
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: '#22C55E',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Briefcase size={15} color="#22C55E" />
+                      {project.project_count || 12}+ Projects
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '12.5px',
+                        fontWeight: '800',
+                        color: '#063B73',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        letterSpacing: '0.3px'
+                      }}
+                    >
+                      VIEW DETAILS <ArrowRight size={14} color="#087CFF" />
+                    </span>
                   </div>
                 </div>
-
-                {/* Content */}
-                <h4 
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: '800',
-                    color: '#0B1F3A',
-                    margin: '0 0 8px 0',
-                    lineHeight: 1.4,
-                    minHeight: '50px',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {project.name}
-                </h4>
-
-                <p 
-                  style={{
-                    fontSize: '13.5px',
-                    color: '#475569',
-                    margin: '0 0 20px 0',
-                    lineHeight: 1.6,
-                    height: '64px',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {project.description || 'Professional design development and MEP engineering works for GCC building topologies.'}
-                </p>
-
-                <div 
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: 'auto',
-                    borderTop: '1px solid rgba(11, 31, 58, 0.06)',
-                    paddingTop: '16px'
-                  }}
-                >
-                  <span 
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: '700',
-                      color: '#00A198',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <Briefcase size={14} />
-                    {project.project_count}+ Projects
-                  </span>
-                  <span 
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: '850',
-                      color: '#0B1F3A',
-                      letterSpacing: '0.5px'
-                    }}
-                  >
-                    VIEW DETAILS →
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

@@ -165,18 +165,50 @@ async function initDB() {
       );
     `);
 
-    // 7. Services Table
+    // 7a. Service Categories Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS service_categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        short_description TEXT,
+        icon VARCHAR(100),
+        display_order INT DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'Active',
+        featured TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 7b. Services Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS services (
         id INT AUTO_INCREMENT PRIMARY KEY,
         category VARCHAR(100) NOT NULL,
         title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255),
         description TEXT,
         bullets TEXT, -- JSON Array
         tools TEXT, -- JSON Array
-        banner_image LONGTEXT
+        banner_image LONGTEXT,
+        display_order INT DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'Active',
+        featured TINYINT(1) DEFAULT 1,
+        seo_title VARCHAR(255),
+        seo_description TEXT,
+        seo_keywords TEXT
       );
     `);
+
+    try { await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN slug VARCHAR(255);`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN display_order INT DEFAULT 0;`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN status VARCHAR(50) DEFAULT 'Active';`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN featured TINYINT(1) DEFAULT 1;`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_title VARCHAR(255);`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_description TEXT;`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_keywords TEXT;`); } catch (e) {}
 
     // 8. Hero Slides Table
     await pool.query(`
@@ -259,7 +291,15 @@ async function initDB() {
         value5Desc TEXT,
         aboutUsVideoUrl LONGTEXT,
         aboutUsHeroType VARCHAR(50),
-        aboutUsHeroUrl LONGTEXT
+        aboutUsHeroUrl LONGTEXT,
+        aboutUsMapImg LONGTEXT,
+        aboutUsCapaImg LONGTEXT,
+        aboutUsDigitalImg LONGTEXT,
+        aboutUsFlowchartBg VARCHAR(50) DEFAULT '#F1F7FF',
+        aboutUsCountriesJson LONGTEXT,
+        aboutUsDisciplinesJson LONGTEXT,
+        aboutUsFlowchartJson LONGTEXT,
+        aboutUsCapabilitiesJson LONGTEXT
       );
     `);
 
@@ -328,6 +368,64 @@ async function initDB() {
       console.log('Altering company_settings columns to LONGTEXT...');
       await pool.query("ALTER TABLE company_settings MODIFY COLUMN aboutUsHeroUrl LONGTEXT");
       await pool.query("ALTER TABLE company_settings MODIFY COLUMN aboutUsVideoUrl LONGTEXT");
+      
+      // Dynamic columns for new customizable backgrounds
+      try {
+        await pool.query("SELECT aboutUsMapImg FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsMapImg column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsMapImg LONGTEXT");
+      }
+      
+      try {
+        await pool.query("SELECT aboutUsCapaImg FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsCapaImg column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsCapaImg LONGTEXT");
+      }
+      
+      try {
+        await pool.query("SELECT aboutUsDigitalImg FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsDigitalImg column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsDigitalImg LONGTEXT");
+      }
+      
+      try {
+        await pool.query("SELECT aboutUsFlowchartBg FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsFlowchartBg column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsFlowchartBg VARCHAR(50) DEFAULT '#F1F7FF'");
+      }
+
+      // Add columns for CRUD lists stored as JSON
+      try {
+        await pool.query("SELECT aboutUsCountriesJson FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsCountriesJson column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsCountriesJson LONGTEXT");
+      }
+
+      try {
+        await pool.query("SELECT aboutUsDisciplinesJson FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsDisciplinesJson column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsDisciplinesJson LONGTEXT");
+      }
+
+      try {
+        await pool.query("SELECT aboutUsFlowchartJson FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsFlowchartJson column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsFlowchartJson LONGTEXT");
+      }
+
+      try {
+        await pool.query("SELECT aboutUsCapabilitiesJson FROM company_settings LIMIT 1");
+      } catch (e) {
+        console.log('Adding aboutUsCapabilitiesJson column to company_settings...');
+        await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsCapabilitiesJson LONGTEXT");
+      }
     } catch (err) {
       console.warn('Altering company_settings columns warning:', err.message);
     }
@@ -610,6 +708,156 @@ async function initDB() {
       }
     }
 
+    // Seed 6 Core Service Categories & Services (Safe Migration)
+    const coreCategories = [
+      {
+        name: 'CAD & Engineering Documentation',
+        slug: 'cad-engineering-documentation',
+        short_description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
+        icon: 'Building2',
+        display_order: 1,
+        status: 'Active',
+        featured: 1,
+        services: [
+          {
+            title: 'CAD & Engineering Documentation',
+            slug: 'cad-engineering-documentation',
+            description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
+            sub_services: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'],
+            banner_image: '/servicepage1.png'
+          }
+        ]
+      },
+      {
+        name: 'BIM & Digital Construction',
+        slug: 'bim-digital-construction',
+        short_description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
+        icon: 'Compass',
+        display_order: 2,
+        status: 'Active',
+        featured: 1,
+        services: [
+          {
+            title: 'BIM & Digital Construction',
+            slug: 'bim-digital-construction',
+            description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
+            sub_services: ['3D BIM', '4D / 5D', 'Architectural BIM', 'Structural BIM', 'MEP BIM', 'Infrastructure BIM', 'Clash Coordination', 'COBie', 'As-Built BIM'],
+            banner_image: '/servicepage1.png'
+          }
+        ]
+      },
+      {
+        name: 'Laser Scanning & Reality Capture',
+        slug: 'laser-scanning-reality-capture',
+        short_description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
+        icon: 'Radio',
+        display_order: 3,
+        status: 'Active',
+        featured: 1,
+        services: [
+          {
+            title: 'Laser Scanning & Reality Capture',
+            slug: 'laser-scanning-reality-capture',
+            description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
+            sub_services: ['3D Laser Scanning', 'Point Cloud Processing', 'Scan-to-BIM', 'Existing Condition Modeling', 'As-Built Verification'],
+            banner_image: '/servicepage1.png'
+          }
+        ]
+      },
+      {
+        name: 'Digital Twin & Asset Lifecycle',
+        slug: 'digital-twin-asset-lifecycle',
+        short_description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
+        icon: 'Layers',
+        display_order: 4,
+        status: 'Active',
+        featured: 1,
+        services: [
+          {
+            title: 'Digital Twin & Asset Lifecycle',
+            slug: 'digital-twin-asset-lifecycle',
+            description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
+            sub_services: ['Digital Twin', 'BIM Integration', 'GIS', 'CAFM / IWMS', 'CMMS', 'BAS / BMS', 'ERP', 'EDMS', 'Asset Information Management'],
+            banner_image: '/servicepage1.png'
+          }
+        ]
+      },
+      {
+        name: 'Sustainability Consultancy',
+        slug: 'sustainability-consultancy',
+        short_description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
+        icon: 'Leaf',
+        display_order: 5,
+        status: 'Active',
+        featured: 1,
+        services: [
+          {
+            title: 'Sustainability Consultancy',
+            slug: 'sustainability-consultancy',
+            description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
+            sub_services: ['GSAS', 'LEED', 'Energy Audits', 'Green Building Gap Analysis', 'Carbon Footprint Management', 'ISO 14064', 'Environmental Consultancy'],
+            banner_image: '/servicepage1.png'
+          }
+        ]
+      },
+      {
+        name: 'Remote Construction Solutions',
+        slug: 'remote-construction-solutions',
+        short_description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
+        icon: 'Cpu',
+        display_order: 6,
+        status: 'Active',
+        featured: 1,
+        services: [
+          {
+            title: 'Remote Construction Solutions',
+            slug: 'remote-construction-solutions',
+            description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
+            sub_services: ['Remote Site Support', 'AR Solutions', '360° Site Documentation', 'Remote Inspection', 'Digital Collaboration', 'Robotic Integration'],
+            banner_image: '/servicepage1.png'
+          }
+        ]
+      }
+    ];
+
+    for (const cat of coreCategories) {
+      const [existingCat] = await pool.query('SELECT id FROM service_categories WHERE slug = ?', [cat.slug]);
+      if (existingCat.length === 0) {
+        await pool.query(
+          'INSERT INTO service_categories (name, slug, short_description, icon, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [cat.name, cat.slug, cat.short_description, cat.icon, cat.display_order, cat.status, cat.featured]
+        );
+      } else {
+        await pool.query(
+          'UPDATE service_categories SET name = ?, short_description = ?, icon = ?, display_order = ?, status = ? WHERE slug = ?',
+          [cat.name, cat.short_description, cat.icon, cat.display_order, cat.status, cat.slug]
+        );
+      }
+
+      for (const s of cat.services) {
+        let existingSvc = [];
+        try {
+          const [res] = await pool.query('SELECT id FROM services WHERE slug = ? OR (category = ? AND title = ?)', [s.slug, cat.name, s.title]);
+          existingSvc = res;
+        } catch (e) {
+          const [res] = await pool.query('SELECT id FROM services WHERE category = ? AND title = ?', [cat.name, s.title]);
+          existingSvc = res;
+        }
+        const bulletsJson = JSON.stringify(s.sub_services);
+        if (existingSvc.length === 0) {
+          await pool.query(
+            'INSERT INTO services (category, title, slug, description, bullets, banner_image, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [cat.name, s.title, s.slug, s.description, bulletsJson, s.banner_image, cat.display_order, 'Active', 1]
+          );
+        } else {
+          await pool.query(
+            'UPDATE services SET category = ?, title = ?, slug = ?, description = ?, bullets = ?, display_order = ?, status = ? WHERE id = ?',
+            [cat.name, s.title, s.slug, s.description, bulletsJson, cat.display_order, 'Active', existingSvc[0].id]
+          );
+        }
+      }
+    }
+
     // Seed Services
     const [servicesRows] = await pool.query('SELECT COUNT(*) as count FROM services');
     if (servicesRows[0].count === 0) {
@@ -837,11 +1085,7 @@ async function initDB() {
       console.log('Seeding hero slides...');
       await pool.query(`
         INSERT INTO hero_slides (title, subtitle, btn1_text, btn2_text, image, status, order_num) VALUES 
-        ('Engineering Excellence, Building a Better Tomorrow.', 'Blue Crescent Engineering delivers innovative, sustainable and reliable engineering solutions across the globe.', 'Explore Our Services', 'Get a Consultation', NULL, 'published', 1),
-        ('Innovative Solutions For Complex Challenges', 'We combine technology, expertise and commitment to deliver outstanding results.', 'Our Services', 'View Projects', '/simulation.png', 'published', 2),
-        ('Building Today. Sustaining Tomorrow.', 'Committed to quality, safety and sustainability in every project we deliver.', 'View Projects', 'Contact Us', '/why.png', 'published', 3),
-        ('Global Presence. Trusted by Partners Worldwide.', 'Delivering engineering excellence in 25+ countries with 500+ successful projects.', 'About Us', 'Get In Touch', '/aerial_city_hero.png', 'draft', 4),
-        ('Shaping Infrastructure. Improving Lives.', 'From concept to completion, we build infrastructure that makes a lasting impact.', 'Our Work', 'Contact Us', '/eng_tower.png', 'published', 5)
+        ('Engineering the Digital Future.', 'Blue Crescent Engineering delivers technology-driven engineering and digital transformation solutions across the complete lifecycle of buildings and infrastructure.', 'EXPLORE OUR SERVICES', 'VIEW OUR PROJECTS', NULL, 'published', 1)
       `);
     }
 
@@ -894,6 +1138,15 @@ async function initDB() {
           'Innovation', 'Pioneering green technology and sustainable design.',
           '/aboutus.mp4', 'image', ''
         )
+      `);
+    } else {
+      // Force update Why Partner section to exact original content
+      await pool.query(`
+        UPDATE company_settings SET 
+          whyIntro1 = 'Guided by the best team leaders, supported by skilled staff, corporate commitment to deliver the services at their best quality while controlling the costs and time components.',
+          whyIntro2 = 'Solutions are provided in various options and supported with recommendations that best suit the Clients requirements.',
+          whyIntro3 = 'Supported by team of specialists in the areas of MEP design, Acoustics, Stress and Hydraulics, all engineering calculations.',
+          whyIntro4 = 'Services are applicable for Owners, Designers, Contractors and Operators.'
       `);
     }
 

@@ -1,189 +1,474 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, Building2, Compass, Radio, Layers, Leaf, Cpu } from 'lucide-react';
+
+const FALLBACK_CATEGORIES = [
+  {
+    id: 1,
+    num: '01',
+    name: 'CAD & Engineering Documentation',
+    slug: 'cad-engineering-documentation',
+    icon: 'Building2',
+    bgLight: '#F0F7FF',
+    border: '1px solid #BAE6FD',
+    accent: '#087CFF',
+    titleColor: '#063B73',
+    textColor: '#1E293B',
+    iconBg: '#E0F2FE',
+    description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
+    subServices: [
+      '2D Drafting',
+      'Shop Drawings',
+      'As-Built Documentation',
+      'Engineering Coordination'
+    ]
+  },
+  {
+    id: 2,
+    num: '02',
+    name: 'BIM & Digital Construction',
+    slug: 'bim-digital-construction',
+    icon: 'Layers',
+    bgLight: '#FFF1F2',
+    border: '1px solid #FECDD3',
+    accent: '#E11D48',
+    titleColor: '#881337',
+    textColor: '#1E293B',
+    iconBg: '#FFE4E6',
+    description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
+    subServices: [
+      '3D BIM',
+      '4D / 5D',
+      'Architectural BIM',
+      'Structural BIM',
+      'MEP BIM',
+      'Infrastructure BIM',
+      'Clash Coordination',
+      'COBie',
+      'As-Built BIM'
+    ]
+  },
+  {
+    id: 3,
+    num: '03',
+    name: 'Laser Scanning & Reality Capture',
+    slug: 'laser-scanning-reality-capture',
+    icon: 'Radio',
+    bgLight: '#F0FDF4',
+    border: '1px solid #99F6E4',
+    accent: '#0D9488',
+    titleColor: '#134E4A',
+    textColor: '#1E293B',
+    iconBg: '#CCFBF1',
+    description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
+    subServices: [
+      '3D Laser Scanning',
+      'Point Cloud Processing',
+      'Scan-to-BIM',
+      'Existing Condition Modeling',
+      'As-Built Verification'
+    ]
+  },
+  {
+    id: 4,
+    num: '04',
+    name: 'Digital Twin & Asset Lifecycle',
+    slug: 'digital-twin-asset-lifecycle',
+    icon: 'Compass',
+    bgLight: '#FFF1F2',
+    border: '1px solid #FECDD3',
+    accent: '#E11D48',
+    titleColor: '#881337',
+    textColor: '#1E293B',
+    iconBg: '#FFE4E6',
+    description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
+    subServices: [
+      'Digital Twin',
+      'BIM Integration',
+      'GIS',
+      'CAFM / IWMS',
+      'CMMS',
+      'BAS / BMS',
+      'ERP',
+      'EDMS',
+      'Asset Information Management'
+    ]
+  },
+  {
+    id: 5,
+    num: '05',
+    name: 'Sustainability Consultancy',
+    slug: 'sustainability-consultancy',
+    icon: 'Leaf',
+    bgLight: '#F0FDF4',
+    border: '1px solid #BBF7D0',
+    accent: '#16A34A',
+    titleColor: '#064E3B',
+    textColor: '#1E293B',
+    iconBg: '#DCFCE7',
+    description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
+    subServices: [
+      'GSAS',
+      'LEED',
+      'Energy Audits',
+      'Green Building Gap Analysis',
+      'Carbon Footprint Management',
+      'ISO 14064',
+      'Environmental Consultancy'
+    ]
+  },
+  {
+    id: 6,
+    num: '06',
+    name: 'Remote Construction Solutions',
+    slug: 'remote-construction-solutions',
+    icon: 'Cpu',
+    bgLight: '#FFFBEB',
+    border: '1px solid #FDE68A',
+    accent: '#D97706',
+    titleColor: '#78350F',
+    textColor: '#1E293B',
+    iconBg: '#FEF3C7',
+    description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
+    subServices: [
+      'Remote Site Support',
+      'AR Solutions',
+      '360° Site Documentation',
+      'Remote Inspection',
+      'Digital Collaboration',
+      'Robotic Integration'
+    ]
+  }
+];
 
 export default function ServicesList({ onNavigate }) {
-  const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+  const [startIndex, setStartIndex] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
-    fetch('/api/services')
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/service-categories')
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (data && data.length > 0) {
-          // Exclude any obsolete Telecom services just in case, focusing on our main 3 categories
-          setServices(data.filter(s => !s.category.toLowerCase().includes('telecom')));
+          const activeData = data.filter(c => c.status !== 'Inactive');
+          if (activeData.length > 0) {
+            setCategories(activeData.map((cat, idx) => {
+              const numStr = (idx + 1).toString().padStart(2, '0');
+              const fallback = FALLBACK_CATEGORIES.find(f => f.slug === cat.slug) || FALLBACK_CATEGORIES[idx % FALLBACK_CATEGORIES.length];
+              return {
+                id: cat.id || idx + 1,
+                num: numStr,
+                name: cat.name,
+                slug: cat.slug,
+                icon: cat.icon || fallback.icon,
+                bgLight: fallback.bgLight,
+                border: fallback.border,
+                accent: fallback.accent,
+                titleColor: fallback.titleColor,
+                textColor: fallback.textColor,
+                iconBg: fallback.iconBg,
+                description: cat.short_description || fallback.description,
+                subServices: fallback.subServices
+              };
+            }));
+          }
         }
       })
-      .catch(err => console.warn('Home services fetch warning:', err));
+      .catch(err => console.warn('Categories fetch warning:', err));
   }, []);
 
-  // Group by category
-  const categoryGroups = {};
-  if (services.length > 0) {
-    const filteredServices = services
-      .filter(s => !['Engineering Design support Services', 'Specialised Simulation & Analysis', 'BIM Modelling - 3D', 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D'].includes(s.title));
-      
-    filteredServices.forEach(s => {
-      if (!categoryGroups[s.category]) {
-        categoryGroups[s.category] = [];
-      }
-      categoryGroups[s.category].push(s.title);
-    });
-
-    // Guarantee items in Engineering Services
-    if (!categoryGroups['Engineering Services']) {
-      categoryGroups['Engineering Services'] = ['BIM Services', '2D CAD Drafting Services', 'Outsourcing Technical Experts'];
-    } else {
-      const items = categoryGroups['Engineering Services'];
-      if (!items.includes('BIM Services')) items.unshift('BIM Services');
-      if (!items.includes('2D CAD Drafting Services')) items.splice(1, 0, '2D CAD Drafting Services');
-      if (!items.includes('Outsourcing Technical Experts')) items.push('Outsourcing Technical Experts');
-      categoryGroups['Engineering Services'] = Array.from(new Set(items));
-    }
-
-    // Guarantee Digital Twin Services
-    if (!categoryGroups['Digital Twin Services']) {
-      categoryGroups['Digital Twin Services'] = [
-        'Life Cycle Twin Asset Management',
-        'Remote Work Automation',
-        'System Integration and Analysis'
-      ];
-    }
-  } else {
-    // Fallbacks
-    categoryGroups['Engineering Services'] = [
-      'BIM Services',
-      '2D CAD Drafting Services',
-      'Outsourcing Technical Experts'
-    ];
-    categoryGroups['Sustainability Services'] = [
-      'GSAS Service',
-      'LEED Consulting Services',
-      'Energy Audit and Analysis',
-      'ISO 14064 Consulting Services'
-    ];
-    categoryGroups['Digital Twin Services'] = [
-      'Life Cycle Twin Asset Management',
-      'Remote Work Automation',
-      'System Integration and Analysis'
-    ];
-  }
-
-  const getThemeClass = (catName) => {
-    const name = catName.toLowerCase();
-    if (name.includes('engineering')) return 'theme-blue';
-    if (name.includes('sustainability')) return 'theme-green';
-    if (name.includes('digital twin')) return 'theme-purple';
-    return 'theme-blue';
+  const getCardsToShow = () => {
+    if (windowWidth < 640) return 1;
+    if (windowWidth < 1024) return 2;
+    return 3;
   };
 
-  const getIconSvg = (catName) => {
-    const name = catName.toLowerCase();
-    if (name.includes('engineering')) {
-      return (
-        <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="3 3" />
-          <path d="M16 3v18" />
-          <path d="M3 15h13" />
-          <path d="M9 3v12" />
-          <path d="M3 9h6" />
-          <path d="M21 21l-4-4" />
-          <path d="M17 13l4 4" />
-        </svg>
-      );
-    }
-    if (name.includes('sustainability')) {
-      return (
-        <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 21h16" />
-          <path d="M6 21V7l7-3v17" />
-          <path d="M18 21V12l-5-2" />
-          <path d="M9 9h2" />
-          <path d="M9 13h2" />
-          <path d="M9 17h2" />
-          <path d="M12 10a4 4 0 0 1 8 0c0 3-4 6-4 6s-4-3-4-6z" />
-        </svg>
-      );
-    }
-    // Digital Twin / Telecom
-    return (
-      <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-        <line x1="8" y1="21" x2="16" y2="21" />
-        <line x1="12" y1="17" x2="12" y2="21" />
-        <rect x="6" y="6" width="4" height="4" rx="0.5" />
-        <rect x="14" y="6" width="4" height="4" rx="0.5" />
-      </svg>
-    );
+  const cardsToShow = getCardsToShow();
+
+  const handlePrev = () => {
+    setStartIndex((prev) => (prev > 0 ? prev - 1 : categories.length - cardsToShow));
   };
 
-  const handleServiceClick = (serviceName) => {
+  const handleNext = () => {
+    setStartIndex((prev) => (prev < categories.length - cardsToShow ? prev + 1 : 0));
+  };
+
+  const getCategoryIcon = (iconName, color) => {
+    switch (iconName) {
+      case 'Building2': return <Building2 size={22} color={color} />;
+      case 'Compass': return <Compass size={22} color={color} />;
+      case 'Radio': return <Radio size={22} color={color} />;
+      case 'Layers': return <Layers size={22} color={color} />;
+      case 'Leaf': return <Leaf size={22} color={color} />;
+      case 'Cpu': return <Cpu size={22} color={color} />;
+      default: return <Building2 size={22} color={color} />;
+    }
+  };
+
+  const handleExplore = (slug) => {
     if (onNavigate) {
-      onNavigate('Services', serviceName);
-    }
-  };
-
-  const handleExploreMore = (category) => {
-    if (onNavigate) {
-      // Pick first subservice or go to main category
-      const subItems = categoryGroups[category] || [];
-      onNavigate('Services', subItems[0] || category);
+      onNavigate('Services', slug);
     }
   };
 
   return (
-    <section id="services" className="services-section-premium">
+    <section id="services" className="services-section-premium" style={{ marginTop: '64px', marginBottom: '80px' }}>
       <div className="services-container-inner">
-        {/* Redesigned Header */}
-        <div className="services-header-wrap">
-          <h2 className="services-title-premium">Our Services</h2>
-          <p className="services-subtitle-premium">
-            Comprehensive solutions designed to meet your engineering and sustainability requirements.
+        {/* Section Header */}
+        <div className="services-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '40px', padding: '0 100px' }}>
+          <h2 className="services-title-premium" style={{ margin: '0 0 10px 0', color: '#063B73', fontSize: '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
+            Our Services
+          </h2>
+          <div style={{ width: '48px', height: '4px', background: 'linear-gradient(90deg, #087CFF, #00B8FF)', borderRadius: '2px', margin: '0 auto 14px auto' }} />
+          <p className="services-subtitle-premium" style={{ margin: '0 auto', maxWidth: '760px', color: '#475569', fontSize: '15px', lineHeight: 1.6, fontWeight: '400' }}>
+            Comprehensive engineering and digital transformation solutions connecting design, construction and asset lifecycle management.
           </p>
-          {/* Custom Decorator Divider */}
-          <div className="services-decorator">
-            <div className="line"></div>
-            <div className="dot-active"></div>
-            <div className="dot-inactive"></div>
-            <div className="line"></div>
+
+          <div className="carousel-nav-arrows" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '10px' }}>
+            <button
+              className="carousel-arrow-btn"
+              onClick={handlePrev}
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '50%',
+                border: '1px solid rgba(6, 59, 115, 0.2)',
+                color: '#063B73',
+                background: '#FFFFFF',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)'
+              }}
+              aria-label="Previous service"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              className="carousel-arrow-btn"
+              onClick={handleNext}
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '50%',
+                border: '1px solid rgba(6, 59, 115, 0.2)',
+                color: '#063B73',
+                background: '#FFFFFF',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)'
+              }}
+              aria-label="Next service"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
         </div>
 
-        {/* Redesigned 3-Column Card Layout */}
-        <div className="services-cards-grid">
-          {Object.keys(categoryGroups).map((catName) => (
-            <div key={catName} className={`service-card-premium ${getThemeClass(catName)}`}>
-              <div className="service-card-top-content">
-                {/* Circular Icon Container */}
-                <div className="service-icon-circle-wrap">
-                  {getIconSvg(catName)}
-                </div>
-                
-                <h3 className="service-card-heading">{catName}</h3>
-                <div className="service-card-divider"></div>
-                
-                <ul className="service-card-bullets">
-                  {(categoryGroups[catName] || []).map((item, idx) => (
-                    <li 
-                      key={idx} 
-                      className="service-bullet-item"
-                      onClick={() => handleServiceClick(item)}
+        {/* Carousel Track */}
+        <div style={{ width: '100%', overflow: 'hidden', padding: '12px 4px' }}>
+          <div
+            style={{
+              display: 'flex',
+              transform: `translateX(-${startIndex * (100 / cardsToShow)}%)`,
+              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              gap: '24px'
+            }}
+          >
+            {categories.map((cat) => {
+              return (
+                <div
+                  key={cat.id || cat.slug}
+                  className="service-card-vibrant"
+                  style={{
+                    flex: `0 0 calc(${100 / cardsToShow}% - ${(24 * (cardsToShow - 1)) / cardsToShow}px)`,
+                    boxSizing: 'border-box',
+                    background: cat.bgLight,
+                    borderRadius: '24px',
+                    border: cat.border,
+                    padding: '32px 28px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 20px rgba(6, 59, 115, 0.05)',
+                    minHeight: '420px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-8px)';
+                    e.currentTarget.style.boxShadow = '0 16px 40px rgba(6, 59, 115, 0.12)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 59, 115, 0.05)';
+                  }}
+                  onClick={() => handleExplore(cat.slug)}
+                >
+                  {/* Decorative Background Accent Shape */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-40px',
+                      right: '-40px',
+                      width: '160px',
+                      height: '160px',
+                      borderRadius: '50%',
+                      background: cat.iconBg,
+                      opacity: 0.6,
+                      pointerEvents: 'none'
+                    }}
+                  />
+
+                  <div>
+                    {/* Top Row: Number & Accent Icon Box */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'relative', zIndex: 2 }}>
+                      <span style={{ fontSize: '32px', fontWeight: '800', color: cat.accent, fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '-0.5px' }}>
+                        {cat.num}
+                      </span>
+                      <div
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '12px',
+                          background: cat.iconBg,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: `1px solid ${cat.accent}33`
+                        }}
+                      >
+                        {getCategoryIcon(cat.icon, cat.accent)}
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h3
+                      style={{
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        fontSize: '21px',
+                        fontWeight: '800',
+                        color: cat.titleColor,
+                        margin: '0 0 20px 0',
+                        lineHeight: 1.3,
+                        position: 'relative',
+                        zIndex: 2
+                      }}
                     >
-                      <span className="star-bullet">✦</span>
-                      <span className="bullet-text">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              {/* Explore More Footer */}
-              <div className="service-card-footer-band" onClick={() => handleExploreMore(catName)}>
-                <span className="footer-explore-text">Explore More</span>
-                <div className="footer-arrow-circle">
-                  <ArrowRight size={14} />
+                      {cat.name}
+                    </h3>
+
+                    {/* Full Sub-services Checklist */}
+                    <ul
+                      style={{
+                        listStyle: 'none',
+                        padding: 0,
+                        margin: '0 0 28px 0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    >
+                      {cat.subServices.map((sub, idx) => (
+                        <li 
+                          key={idx} 
+                          className="sub-service-touch-item"
+                          style={{ 
+                            fontSize: '14px', 
+                            color: cat.textColor, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '10px', 
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            padding: '4px 8px',
+                            margin: '0 -8px',
+                            borderRadius: '6px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                            if (textSpan) textSpan.style.color = cat.accent;
+                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.03)';
+                          }}
+                          onMouseLeave={(e) => {
+                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                            if (textSpan) textSpan.style.color = cat.textColor;
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                          onTouchStart={(e) => {
+                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                            if (textSpan) textSpan.style.color = cat.accent;
+                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)';
+                          }}
+                          onTouchEnd={(e) => {
+                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                            if (textSpan) textSpan.style.color = cat.textColor;
+                            e.currentTarget.style.background = 'transparent';
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExplore(cat.slug);
+                          }}
+                        >
+                          <span style={{ color: cat.accent, fontWeight: '800', fontSize: '15px', flexShrink: 0 }}>✓</span>
+                          <span className="sub-text-label" style={{ color: cat.textColor, transition: 'color 0.2s ease' }}>{sub}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Explore Service CTA Footer */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderTop: `1px solid ${cat.accent}30`,
+                      paddingTop: '18px',
+                      color: cat.accent,
+                      fontWeight: '800',
+                      fontSize: '14px',
+                      letterSpacing: '0.3px',
+                      position: 'relative',
+                      zIndex: 2
+                    }}
+                  >
+                    <span>Explore Service</span>
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        background: cat.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'transform 0.2s ease'
+                      }}
+                    >
+                      <ArrowRight size={16} color={cat.accent} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

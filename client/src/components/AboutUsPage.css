@@ -1064,3 +1064,15 @@
     gap: 20px !important;
   }
 }
+
+/* Custom strengths hover styling */
+.strength-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.strength-card-hover:hover {
+  transform: translateY(-4px) !important;
+  border-color: #08A8F0 !important;
+  box-shadow: 0 12px 30px rgba(8, 168, 240, 0.12) !important;
+  background-color: #FFFFFF !important;
+}
