@@ -7,7 +7,7 @@ export default function WhoWeAreSection({ onNavigate }) {
       whoWeArePara1: "Blue Crescent Engineering is based upon pillars of engineering excellence, a proven system of quality assurance and a dedication in meeting the client's needs and schedules. The company is incorporated by the core values of teamwork, Respect and Integrity.",
       whoWeArePara2: "Our client-centered culture and teamwork based approach integrate the knowledge and skills of our network with local awareness, technical leadership and innovative approaches to solve our client's challenges.",
       whoWeArePara3: "Across our spectrum of expertise, We make the connection for each client that best serves their immediate objectives while fulfilling our shared purpose.",
-      whoWeArePara4: "We offer premium services in Engineering Design Support for MEP, Infrastructure and Transportation, Simulations and Analysis, BIM Modelling, Outsourcing Technical Experts, Energy Audit, Commissioning for LEED and GSAS, LEED Facilitation and Academics & Trainings."
+      whoWeArePara4: "We offer multidisciplinary engineering solutions across our 4 core service verticals: Engineering Services (CAD, BIM, Laser Scanning, Scan to BIM), Sustainability Services (GSAS, LEED, Energy Audit, Carbon Management), Digital Twin, and Construction Technology."
     };
     try {
       const saved = localStorage.getItem('companySettings');
@@ -62,7 +62,7 @@ export default function WhoWeAreSection({ onNavigate }) {
       step: '04',
       code: 'DIGITAL TWIN',
       title: 'Connected Asset Lifecycle',
-      desc: 'Life Cycle Digital Twin, GIS & Asset Information Management',
+      desc: 'Asset Twin, System Integration, Real-Time Monitoring & Asset Management',
       icon: <Layers size={24} color="#6366F1" />,
       color: '#6366F1'
     }

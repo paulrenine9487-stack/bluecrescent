@@ -5,8 +5,8 @@ const FALLBACK_CATEGORIES = [
   {
     id: 1,
     num: '01',
-    name: 'CAD & Engineering Documentation',
-    slug: 'cad-engineering-documentation',
+    name: 'Engineering Services',
+    slug: 'engineering-services',
     icon: 'Building2',
     bgLight: '#F0F7FF',
     border: '1px solid #BAE6FD',
@@ -14,90 +14,14 @@ const FALLBACK_CATEGORIES = [
     titleColor: '#063B73',
     textColor: '#1E293B',
     iconBg: '#E0F2FE',
-    description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
-    subServices: [
-      '2D Drafting',
-      'Shop Drawings',
-      'As-Built Documentation',
-      'Engineering Coordination'
-    ]
+    description: 'Comprehensive engineering services including CAD drafting, BIM modeling, 3D laser scanning, and scan-to-BIM conversions.',
+    subServices: ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM']
   },
   {
     id: 2,
     num: '02',
-    name: 'BIM & Digital Construction',
-    slug: 'bim-digital-construction',
-    icon: 'Layers',
-    bgLight: '#FFF1F2',
-    border: '1px solid #FECDD3',
-    accent: '#E11D48',
-    titleColor: '#881337',
-    textColor: '#1E293B',
-    iconBg: '#FFE4E6',
-    description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
-    subServices: [
-      '3D BIM',
-      '4D / 5D',
-      'Architectural BIM',
-      'Structural BIM',
-      'MEP BIM',
-      'Infrastructure BIM',
-      'Clash Coordination',
-      'COBie',
-      'As-Built BIM'
-    ]
-  },
-  {
-    id: 3,
-    num: '03',
-    name: 'Laser Scanning & Reality Capture',
-    slug: 'laser-scanning-reality-capture',
-    icon: 'Radio',
-    bgLight: '#F0FDF4',
-    border: '1px solid #99F6E4',
-    accent: '#0D9488',
-    titleColor: '#134E4A',
-    textColor: '#1E293B',
-    iconBg: '#CCFBF1',
-    description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
-    subServices: [
-      '3D Laser Scanning',
-      'Point Cloud Processing',
-      'Scan-to-BIM',
-      'Existing Condition Modeling',
-      'As-Built Verification'
-    ]
-  },
-  {
-    id: 4,
-    num: '04',
-    name: 'Digital Twin & Asset Lifecycle',
-    slug: 'digital-twin-asset-lifecycle',
-    icon: 'Compass',
-    bgLight: '#FFF1F2',
-    border: '1px solid #FECDD3',
-    accent: '#E11D48',
-    titleColor: '#881337',
-    textColor: '#1E293B',
-    iconBg: '#FFE4E6',
-    description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
-    subServices: [
-      'Digital Twin',
-      'BIM Integration',
-      'GIS',
-      'CAFM / IWMS',
-      'CMMS',
-      'BAS / BMS',
-      'ERP',
-      'EDMS',
-      'Asset Information Management'
-    ]
-  },
-  {
-    id: 5,
-    num: '05',
-    name: 'Sustainability Consultancy',
-    slug: 'sustainability-consultancy',
+    name: 'Sustainability Services',
+    slug: 'sustainability-services',
     icon: 'Leaf',
     bgLight: '#F0FDF4',
     border: '1px solid #BBF7D0',
@@ -105,22 +29,29 @@ const FALLBACK_CATEGORIES = [
     titleColor: '#064E3B',
     textColor: '#1E293B',
     iconBg: '#DCFCE7',
-    description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
-    subServices: [
-      'GSAS',
-      'LEED',
-      'Energy Audits',
-      'Green Building Gap Analysis',
-      'Carbon Footprint Management',
-      'ISO 14064',
-      'Environmental Consultancy'
-    ]
+    description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.',
+    subServices: ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management']
   },
   {
-    id: 6,
-    num: '06',
-    name: 'Remote Construction Solutions',
-    slug: 'remote-construction-solutions',
+    id: 3,
+    num: '03',
+    name: 'Digital Twin',
+    slug: 'digital-twin',
+    icon: 'Layers',
+    bgLight: '#FFF1F2',
+    border: '1px solid #FECDD3',
+    accent: '#E11D48',
+    titleColor: '#881337',
+    textColor: '#1E293B',
+    iconBg: '#FFE4E6',
+    description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.',
+    subServices: ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management']
+  },
+  {
+    id: 4,
+    num: '04',
+    name: 'Construction Technology',
+    slug: 'construction-technology',
     icon: 'Cpu',
     bgLight: '#FFFBEB',
     border: '1px solid #FDE68A',
@@ -128,15 +59,8 @@ const FALLBACK_CATEGORIES = [
     titleColor: '#78350F',
     textColor: '#1E293B',
     iconBg: '#FEF3C7',
-    description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
-    subServices: [
-      'Remote Site Support',
-      'AR Solutions',
-      '360° Site Documentation',
-      'Remote Inspection',
-      'Digital Collaboration',
-      'Robotic Integration'
-    ]
+    description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.',
+    subServices: ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics']
   }
 ];
 
@@ -152,35 +76,45 @@ export default function ServicesList({ onNavigate }) {
   }, []);
 
   useEffect(() => {
-    fetch('/api/service-categories')
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if (data && data.length > 0) {
-          const activeData = data.filter(c => c.status !== 'Inactive');
-          if (activeData.length > 0) {
-            setCategories(activeData.map((cat, idx) => {
-              const numStr = (idx + 1).toString().padStart(2, '0');
-              const fallback = FALLBACK_CATEGORIES.find(f => f.slug === cat.slug) || FALLBACK_CATEGORIES[idx % FALLBACK_CATEGORIES.length];
-              return {
-                id: cat.id || idx + 1,
-                num: numStr,
-                name: cat.name,
-                slug: cat.slug,
-                icon: cat.icon || fallback.icon,
-                bgLight: fallback.bgLight,
-                border: fallback.border,
-                accent: fallback.accent,
-                titleColor: fallback.titleColor,
-                textColor: fallback.textColor,
-                iconBg: fallback.iconBg,
-                description: cat.short_description || fallback.description,
-                subServices: fallback.subServices
-              };
-            }));
-          }
+    Promise.all([
+      fetch('/api/service-categories').then(res => res.ok ? res.json() : []),
+      fetch('/api/services').then(res => res.ok ? res.json() : [])
+    ]).then(([catsData, svcsData]) => {
+      const activeCats = catsData.filter(c => c.status !== 'Inactive');
+      const activeSvcs = svcsData.filter(s => s.status !== 'Inactive');
+
+      const catsToUse = activeCats.length > 0 ? activeCats : FALLBACK_CATEGORIES;
+
+      setCategories(catsToUse.map((cat, idx) => {
+        const numStr = (idx + 1).toString().padStart(2, '0');
+        const fallback = FALLBACK_CATEGORIES.find(f => f.slug === cat.slug || f.name.toLowerCase() === (cat.name || '').toLowerCase()) || FALLBACK_CATEGORIES[idx % FALLBACK_CATEGORIES.length];
+        
+        let subServicesList = [];
+        if (activeSvcs.length > 0) {
+          const matching = activeSvcs.filter(s => s.category === cat.name || s.category_id === cat.id);
+          subServicesList = matching.map(s => s.title);
         }
-      })
-      .catch(err => console.warn('Categories fetch warning:', err));
+        if (subServicesList.length === 0) {
+          subServicesList = cat.subServices || fallback.subServices || [];
+        }
+
+        return {
+          id: cat.id || idx + 1,
+          num: numStr,
+          name: cat.name,
+          slug: cat.slug,
+          icon: cat.icon || fallback.icon,
+          bgLight: fallback.bgLight,
+          border: fallback.border,
+          accent: fallback.accent,
+          titleColor: fallback.titleColor,
+          textColor: fallback.textColor,
+          iconBg: fallback.iconBg,
+          description: cat.short_description || fallback.description,
+          subServices: subServicesList
+        };
+      }));
+    }).catch(err => console.warn('ServicesList fetch warning:', err));
   }, []);
 
   const getCardsToShow = () => {

@@ -17,30 +17,41 @@ import OurJourneyPage from './components/OurJourneyPage';
 import Footer from './components/Footer';
 import TestimonialModal from './components/TestimonialModal';
 import AdminPanel from './components/AdminPanel';
+import ProjectDetailPage from './components/ProjectDetailPage';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('Home');
-  const [activeSubTab, setActiveSubTab] = useState(''); // Empty defaults to Main Services Overview Page
+  const [activeSubTab, setActiveSubTab] = useState(''); // Stores sub-tab or project slug
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Sync state with URL pathname on mount and handle back/forward navigation
   useEffect(() => {
-    if (window.location.pathname === '/manager') {
-      setCurrentView('Admin');
-    } else if (window.location.pathname === '/our-journey') {
-      setCurrentView('Our Journey');
-    }
-
-    const handlePopState = () => {
-      if (window.location.pathname === '/manager') {
+    const syncRouteWithURL = () => {
+      const path = window.location.pathname;
+      if (path === '/manager') {
         setCurrentView('Admin');
-      } else if (window.location.pathname === '/our-journey') {
+      } else if (path === '/our-journey') {
         setCurrentView('Our Journey');
+      } else if (path.startsWith('/projects/') && path.length > 10) {
+        const slug = path.replace('/projects/', '').split('/')[0];
+        if (slug) {
+          setCurrentView('ProjectDetail');
+          setActiveSubTab(slug);
+        } else {
+          setCurrentView('Projects');
+        }
+      } else if (path === '/projects') {
+        setCurrentView('Projects');
       } else {
         setCurrentView('Home');
-        setActiveSubTab('');
       }
+    };
+
+    syncRouteWithURL();
+
+    const handlePopState = () => {
+      syncRouteWithURL();
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -60,6 +71,10 @@ export default function App() {
       window.history.pushState({}, '', '/manager');
     } else if (view === 'Our Journey' || view === 'Journey') {
       window.history.pushState({}, '', '/our-journey');
+    } else if (view === 'ProjectDetail' && subTab) {
+      window.history.pushState({}, '', `/projects/${subTab}`);
+    } else if (view === 'Projects') {
+      window.history.pushState({}, '', '/projects');
     } else {
       window.history.pushState({}, '', '/');
     }
@@ -81,6 +96,11 @@ export default function App() {
       {/* Main View Router */}
       {currentView === 'Admin' ? (
         <AdminPanel
+          onNavigate={handleNavigate}
+        />
+      ) : currentView === 'ProjectDetail' ? (
+        <ProjectDetailPage
+          projectSlug={activeSubTab}
           onNavigate={handleNavigate}
         />
       ) : currentView === 'Certifications' ? (

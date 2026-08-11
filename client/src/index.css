@@ -1593,11 +1593,16 @@ button.cert-close-btn,
   border-left: 4px solid #0B3D91;
 }
 
-.paragraph-text {
+.paragraph-text,
+.service-description,
+.project-description,
+.news-description,
+.bce-multiline-text {
   font-size: 16.5px;
   color: var(--color-text-secondary);
   line-height: 1.75;
   margin-bottom: 24px;
+  white-space: pre-line;
 }
 
 .quote-text {

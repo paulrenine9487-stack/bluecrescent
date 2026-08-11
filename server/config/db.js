@@ -65,6 +65,30 @@ const fallbackData = {
       image: "/project1.png",
       date: "February 28, 2024"
     }
+  ],
+  service_categories: [
+    { id: 1, name: 'Engineering Services', slug: 'engineering-services', short_description: 'Comprehensive engineering services including CAD drafting, BIM modeling, 3D laser scanning, and scan-to-BIM conversions.', icon: 'Building2', display_order: 1, status: 'Active', featured: 1 },
+    { id: 2, name: 'Sustainability Services', slug: 'sustainability-services', short_description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.', icon: 'Leaf', display_order: 2, status: 'Active', featured: 1 },
+    { id: 3, name: 'Digital Twin', slug: 'digital-twin', short_description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.', icon: 'Layers', display_order: 3, status: 'Active', featured: 1 },
+    { id: 4, name: 'Construction Technology', slug: 'construction-technology', short_description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.', icon: 'Cpu', display_order: 4, status: 'Active', featured: 1 }
+  ],
+  services: [
+    { id: 1, category: 'Engineering Services', category_id: 1, title: 'CAD', slug: 'cad', description: 'Professional multidisciplinary 2D/3D CAD drafting and engineering documentation support.', bullets: JSON.stringify(['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination']), tools: JSON.stringify([['AutoCAD', 'MicroStation'], ['Civil 3D', 'Revit']]), banner_image: '/servicepage1.png', display_order: 1, status: 'Active' },
+    { id: 2, category: 'Engineering Services', category_id: 1, title: 'BIM', slug: 'bim', description: 'End-to-end Building Information Modeling up to LOD 500 across architectural, structural, and MEP disciplines.', bullets: JSON.stringify(['3D BIM Modeling', 'Clash Detection', '4D Scheduling', '5D Quantity Take-Off']), tools: JSON.stringify([['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']]), banner_image: '/servicepage1.png', display_order: 2, status: 'Active' },
+    { id: 3, category: 'Engineering Services', category_id: 1, title: 'Laser Scanning', slug: 'laser-scanning', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bullets: JSON.stringify(['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Capture']), tools: JSON.stringify([['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']]), banner_image: '/servicepage1.png', display_order: 3, status: 'Active' },
+    { id: 4, category: 'Engineering Services', category_id: 1, title: 'Scan to BIM', slug: 'scan-to-bim', description: 'Converting raw point cloud scans into intelligent 3D BIM models for renovation, retrofit, and facility management.', bullets: JSON.stringify(['Point Cloud to BIM Conversion', 'As-Built Model Verification', 'Retrofit Modeling', 'Deviation Analysis']), tools: JSON.stringify([['Autodesk Revit', 'CloudCompare'], ['ClearEdge3D Edgewise']]), banner_image: '/servicepage1.png', display_order: 4, status: 'Active' },
+    { id: 5, category: 'Sustainability Services', category_id: 2, title: 'GSAS', slug: 'gsas', description: 'Global Sustainability Assessment System (GSAS) certification management and green building compliance.', bullets: JSON.stringify(['GSAS Design & Build', 'GSAS Construction Management', 'Energy & Water Audits', 'Daylight Simulation']), tools: JSON.stringify([['GSAS Gate Tool', 'IES VE'], ['Sefaira', 'One Click LCA']]), banner_image: '/servicepage1.png', display_order: 1, status: 'Active' },
+    { id: 6, category: 'Sustainability Services', category_id: 2, title: 'LEED', slug: 'leed', description: 'LEED BD+C, ID+C, and O+M consulting, energy modeling, and commissioning for USGBC certification.', bullets: JSON.stringify(['LEED Certification Management', 'Fundamental & Enhanced Commissioning', 'Thermal Comfort Modeling', 'Green Materials Sourcing']), tools: JSON.stringify([['USGBC LEED v4/v4.1', 'IES VE'], ['EnergyPlus', 'CxAlloy']]), banner_image: '/servicepage1.png', display_order: 2, status: 'Active' },
+    { id: 7, category: 'Sustainability Services', category_id: 2, title: 'Energy Audit', slug: 'energy-audit', description: 'Comprehensive ASHRAE Level 1, 2, and 3 energy diagnostic audits to optimize building energy performance.', bullets: JSON.stringify(['ASHRAE Level 1, 2 & 3 Audits', 'Chiller Plant Optimization', 'Infrared Thermography', 'Power Quality Analysis']), tools: JSON.stringify([['FLIR Thermal Cameras', 'Power Quality Analyzers'], ['eQUEST', 'EnergyPlus']]), banner_image: '/servicepage1.png', display_order: 3, status: 'Active' },
+    { id: 8, category: 'Sustainability Services', category_id: 2, title: 'Carbon Management', slug: 'carbon-management', description: 'Greenhouse gas inventory compiling, carbon footprinting, and ISO 14064 verification strategies.', bullets: JSON.stringify(['ISO 14064 GHG Accounting', 'Organizational Carbon Footprint', 'Decarbonization Roadmap', 'Lifecycle Assessment']), tools: JSON.stringify([['GHG Protocol Suite', 'ISO 14064 Guidelines'], ['Carbon Calculation Tools']]), banner_image: '/servicepage1.png', display_order: 4, status: 'Active' },
+    { id: 9, category: 'Digital Twin', category_id: 3, title: 'Asset Twin', slug: 'asset-twin', description: 'Virtual representation of physical assets connecting 3D spatial models with operational telemetry.', bullets: JSON.stringify(['3D Asset Visualization', 'IoT Telemetry Integration', 'Predictive Asset Analytics', 'COBie Data Handover']), tools: JSON.stringify([['Autodesk Tandem', 'Azure Digital Twins'], ['ThingWorx', 'Matterport']]), banner_image: '/servicepage1.png', display_order: 1, status: 'Active' },
+    { id: 10, category: 'Digital Twin', category_id: 3, title: 'System Integration', slug: 'system-integration', description: 'Connecting heterogeneous building automation, BMS, CAFM, and ERP software with Digital Twin hubs.', bullets: JSON.stringify(['REST/GraphQL API Middleware', 'BMS/BAS Integration', 'CAFM & ERP Connector', 'Data Pipelines']), tools: JSON.stringify([['Node-RED', 'Apache Kafka'], ['Grafana', 'Docker']]), banner_image: '/servicepage1.png', display_order: 2, status: 'Active' },
+    { id: 11, category: 'Digital Twin', category_id: 3, title: 'Real-Time Monitoring', slug: 'real-time-monitoring', description: 'Continuous live sensor data monitoring, anomaly detection, and operational performance dashboards.', bullets: JSON.stringify(['Live Sensor Data Streaming', 'Anomaly Alerts', 'Energy Consumption Monitoring', 'Space Utilization Analytics']), tools: JSON.stringify([['Grafana', 'InfluxDB'], ['AWS IoT Core', 'Azure IoT']]), banner_image: '/servicepage1.png', display_order: 3, status: 'Active' },
+    { id: 12, category: 'Digital Twin', category_id: 3, title: 'Asset Management', slug: 'asset-management', description: 'Comprehensive facility asset lifecycle tracking, maintenance scheduling, and digital operations handover.', bullets: JSON.stringify(['Maintenance Scheduling', 'Work Order Automation', 'Lifecycle Cost Analysis', 'Asset Register Management']), tools: JSON.stringify([['IBM Maximo', 'SAP PM'], ['Autodesk Tandem', 'Archibus']]), banner_image: '/servicepage1.png', display_order: 4, status: 'Active' },
+    { id: 13, category: 'Construction Technology', category_id: 4, title: 'Remote Construction', slug: 'remote-construction', description: 'Remote site monitoring, virtual walkthroughs, and automated progress reporting for distributed teams.', bullets: JSON.stringify(['Remote Site Walkthroughs', 'Progress Monitoring', 'Virtual Inspections', 'Cloud Collaboration']), tools: JSON.stringify([['OpenSpace', 'Cupix'], ['Matterport', 'Autodesk ACC']]), banner_image: '/servicepage1.png', display_order: 1, status: 'Active' },
+    { id: 14, category: 'Construction Technology', category_id: 4, title: '360° Capture', slug: '360-capture', description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual tracking.', bullets: JSON.stringify(['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation']), tools: JSON.stringify([['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']]), banner_image: '/servicepage1.png', display_order: 2, status: 'Active' },
+    { id: 15, category: 'Construction Technology', category_id: 4, title: 'AR Solutions', slug: 'ar-solutions', description: 'Augmented reality visualization overlaying 3D BIM models directly onto job site physical spaces.', bullets: JSON.stringify(['BIM Overlay on Site', 'Clash Detection in AR', 'Remote Expert Assistance', 'Safety Hazard Training']), tools: JSON.stringify([['Trimble Connect AR', 'HoloLens 2'], ['vGIS', 'Unity Industrial']]), banner_image: '/servicepage1.png', display_order: 3, status: 'Active' },
+    { id: 16, category: 'Construction Technology', category_id: 4, title: 'Robotics', slug: 'robotics', description: 'Robotic site layout, autonomous scanning, and robotic inspection integrations for modern job sites.', bullets: JSON.stringify(['Autonomous Scanning Robots', 'Robotic Layout Marking', 'Drone Photogrammetry', 'Automated Surveys']), tools: JSON.stringify([['Boston Dynamics Spot', 'Dusty Robotics'], ['Skydio Drones', 'Pix4D']]), banner_image: '/servicepage1.png', display_order: 4, status: 'Active' }
   ]
 };
 
@@ -83,7 +107,7 @@ async function initDB() {
 
     // Now create pool with database
     pool = mysql.createPool(dbConfig);
-    
+
     // 1. Users Table (Access Control)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -201,14 +225,14 @@ async function initDB() {
       );
     `);
 
-    try { await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`); } catch (e) {}
-    try { await pool.query(`ALTER TABLE services ADD COLUMN slug VARCHAR(255);`); } catch (e) {}
-    try { await pool.query(`ALTER TABLE services ADD COLUMN display_order INT DEFAULT 0;`); } catch (e) {}
-    try { await pool.query(`ALTER TABLE services ADD COLUMN status VARCHAR(50) DEFAULT 'Active';`); } catch (e) {}
-    try { await pool.query(`ALTER TABLE services ADD COLUMN featured TINYINT(1) DEFAULT 1;`); } catch (e) {}
-    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_title VARCHAR(255);`); } catch (e) {}
-    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_description TEXT;`); } catch (e) {}
-    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_keywords TEXT;`); } catch (e) {}
+    try { await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS slug VARCHAR(255);`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN slug VARCHAR(255);`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN display_order INT DEFAULT 0;`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN status VARCHAR(50) DEFAULT 'Active';`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN featured TINYINT(1) DEFAULT 1;`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_title VARCHAR(255);`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_description TEXT;`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN seo_keywords TEXT;`); } catch (e) { }
 
     // 8. Hero Slides Table
     await pool.query(`
@@ -238,12 +262,33 @@ async function initDB() {
       CREATE TABLE IF NOT EXISTS projects (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        division_type VARCHAR(100) NOT NULL DEFAULT 'Engineering Division',
+        slug VARCHAR(255),
+        division_type VARCHAR(100) NOT NULL DEFAULT 'BIM Projects',
         project_count INT DEFAULT 0,
-        description TEXT,
+        client VARCHAR(255),
+        contractor VARCHAR(255),
+        consultant VARCHAR(255),
+        location VARCHAR(255) DEFAULT 'Qatar',
+        sector VARCHAR(255) DEFAULT 'Infrastructure & Buildings',
+        status VARCHAR(50) DEFAULT 'Completed',
+        year VARCHAR(50) DEFAULT '2024',
+        short_description TEXT,
+        description LONGTEXT,
+        services LONGTEXT,
+        disciplines LONGTEXT,
+        project_stage VARCHAR(100),
+        bim_level VARCHAR(100),
+        scope_of_work LONGTEXT,
+        deliverables LONGTEXT,
+        technologies LONGTEXT,
+        project_highlights TEXT,
         image LONGTEXT,
-        status VARCHAR(50) DEFAULT 'Active',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        gallery LONGTEXT,
+        display_order INT DEFAULT 0,
+        seo_title VARCHAR(255),
+        seo_description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );
     `);
 
@@ -368,7 +413,7 @@ async function initDB() {
       console.log('Altering company_settings columns to LONGTEXT...');
       await pool.query("ALTER TABLE company_settings MODIFY COLUMN aboutUsHeroUrl LONGTEXT");
       await pool.query("ALTER TABLE company_settings MODIFY COLUMN aboutUsVideoUrl LONGTEXT");
-      
+
       // Dynamic columns for new customizable backgrounds
       try {
         await pool.query("SELECT aboutUsMapImg FROM company_settings LIMIT 1");
@@ -376,21 +421,21 @@ async function initDB() {
         console.log('Adding aboutUsMapImg column to company_settings...');
         await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsMapImg LONGTEXT");
       }
-      
+
       try {
         await pool.query("SELECT aboutUsCapaImg FROM company_settings LIMIT 1");
       } catch (e) {
         console.log('Adding aboutUsCapaImg column to company_settings...');
         await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsCapaImg LONGTEXT");
       }
-      
+
       try {
         await pool.query("SELECT aboutUsDigitalImg FROM company_settings LIMIT 1");
       } catch (e) {
         console.log('Adding aboutUsDigitalImg column to company_settings...');
         await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsDigitalImg LONGTEXT");
       }
-      
+
       try {
         await pool.query("SELECT aboutUsFlowchartBg FROM company_settings LIMIT 1");
       } catch (e) {
@@ -426,8 +471,41 @@ async function initDB() {
         console.log('Adding aboutUsCapabilitiesJson column to company_settings...');
         await pool.query("ALTER TABLE company_settings ADD COLUMN aboutUsCapabilitiesJson LONGTEXT");
       }
+
+      // Projects table column expansion migration
+      const projCols = [
+        { name: 'slug', type: 'VARCHAR(255)' },
+        { name: 'client', type: 'VARCHAR(255)' },
+        { name: 'contractor', type: 'VARCHAR(255)' },
+        { name: 'consultant', type: 'VARCHAR(255)' },
+        { name: 'location', type: "VARCHAR(255) DEFAULT 'Qatar'" },
+        { name: 'sector', type: "VARCHAR(255) DEFAULT 'Infrastructure & Buildings'" },
+        { name: 'year', type: "VARCHAR(50) DEFAULT '2024'" },
+        { name: 'short_description', type: 'TEXT' },
+        { name: 'services', type: 'LONGTEXT' },
+        { name: 'disciplines', type: 'LONGTEXT' },
+        { name: 'project_stage', type: 'VARCHAR(100)' },
+        { name: 'bim_level', type: 'VARCHAR(100)' },
+        { name: 'scope_of_work', type: 'LONGTEXT' },
+        { name: 'deliverables', type: 'LONGTEXT' },
+        { name: 'technologies', type: 'LONGTEXT' },
+        { name: 'project_highlights', type: 'TEXT' },
+        { name: 'gallery', type: 'LONGTEXT' },
+        { name: 'display_order', type: 'INT DEFAULT 0' },
+        { name: 'seo_title', type: 'VARCHAR(255)' },
+        { name: 'seo_description', type: 'TEXT' }
+      ];
+
+      for (const col of projCols) {
+        try {
+          await pool.query(`SELECT ${col.name} FROM projects LIMIT 1`);
+        } catch (e) {
+          console.log(`Adding ${col.name} column to projects...`);
+          await pool.query(`ALTER TABLE projects ADD COLUMN ${col.name} ${col.type}`);
+        }
+      }
     } catch (err) {
-      console.warn('Altering company_settings columns warning:', err.message);
+      console.warn('Altering table columns warning:', err.message);
     }
 
     try {
@@ -507,11 +585,13 @@ async function initDB() {
       const [r4] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Projects', 'Projects', 4)");
       const [r5] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Media', 'Media', 5)");
       const [r6] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Contact Us', 'Contact Us', 6)");
-      
+
       const projectsId = r4.insertId;
-      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Engineering Division', 'Engineering Division', ?, 1)", [projectsId]);
-      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Sustainability Division', 'Sustainability Division', ?, 2)", [projectsId]);
-      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Digital Twin Division', 'Digital Twin Division', ?, 3)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('CAD Projects', 'CAD Projects', ?, 1)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('BIM Projects', 'BIM Projects', ?, 2)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Laser Scanning Projects', 'Laser Scanning Projects', ?, 3)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Digital Twin Projects', 'Digital Twin Projects', ?, 4)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Sustainability Projects', 'Sustainability Projects', ?, 5)", [projectsId]);
     } else {
       // Dynamic migration for existing databases: ensure 'Media' exists
       const [hasMedia] = await pool.query("SELECT id FROM menus WHERE name = 'Media'");
@@ -520,71 +600,35 @@ async function initDB() {
         await pool.query("UPDATE menus SET order_num = 6 WHERE name = 'Contact Us'");
         await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Media', 'Media', 5)");
       }
-      // Migrate Telecom Division to Digital Twin Division
-      await pool.query("UPDATE menus SET name = 'Digital Twin Division', url = 'Digital Twin Division' WHERE name = 'Telecom Division'");
-      await pool.query("UPDATE projects SET division_type = 'Digital Twin Division' WHERE division_type = 'Telecom Division'");
 
-      // Migrate / Seed Digital Twin Services if missing
-      const [dtRows] = await pool.query("SELECT COUNT(*) as count FROM services WHERE category = 'Digital Twin Services'");
-      if (dtRows[0].count === 0) {
-        console.log('Migrating database: Seeding Digital Twin Services...');
-        const dtSeeds = [
-          {
-            category: 'Digital Twin Services',
-            title: 'Life Cycle Twin Asset Management',
-            description: 'Virtual representation of physical assets, integrating real-time IoT sensors and 3D space for facilities management and predictive maintenance.',
-            bullets: JSON.stringify([
-              'Real-time IoT sensor telemetry integration with 3D BIM models.',
-              'Predictive maintenance schedules and asset health monitoring dashboard.',
-              'Immersive virtual inspections and operational analytics overlay.',
-              'COBie data integration and digital operations handover.'
-            ]),
-            tools: JSON.stringify([
-              ['Autodesk Tandem', 'Azure Digital Twins'],
-              ['Matterport 3D Pro', 'ThingWorx IoT']
-            ]),
-            banner_image: '/servicepage1.png'
-          },
-          {
-            category: 'Digital Twin Services',
-            title: 'Remote Work Automation',
-            description: 'Industrial automation, control logic simulation, and remote work validation platforms for distributed teams.',
-            bullets: JSON.stringify([
-              'SCADA and PLC control systems logic simulation and remote testing.',
-              'Collaborative virtual control room environments for remote operators.',
-              'Safety training and hazard simulation in interactive 3D spaces.',
-              'Cloud-based process monitoring and diagnostics pipeline.'
-            ]),
-            tools: JSON.stringify([
-              ['Siemens SIMIT', 'Unity Industrial'],
-              ['Wonderware SCADA', 'AWS IoT RoboRunner']
-            ]),
-            banner_image: '/servicepage1.png'
-          },
-          {
-            category: 'Digital Twin Services',
-            title: 'System Integration and Analysis',
-            description: 'Pipelining heterogeneous system APIs, legacy database schemas, and spatial maps into a unified enterprise operations hub.',
-            bullets: JSON.stringify([
-              'REST/GraphQL API middleware development for legacy system connectivity.',
-              'Data ingestion and normalization pipelines from raw log streams.',
-              'Cross-platform analytics dashboards and operational reports.',
-              'Cybersecurity isolation and secure tunnel architecture for remote nodes.'
-            ]),
-            tools: JSON.stringify([
-              ['Node-RED', 'Apache Kafka'],
-              ['Grafana', 'Docker / Kubernetes']
-            ]),
-            banner_image: '/servicepage1.png'
-          }
+      // Sync Projects sub-menus to the 5 required categories
+      const [projectsMenuRows] = await pool.query("SELECT id FROM menus WHERE LOWER(name) = 'projects'");
+      if (projectsMenuRows.length > 0) {
+        const pId = projectsMenuRows[0].id;
+        // Delete legacy sub-menus under Projects
+        await pool.query("DELETE FROM menus WHERE parent_id = ? AND name NOT IN ('CAD Projects', 'BIM Projects', 'Laser Scanning Projects', 'Digital Twin Projects', 'Sustainability Projects')", [pId]);
+
+        const requiredProjectSubMenus = [
+          { name: 'CAD Projects', url: 'CAD Projects', order_num: 1 },
+          { name: 'BIM Projects', url: 'BIM Projects', order_num: 2 },
+          { name: 'Laser Scanning Projects', url: 'Laser Scanning Projects', order_num: 3 },
+          { name: 'Digital Twin Projects', url: 'Digital Twin Projects', order_num: 4 },
+          { name: 'Sustainability Projects', url: 'Sustainability Projects', order_num: 5 }
         ];
-        for (const s of dtSeeds) {
-          await pool.query(
-            'INSERT INTO services (category, title, description, bullets, tools, banner_image) VALUES (?, ?, ?, ?, ?, ?)',
-            [s.category, s.title, s.description, s.bullets, s.tools, s.banner_image]
-          );
+
+        for (const sub of requiredProjectSubMenus) {
+          const [exists] = await pool.query("SELECT id FROM menus WHERE parent_id = ? AND name = ?", [pId, sub.name]);
+          if (exists.length === 0) {
+            await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES (?, ?, ?, ?)", [sub.name, sub.url, pId, sub.order_num]);
+          } else {
+            await pool.query("UPDATE menus SET order_num = ? WHERE id = ?", [sub.order_num, exists[0].id]);
+          }
         }
       }
+
+      // Inactivate legacy categories and services ('Telecom Services', 'Digital Twin Services', etc.)
+      await pool.query("UPDATE service_categories SET status = 'Inactive' WHERE name IN ('Telecom Services', 'Telecom', 'Digital Twin Services') OR name NOT IN ('Engineering Services', 'Sustainability Services', 'Digital Twin', 'Construction Technology')");
+      await pool.query("UPDATE services SET status = 'Inactive' WHERE category IN ('Telecom Services', 'Telecom', 'Digital Twin Services') OR category NOT IN ('Engineering Services', 'Sustainability Services', 'Digital Twin', 'Construction Technology')");
     }
 
     // Seed default media items (Gallery & Videos) if empty
@@ -625,459 +669,263 @@ async function initDB() {
       `);
     }
 
-    // Clean up old and seed new Sustainability Services
-    const [sustRows] = await pool.query("SELECT COUNT(*) as count FROM services WHERE category = 'Sustainability Services' AND title IN ('GSAS Service', 'LEED Consulting Services', 'Energy Audit and Analysis', 'ISO 14064 Consulting Services')");
-    if (sustRows[0].count < 4) {
-      console.log('Migrating Sustainability Services in MySQL database...');
-      await pool.query("DELETE FROM services WHERE category = 'Sustainability Services'");
-      const sustSeeds = [
-        {
-          category: 'Sustainability Services',
-          title: 'GSAS Service',
-          description: 'GSAS (Global Sustainability Assessment System) certification management, green building compliance facilitation, and design and construction consulting for commercial, residential, and institutional projects.',
-          bullets: JSON.stringify([
-            'GSAS Design & Build Certification management (1-Star to 5-Star).',
-            'GSAS Construction Management facilitation and site auditing.',
-            'Energy & Water optimization studies conforming to GSAS standards.',
-            'Indoor Environmental Quality (IEQ) assessment and daylight simulation.',
-            'Materials & lifecycle assessment (LCA) matching GSAS requirements.'
-          ]),
-          tools: JSON.stringify([
-            ['GSAS Gate Tool', 'IES VE'],
-            ['Sefaira', 'One Click LCA']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Sustainability Services',
-          title: 'LEED Consulting Services',
-          description: 'LEED (Leadership in Energy and Environmental Design) consulting and certification management from concept design through to final USGBC audit and commissioning.',
-          bullets: JSON.stringify([
-            'LEED BD+C, ID+C, and O+M certification facilitation.',
-            'Fundamental & Enhanced Commissioning (Cx) satisfying USGBC standards.',
-            'Thermal comfort modeling, building energy simulation, and daylight calculations.',
-            'Indoor air quality testing and green materials sourcing strategies.',
-            'LEED Online portal management and submittal documentation compilation.'
-          ]),
-          tools: JSON.stringify([
-            ['USGBC LEED v4/v4.1 Guidelines', 'IES VE'],
-            ['CxAlloy Commissioning Platform', 'EnergyPlus']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Sustainability Services',
-          title: 'Energy Audit and Analysis',
-          description: 'Comprehensive energy auditing and diagnostic analysis services to maximize operational energy efficiency and achieve regulatory sustainability compliance.',
-          bullets: JSON.stringify([
-            'ASHRAE Level 1, 2, and 3 (Investment Grade) Energy Audits.',
-            'HVAC system thermal efficiency and central chiller plant optimization.',
-            'Building envelope thermal imaging (infrared thermography) and testing.',
-            'Electrical demand management, power quality analysis, and power factor correction.',
-            'Renewable energy (Solar PV) integration and economic feasibility analysis.'
-          ]),
-          tools: JSON.stringify([
-            ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
-            ['Data Loggers', 'eQUEST / EnergyPlus']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Sustainability Services',
-          title: 'ISO 14064 Consulting Services',
-          description: 'Consulting services for Greenhouse Gas (GHG) inventory compilation, validation, and verification conforming to ISO 14064 international standards for carbon footprint auditing.',
-          bullets: JSON.stringify([
-            'ISO 14064-1: Organizational carbon footprint inventory and reporting.',
-            'ISO 14064-2: Project-level GHG emission reduction quantification.',
-            'ISO 14064-3: Validation and verification of GHG assertions.',
-            'Product carbon footprinting and corporate sustainability auditing.',
-            'Carbon offset and decarbonization roadmap strategy development.'
-          ]),
-          tools: JSON.stringify([
-            ['GHG Protocol Suite', 'ISO 14064 Guidelines'],
-            ['Carbon Calculation Tools', 'Decarbonization Models']
-          ]),
-          banner_image: '/servicepage1.png'
-        }
-      ];
-      for (const s of sustSeeds) {
-        await pool.query(
-          'INSERT INTO services (category, title, description, bullets, tools, banner_image) VALUES (?, ?, ?, ?, ?, ?)',
-          [s.category, s.title, s.description, s.bullets, s.tools, s.banner_image]
-        );
-      }
-    }
+    // Clean up legacy sub-service titles in MySQL database
+    await pool.query(`
+        UPDATE services SET status = 'Inactive' WHERE title IN (
+          'Engineering Design support Services',
+          'Specialised Simulation & Analysis',
+          'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D',
+          'BIM Modelling - 3D',
+          'Outsourcing Technical Experts',
+          'GSAS Service',
+          'LEED Consulting Services',
+          'Energy Audit and Analysis',
+          'ISO 14064 Consulting Services',
+          '2D CAD Drafting Services',
+          'BIM Services',
+          'Life Cycle Twin Asset Management',
+          'Remote Work Automation',
+          'System Integration and Analysis'
+        )
+      `);
 
-    // Seed 6 Core Service Categories & Services (Safe Migration)
-    const coreCategories = [
+    // Ensure columns exist on service_categories
+    try { await pool.query(`ALTER TABLE service_categories ADD COLUMN IF NOT EXISTS image LONGTEXT;`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE service_categories ADD COLUMN image LONGTEXT;`); } catch (e) { }
+
+    // Ensure columns exist on services
+    try { await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS category_id INT;`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN category_id INT;`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS icon VARCHAR(100);`); } catch (e) { }
+    try { await pool.query(`ALTER TABLE services ADD COLUMN icon VARCHAR(100);`); } catch (e) { }
+
+    // Seed/Migrate the required 4 Main Categories and 16 Sub-services
+    const requiredCategories = [
       {
-        name: 'CAD & Engineering Documentation',
-        slug: 'cad-engineering-documentation',
-        short_description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
+        name: 'Engineering Services',
+        slug: 'engineering-services',
+        short_description: 'Comprehensive engineering services including CAD drafting, BIM modeling, 3D laser scanning, and scan-to-BIM conversions.',
         icon: 'Building2',
         display_order: 1,
         status: 'Active',
         featured: 1,
         services: [
           {
-            title: 'CAD & Engineering Documentation',
-            slug: 'cad-engineering-documentation',
-            description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
-            sub_services: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'],
-            banner_image: '/servicepage1.png'
+            title: 'CAD',
+            slug: 'cad',
+            description: 'Professional multidisciplinary 2D/3D CAD drafting and engineering documentation support.',
+            bullets: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'],
+            tools: [['AutoCAD', 'MicroStation'], ['Civil 3D', 'Revit']],
+            display_order: 1
+          },
+          {
+            title: 'BIM',
+            slug: 'bim',
+            description: 'End-to-end Building Information Modeling up to LOD 500 across architectural, structural, and MEP disciplines.',
+            bullets: ['3D BIM Modeling', 'Clash Detection', '4D Scheduling', '5D Quantity Take-Off'],
+            tools: [['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']],
+            display_order: 2
+          },
+          {
+            title: 'Laser Scanning',
+            slug: 'laser-scanning',
+            description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.',
+            bullets: ['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Capture'],
+            tools: [['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']],
+            display_order: 3
+          },
+          {
+            title: 'Scan to BIM',
+            slug: 'scan-to-bim',
+            description: 'Converting raw point cloud scans into intelligent 3D BIM models for renovation, retrofit, and facility management.',
+            bullets: ['Point Cloud to BIM Conversion', 'As-Built Model Verification', 'Retrofit Modeling', 'Deviation Analysis'],
+            tools: [['Autodesk Revit', 'CloudCompare'], ['ClearEdge3D Edgewise']],
+            display_order: 4
           }
         ]
       },
       {
-        name: 'BIM & Digital Construction',
-        slug: 'bim-digital-construction',
-        short_description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
-        icon: 'Compass',
+        name: 'Sustainability Services',
+        slug: 'sustainability-services',
+        short_description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.',
+        icon: 'Leaf',
         display_order: 2,
         status: 'Active',
         featured: 1,
         services: [
           {
-            title: 'BIM & Digital Construction',
-            slug: 'bim-digital-construction',
-            description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
-            sub_services: ['3D BIM', '4D / 5D', 'Architectural BIM', 'Structural BIM', 'MEP BIM', 'Infrastructure BIM', 'Clash Coordination', 'COBie', 'As-Built BIM'],
-            banner_image: '/servicepage1.png'
+            title: 'GSAS',
+            slug: 'gsas',
+            description: 'Global Sustainability Assessment System (GSAS) certification management and green building compliance.',
+            bullets: ['GSAS Design & Build', 'GSAS Construction Management', 'Energy & Water Audits', 'Daylight Simulation'],
+            tools: [['GSAS Gate Tool', 'IES VE'], ['Sefaira', 'One Click LCA']],
+            display_order: 1
+          },
+          {
+            title: 'LEED',
+            slug: 'leed',
+            description: 'LEED BD+C, ID+C, and O+M consulting, energy modeling, and commissioning for USGBC certification.',
+            bullets: ['LEED Certification Management', 'Fundamental & Enhanced Commissioning', 'Thermal Comfort Modeling', 'Green Materials Sourcing'],
+            tools: [['USGBC LEED v4/v4.1', 'IES VE'], ['EnergyPlus', 'CxAlloy']],
+            display_order: 2
+          },
+          {
+            title: 'Energy Audit',
+            slug: 'energy-audit',
+            description: 'Comprehensive ASHRAE Level 1, 2, and 3 energy diagnostic audits to optimize building energy performance.',
+            bullets: ['ASHRAE Level 1, 2 & 3 Audits', 'Chiller Plant Optimization', 'Infrared Thermography', 'Power Quality Analysis'],
+            tools: [['FLIR Thermal Cameras', 'Power Quality Analyzers'], ['eQUEST', 'EnergyPlus']],
+            display_order: 3
+          },
+          {
+            title: 'Carbon Management',
+            slug: 'carbon-management',
+            description: 'Greenhouse gas inventory compiling, carbon footprinting, and ISO 14064 verification strategies.',
+            bullets: ['ISO 14064 GHG Accounting', 'Organizational Carbon Footprint', 'Decarbonization Roadmap', 'Lifecycle Assessment'],
+            tools: [['GHG Protocol Suite', 'ISO 14064 Guidelines'], ['Carbon Calculation Tools']],
+            display_order: 4
           }
         ]
       },
       {
-        name: 'Laser Scanning & Reality Capture',
-        slug: 'laser-scanning-reality-capture',
-        short_description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
-        icon: 'Radio',
+        name: 'Digital Twin',
+        slug: 'digital-twin',
+        short_description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.',
+        icon: 'Layers',
         display_order: 3,
         status: 'Active',
         featured: 1,
         services: [
           {
-            title: 'Laser Scanning & Reality Capture',
-            slug: 'laser-scanning-reality-capture',
-            description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
-            sub_services: ['3D Laser Scanning', 'Point Cloud Processing', 'Scan-to-BIM', 'Existing Condition Modeling', 'As-Built Verification'],
-            banner_image: '/servicepage1.png'
+            title: 'Asset Twin',
+            slug: 'asset-twin',
+            description: 'Virtual representation of physical assets connecting 3D spatial models with operational telemetry.',
+            bullets: ['3D Asset Visualization', 'IoT Telemetry Integration', 'Predictive Asset Analytics', 'COBie Data Handover'],
+            tools: [['Autodesk Tandem', 'Azure Digital Twins'], ['ThingWorx', 'Matterport']],
+            display_order: 1
+          },
+          {
+            title: 'System Integration',
+            slug: 'system-integration',
+            description: 'Connecting heterogeneous building automation, BMS, CAFM, and ERP software with Digital Twin hubs.',
+            bullets: ['REST/GraphQL API Middleware', 'BMS/BAS Integration', 'CAFM & ERP Connector', 'Data Pipelines'],
+            tools: [['Node-RED', 'Apache Kafka'], ['Grafana', 'Docker']],
+            display_order: 2
+          },
+          {
+            title: 'Real-Time Monitoring',
+            slug: 'real-time-monitoring',
+            description: 'Continuous live sensor data monitoring, anomaly detection, and operational performance dashboards.',
+            bullets: ['Live Sensor Data Streaming', 'Anomaly Alerts', 'Energy Consumption Monitoring', 'Space Utilization Analytics'],
+            tools: [['Grafana', 'InfluxDB'], ['AWS IoT Core', 'Azure IoT']],
+            display_order: 3
+          },
+          {
+            title: 'Asset Management',
+            slug: 'asset-management',
+            description: 'Comprehensive facility asset lifecycle tracking, maintenance scheduling, and digital operations handover.',
+            bullets: ['Maintenance Scheduling', 'Work Order Automation', 'Lifecycle Cost Analysis', 'Asset Register Management'],
+            tools: [['IBM Maximo', 'SAP PM'], ['Autodesk Tandem', 'Archibus']],
+            display_order: 4
           }
         ]
       },
       {
-        name: 'Digital Twin & Asset Lifecycle',
-        slug: 'digital-twin-asset-lifecycle',
-        short_description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
-        icon: 'Layers',
+        name: 'Construction Technology',
+        slug: 'construction-technology',
+        short_description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.',
+        icon: 'Cpu',
         display_order: 4,
         status: 'Active',
         featured: 1,
         services: [
           {
-            title: 'Digital Twin & Asset Lifecycle',
-            slug: 'digital-twin-asset-lifecycle',
-            description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
-            sub_services: ['Digital Twin', 'BIM Integration', 'GIS', 'CAFM / IWMS', 'CMMS', 'BAS / BMS', 'ERP', 'EDMS', 'Asset Information Management'],
-            banner_image: '/servicepage1.png'
-          }
-        ]
-      },
-      {
-        name: 'Sustainability Consultancy',
-        slug: 'sustainability-consultancy',
-        short_description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
-        icon: 'Leaf',
-        display_order: 5,
-        status: 'Active',
-        featured: 1,
-        services: [
+            title: 'Remote Construction',
+            slug: 'remote-construction',
+            description: 'Remote site monitoring, virtual walkthroughs, and automated progress reporting for distributed teams.',
+            bullets: ['Remote Site Walkthroughs', 'Progress Monitoring', 'Virtual Inspections', 'Cloud Collaboration'],
+            tools: [['OpenSpace', 'Cupix'], ['Matterport', 'Autodesk ACC']],
+            display_order: 1
+          },
           {
-            title: 'Sustainability Consultancy',
-            slug: 'sustainability-consultancy',
-            description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
-            sub_services: ['GSAS', 'LEED', 'Energy Audits', 'Green Building Gap Analysis', 'Carbon Footprint Management', 'ISO 14064', 'Environmental Consultancy'],
-            banner_image: '/servicepage1.png'
-          }
-        ]
-      },
-      {
-        name: 'Remote Construction Solutions',
-        slug: 'remote-construction-solutions',
-        short_description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
-        icon: 'Cpu',
-        display_order: 6,
-        status: 'Active',
-        featured: 1,
-        services: [
+            title: '360° Capture',
+            slug: '360-capture',
+            description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual tracking.',
+            bullets: ['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation'],
+            tools: [['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']],
+            display_order: 2
+          },
           {
-            title: 'Remote Construction Solutions',
-            slug: 'remote-construction-solutions',
-            description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
-            sub_services: ['Remote Site Support', 'AR Solutions', '360° Site Documentation', 'Remote Inspection', 'Digital Collaboration', 'Robotic Integration'],
-            banner_image: '/servicepage1.png'
+            title: 'AR Solutions',
+            slug: 'ar-solutions',
+            description: 'Augmented reality visualization overlaying 3D BIM models directly onto job site physical spaces.',
+            bullets: ['BIM Overlay on Site', 'Clash Detection in AR', 'Remote Expert Assistance', 'Safety Hazard Training'],
+            tools: [['Trimble Connect AR', 'HoloLens 2'], ['vGIS', 'Unity Industrial']],
+            display_order: 3
+          },
+          {
+            title: 'Robotics',
+            slug: 'robotics',
+            description: 'Robotic site layout, autonomous scanning, and robotic inspection integrations for modern job sites.',
+            bullets: ['Autonomous Scanning Robots', 'Robotic Layout Marking', 'Drone Photogrammetry', 'Automated Surveys'],
+            tools: [['Boston Dynamics Spot', 'Dusty Robotics'], ['Skydio Drones', 'Pix4D']],
+            display_order: 4
           }
         ]
       }
     ];
 
-    for (const cat of coreCategories) {
-      const [existingCat] = await pool.query('SELECT id FROM service_categories WHERE slug = ?', [cat.slug]);
+    // Archive (inactivate) any old categories not matching the 4 required
+    const validCatNames = requiredCategories.map(c => c.name);
+    await pool.query('UPDATE service_categories SET status = "Inactive" WHERE name NOT IN (?)', [validCatNames]);
+
+    // Upsert the 4 main categories
+    for (const cat of requiredCategories) {
+      const [existingCat] = await pool.query('SELECT id FROM service_categories WHERE name = ? OR slug = ?', [cat.name, cat.slug]);
+      let catId;
       if (existingCat.length === 0) {
-        await pool.query(
+        const [res] = await pool.query(
           'INSERT INTO service_categories (name, slug, short_description, icon, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [cat.name, cat.slug, cat.short_description, cat.icon, cat.display_order, cat.status, cat.featured]
+          [cat.name, cat.slug, cat.short_description, cat.icon, cat.display_order, 'Active', cat.featured]
         );
+        catId = res.insertId;
       } else {
+        catId = existingCat[0].id;
         await pool.query(
-          'UPDATE service_categories SET name = ?, short_description = ?, icon = ?, display_order = ?, status = ? WHERE slug = ?',
-          [cat.name, cat.short_description, cat.icon, cat.display_order, cat.status, cat.slug]
+          'UPDATE service_categories SET status = "Active" WHERE id = ?',
+          [catId]
         );
       }
 
+      // Upsert the 4 sub-services per category
       for (const s of cat.services) {
-        let existingSvc = [];
-        try {
-          const [res] = await pool.query('SELECT id FROM services WHERE slug = ? OR (category = ? AND title = ?)', [s.slug, cat.name, s.title]);
-          existingSvc = res;
-        } catch (e) {
-          const [res] = await pool.query('SELECT id FROM services WHERE category = ? AND title = ?', [cat.name, s.title]);
-          existingSvc = res;
-        }
-        const bulletsJson = JSON.stringify(s.sub_services);
+        const [existingSvc] = await pool.query(
+          'SELECT id FROM services WHERE slug = ? OR (category = ? AND title = ?)',
+          [s.slug, cat.name, s.title]
+        );
+        const bulletsJson = JSON.stringify(s.bullets);
+        const toolsJson = JSON.stringify(s.tools);
+
         if (existingSvc.length === 0) {
           await pool.query(
-            'INSERT INTO services (category, title, slug, description, bullets, banner_image, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [cat.name, s.title, s.slug, s.description, bulletsJson, s.banner_image, cat.display_order, 'Active', 1]
+            'INSERT INTO services (category, category_id, title, slug, description, bullets, tools, banner_image, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [cat.name, catId, s.title, s.slug, s.description, bulletsJson, toolsJson, '/servicepage1.png', s.display_order, 'Active', 1]
           );
         } else {
+          // Preserve all custom user edits in the database (description, bullets, tools, images, etc.) on server restart
           await pool.query(
-            'UPDATE services SET category = ?, title = ?, slug = ?, description = ?, bullets = ?, display_order = ?, status = ? WHERE id = ?',
-            [cat.name, s.title, s.slug, s.description, bulletsJson, cat.display_order, 'Active', existingSvc[0].id]
+            'UPDATE services SET category = ?, category_id = ?, status = "Active" WHERE id = ?',
+            [cat.name, catId, existingSvc[0].id]
           );
         }
       }
     }
 
-    // Seed Services
-    const [servicesRows] = await pool.query('SELECT COUNT(*) as count FROM services');
-    if (servicesRows[0].count === 0) {
-      console.log('Seeding services...');
-      const servicesSeed = [
-        {
-          category: 'Engineering Services',
-          title: 'Engineering Design support Services',
-          description: 'We at Blue Crescent Engineering provide comprehensive Engineering Design Support Services spanning conceptual development, preliminary FEED engineering, detailed design calculations, and authority approval management across Qatar & GCC region.',
-          bullets: JSON.stringify([
-            'Comprehensive HVAC, Plumbing, Drainage, and Electrical Load Calculations.',
-            'Structural Load Analysis, Foundation Design & Frame Modeling.',
-            'Value Engineering & System Optimization to reduce CapEx & OpEx.',
-            'Peer Review & Technical Audit of third-party engineering packages.',
-            'Authority Approval Submissions (Kahramaa, Civil Defense, Ashghal, Qatar Municipality).'
-          ]),
-          tools: JSON.stringify([
-            ['AutoCAD', 'HAP (Hourly Analysis Program)'],
-            ['ETABS', 'SAFE'],
-            ['STAAD.Pro', 'Revit MEP']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Engineering Services',
-          title: 'Specialised Simulation & Analysis',
-          description: 'We, at Blue Crescent Engineering Specialised Simulation and Analysis offers advanced engineering solution for Acoustics, HVAC, Power, Oil & Gas domains. We add values to our clients by providing the following services which really helps our clients to acquire a good decision during the early stages of projects by averting any possible future foilmes.\n\nWe,Blue Crescent Engineering have collaborated with specialized service experts and providers to provide unique, feasible, cost effective, and environmental friendly solutions for our client\'s challenges by adopting the advanced tools like Numerical Methods, Simulation Algorithm and Finite Element Method with remarkable ease.',
-          bullets: JSON.stringify([
-            'CFD (Computational Fluid Dynamics) Analysis',
-            'Piping Analysis (Fem)',
-            'Structural Analysis',
-            'Acoustic Study, Acoustic Analysis, Noise and Vibration Control'
-          ]),
-          tools: JSON.stringify([
-            ['NASTRAN', 'ANSYS CFX'],
-            ['FEMAP', 'FDS'],
-            ['Open Cascade', 'Bentley PLUS'],
-            ['ANSYS FLUENT', 'Bentley AUTOPIPE']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Engineering Services',
-          title: 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D',
-          description: 'High-precision 2D CAD drafting and shop drawing development for Mechanical, Electrical, Plumbing (MEP) systems, civil infrastructure networks, and transportation corridors.',
-          bullets: JSON.stringify([
-            'Coordinated Mechanical, Electrical & Plumbing (MEP) 2D Shop Drawings.',
-            'Infrastructure Utility Layouts (Stormwater, Foul Sewer, Potable Water, District Cooling).',
-            'Road Alignment, Pavement Marking & Traffic Signage 2D Drawings.',
-            'Builder’s Work & Penetration Coordination Drawings.',
-            'As-Built Drawings & Record Documentation for Handover.'
-          ]),
-          tools: JSON.stringify([
-            ['AutoCAD Electrical', 'AutoCAD MEP'],
-            ['MicroStation', 'Civil 3D']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Engineering Services',
-          title: 'BIM Modelling - 3D',
-          description: 'Advanced Building Information Modeling (BIM) services up to LOD 500, enabling clash-free multi-disciplinary coordination, 4D construction scheduling, and 5D quantity extraction.',
-          bullets: JSON.stringify([
-            'Multi-Disciplinary 3D BIM Model Creation (Architectural, Structural, MEP).',
-            'Automated Clash Detection & Matrix Resolution (Navisworks Manage).',
-            '4D Construction Sequencing & Phasing Visualizations.',
-            '5D Quantity Take-off (QTO) & Cost Estimation Integration.',
-            'COBie Data Integration & Scan-to-BIM Point Cloud Modeling.'
-          ]),
-          tools: JSON.stringify([
-            ['Autodesk Revit', 'Navisworks Manage'],
-            ['Solibri Model Checker', 'BIM 360 / Autodesk Construction Cloud']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Engineering Services',
-          title: 'Outsourcing Technical Experts',
-          description: 'Deployment of highly qualified, specialized engineering personnel and technical experts to client site teams and project management offices across Qatar and the Gulf region.',
-          bullets: JSON.stringify([
-            'Senior MEP Project Engineers & Technical Coordinators.',
-            'Certified BIM Managers, Coordinators & Modellers.',
-            'Structural, Civil & Infrastructure Senior Engineers.',
-            'Certified QA/QC Inspectors & HSE Safety Managers.',
-            'Contract Specialists, Cost Engineers & Commercial Managers.'
-          ]),
-          tools: JSON.stringify([
-            ['On-Demand Talent Scaling', 'Deep Local Qatar Market Expertise'],
-            ['Immediate Site Mobilization', 'Full Regulatory Compliance']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Sustainability Services',
-          title: 'Energy Auditing',
-          description: 'Comprehensive energy audit services tailored for commercial, residential, healthcare, and industrial facilities to maximize energy efficiency and comply with Qatar National Sustainability Standards.',
-          bullets: JSON.stringify([
-            'ASHRAE Level 1 (Walk-Through), Level 2 (Energy Survey), and Level 3 (Investment Grade) Audits.',
-            'HVAC System Thermal Performance & Chiller Plant Efficiency Audits.',
-            'Building Envelope Thermal Imaging (Infrared Thermography) & Blower Door Testing.',
-            'Power Quality Analysis, Power Factor Correction & Electrical Peak Demand Management.',
-            'Renewable Energy (Solar PV) Feasibility & Energy Conservation Measure (ECM) ROI Reports.'
-          ]),
-          tools: JSON.stringify([
-            ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
-            ['Data Loggers', 'eQUEST / EnergyPlus']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Sustainability Services',
-          title: 'Commissioning LEED & GSAS',
-          description: 'Independent 3rd-Party Commissioning Authority (CxA) services ensuring building systems operate according to design intent and satisfy LEED & GSAS sustainability requirements.',
-          bullets: JSON.stringify([
-            'Fundamental & Enhanced Commissioning for LEED (BD+C, ID+C, O+M).',
-            'GSAS (Global Sustainability Assessment System) Mandatory Cx Certification.',
-            'Re-Commissioning & Retro-Commissioning of Existing Operational Buildings.',
-            'Pre-Functional Checklists, Functional Performance Testing (FPT), and Integrated Systems Testing (IST).',
-            'O&M Manual Verification, Staff Training Supervision, and 10-Month Warranty Reviews.'
-          ]),
-          tools: JSON.stringify([
-            ['GSAS 2019 / 2022 Guidelines', 'USGBC LEED v4 / v4.1 Standards'],
-            ['CxAlloy Commissioning Platform', 'Calibrated Testing Instruments']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Sustainability Services',
-          title: 'Green Building Facilitation',
-          description: 'Full lifecycle green building consulting, facilitating GSAS & LEED certifications from concept design stage through to final award and handover.',
-          bullets: JSON.stringify([
-            'GSAS 1-Star to 5-Star Rating Facilitation & Documentation Management.',
-            'LEED Certified, Silver, Gold & Platinum Certification Management.',
-            'Life Cycle Assessment (LCA) & Embodied Carbon Footprint Calculations.',
-            'Indoor Environmental Quality (IEQ) Studies, Daylight & Views Simulation.',
-            'Water Conservation Strategy & Stormwater Management Consulting.'
-          ]),
-          tools: JSON.stringify([
-            ['GSAS Gate Tool', 'IES VE'],
-            ['Sefaira', 'One Click LCA']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Telecom Services',
-          title: 'Fiber Optic (Indoor & Outdoor)',
-          description: 'Turnkey fiber optic network engineering, encompassing indoor structured cabling, outdoor long-haul backbone networks, and FTTH (Fiber-To-The-Home) deployment.',
-          bullets: JSON.stringify([
-            'Single-Mode (OS2) and Multi-Mode (OM3/OM4/OM5) Fiber Infrastructure Design.',
-            'Outdoor Duct Network, Handhole & Manhole Infrastructure Routing.',
-            'Fusion Splicing, Termination, and OTDR Trace Testing & Certification.',
-            'FTTH (Fiber-to-the-Home) & FTTB (Fiber-to-the-Building) Passive Optical Networks.',
-            'Ooredoo & Vodafone Qatar Service Provider Interface Coordination.'
-          ]),
-          tools: JSON.stringify([
-            ['EXFO OTDR Testers', 'Fujikura Fusion Splicers'],
-            ['Fluke Networks Cable Analyzer', 'AutoCAD Telecom']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Telecom Services',
-          title: 'Cellular (IBS & Outdoor Sites)',
-          description: 'In-Building Solutions (IBS) and Outdoor Cell Site engineering for seamless 4G LTE & 5G NR mobile coverage across Qatar’s iconic towers, stadiums, and infrastructure.',
-          bullets: JSON.stringify([
-            'Active & Passive Distributed Antenna System (DAS) Design for IBS.',
-            'Small Cell & Femtocell Indoor Coverage Planning for High-Rise Buildings.',
-            'Outdoor Macro Cell Tower Foundation, Pole Mount & Monopole Engineering.',
-            'RF Field Survey, CW Propagation Testing & Drive Test Optimization.',
-            'Service Provider (Ooredoo / Vodafone) Approval & Site Integration.'
-          ]),
-          tools: JSON.stringify([
-            ['iBwave Design', 'TEMS Investigation'],
-            ['Anritsu Site Master', 'NEMO Outdoor']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Telecom Services',
-          title: 'Microwave Links',
-          description: 'High-capacity Wireless Backhaul Point-to-Point (P2P) and Point-to-Multipoint (P2MP) microwave network design and line-of-sight validation.',
-          bullets: JSON.stringify([
-            'Line-of-Sight (LOS) Path Survey & Fresnel Zone Clearance Analysis.',
-            'Microwave Link Budget Calculation, Availability & Rain Fade Modeling.',
-            'High-Frequency (6GHz to 80GHz E-Band) Microwave Equipment Specification.',
-            'Antenna Mounting Structure, Tower Wind Load & Structural Stress Analysis.',
-            'Regulatory Spectrum Licensing & Frequency Coordination Support.'
-          ]),
-          tools: JSON.stringify([
-            ['Pathloss 5', 'Planet RF'],
-            ['TEMS Microwave', 'Pathfinder']
-          ]),
-          banner_image: '/servicepage1.png'
-        },
-        {
-          category: 'Telecom Services',
-          title: 'Wi-Fi Systems',
-          description: 'High-density enterprise Wi-Fi 6 / 6E / 7 wireless network architecture for commercial offices, luxury hotels, educational campuses, and industrial facilities.',
-          bullets: JSON.stringify([
-            'Predictive & On-Site Active Wi-Fi Heatmap Survey (Ekahau AI Pro).',
-            'Access Point (AP) Location Optimization & Channel Allocation Planning.',
-            'Enterprise WLAN Controller Configuration & High-Availability Mesh Architecture.',
-            'Guest Portal, Captive Portal & Bandwidth Management Integration.',
-            'Post-Deployment Validation, Signal Strength (RSSI) & SNR Optimization.'
-          ]),
-          tools: JSON.stringify([
-            ['Ekahau AI Pro', 'Sidekick 2'],
-            ['AirMagnet WiFi Analyzer', 'Cisco Catalyst Center']
-          ]),
-          banner_image: '/servicepage1.png'
-        }
-      ];
-
-      for (const s of servicesSeed) {
-        await pool.query(
-          'INSERT INTO services (category, title, description, bullets, tools, banner_image) VALUES (?, ?, ?, ?, ?, ?)',
-          [s.category, s.title, s.description, s.bullets, s.tools, s.banner_image]
-        );
-      }
-    }
+    // Archive (inactivate) any old service items not matching the 16 sub-services
+    const validSubSlugs = requiredCategories.flatMap(c => c.services.map(s => s.slug));
+    await pool.query('UPDATE services SET status = "Inactive" WHERE slug NOT IN (?) AND title NOT IN ("CAD", "BIM", "Laser Scanning", "Scan to BIM", "GSAS", "LEED", "Energy Audit", "Carbon Management", "Asset Twin", "System Integration", "Real-Time Monitoring", "Asset Management", "Remote Construction", "360° Capture", "AR Solutions", "Robotics")', [validSubSlugs]);
+    await pool.query('UPDATE services SET status = "Inactive" WHERE category IN ("Telecom Services", "Telecom", "Digital Twin Services") OR category NOT IN ("Engineering Services", "Sustainability Services", "Digital Twin", "Construction Technology")');
+    await pool.query('UPDATE service_categories SET status = "Inactive" WHERE name IN ("Telecom Services", "Telecom", "Digital Twin Services") OR name NOT IN ("Engineering Services", "Sustainability Services", "Digital Twin", "Construction Technology")');
 
     // Seed Hero Slides
     const [heroRows] = await pool.query('SELECT COUNT(*) as count FROM hero_slides');
@@ -1167,6 +1015,230 @@ async function initDB() {
           '8:00 AM – 6:00 PM', '8:00 AM – 12:00 PM', 'Closed'
         )
       `);
+    }
+
+    // Seed & Upgrade Projects with rich structured data
+    const [projCountRows] = await pool.query('SELECT COUNT(*) as count FROM projects');
+    const defaultSeedProjects = [
+      {
+        name: 'Qatar Free Zone Project',
+        slug: 'qatar-free-zone',
+        division_type: 'BIM Projects',
+        client: 'Free Zones Authority (QFZA)',
+        contractor: 'Consolidated Contractors Company (CCC)',
+        consultant: 'Dar Al-Handasah',
+        location: 'Doha, Qatar',
+        sector: 'Infrastructure & Buildings',
+        status: 'Completed',
+        year: '2024',
+        short_description: 'Multidisciplinary BIM coordination and digital asset information supporting infrastructure and building requirements.',
+        description: 'Development and coordination of multidisciplinary BIM models and preparation of digital asset information to support operational requirements for Qatar Free Zone development.',
+        services: JSON.stringify(['BIM', 'Digital Twin', 'Laser Scanning']),
+        disciplines: JSON.stringify(['Architecture', 'Structure', 'MEP', 'Infrastructure']),
+        project_stage: 'As-Built / Asset Handover',
+        bim_level: 'LOD 500',
+        scope_of_work: 'Development and coordination of multidisciplinary BIM models and preparation of digital asset information to support operational requirements.',
+        deliverables: JSON.stringify(['BIM Models', 'As-Built Information', 'Asset Data', 'Digital Twin Integration']),
+        technologies: JSON.stringify(['Revit', 'Navisworks', 'Digital Twin Platform', 'AutoCAD']),
+        project_highlights: 'Multidisciplinary BIM coordination and digital asset information supporting infrastructure and building requirements.',
+        image: '/project1.png',
+        display_order: 1
+      },
+      {
+        name: 'Hamad Port Maritime Facilities',
+        slug: 'hamad-port-maritime',
+        division_type: 'CAD Projects',
+        client: 'Mwani Qatar / Ministry of Transport',
+        contractor: 'China Harbour Engineering Company',
+        consultant: 'AECOM',
+        location: 'Umm Said, Qatar',
+        sector: 'Transportation & Maritime',
+        status: 'Completed',
+        year: '2023',
+        short_description: 'Multidisciplinary CAD drafting, shop drawings, and engineering documentation support.',
+        description: 'Comprehensive CAD drafting, shop drawings, as-built documentation, and GSAS green building compliance management for maritime port facilities.',
+        services: JSON.stringify(['CAD', 'GSAS', 'Engineering Services']),
+        disciplines: JSON.stringify(['Infrastructure', 'Roads', 'Utilities', 'MEP']),
+        project_stage: 'Construction & As-Built',
+        bim_level: 'LOD 300',
+        scope_of_work: 'Comprehensive CAD drafting, shop drawings, and GSAS green building compliance management for maritime port facilities.',
+        deliverables: JSON.stringify(['Shop Drawings', 'As-Built Documentation', 'GSAS Certification Data']),
+        technologies: JSON.stringify(['AutoCAD', 'Civil 3D', 'MicroStation']),
+        project_highlights: 'Large-scale maritime infrastructure CAD documentation and environmental sustainability verification.',
+        image: '/project1.png',
+        display_order: 2
+      },
+      {
+        name: 'Doha Port Terminal Renovation',
+        slug: 'doha-port-terminal',
+        division_type: 'Sustainability Projects',
+        client: 'Mwani Qatar',
+        contractor: 'Al Jaber Engineering',
+        consultant: 'KEO International Consultants',
+        location: 'Doha, Qatar',
+        sector: 'Hospitality & Maritime',
+        status: 'Completed',
+        year: '2023',
+        short_description: 'GSAS green building certification management and energy diagnostic audits.',
+        description: 'GSAS green building certification management, energy diagnostic audits, and sustainable material sourcing for commercial cruise terminal facilities.',
+        services: JSON.stringify(['Sustainability Services', 'GSAS', 'Energy Audit']),
+        disciplines: JSON.stringify(['Architecture', 'MEP', 'Landscape']),
+        project_stage: 'Design & Commissioning',
+        bim_level: 'LOD 300',
+        scope_of_work: 'GSAS green building certification management, energy diagnostic audits, and sustainable material sourcing.',
+        deliverables: JSON.stringify(['GSAS Documentation', 'Energy Audit Reports', 'Sustainability Guidelines']),
+        technologies: JSON.stringify(['IES VE', 'EnergyPlus', 'GSAS Gate Tool']),
+        project_highlights: 'Achievement of 3-Star GSAS Design & Build rating for commercial cruise terminal facilities.',
+        image: '/project1.png',
+        display_order: 3
+      },
+      {
+        name: 'Qatar Rail Station Project',
+        slug: 'qatar-rail-station',
+        division_type: 'BIM Projects',
+        client: 'Qatar Rail',
+        contractor: 'RHK Joint Venture',
+        consultant: 'Atkins',
+        location: 'Doha, Qatar',
+        sector: 'Transportation & Metro',
+        status: 'Completed',
+        year: '2022',
+        short_description: 'Building Information Modeling up to LOD 400, clash detection, and 4D/5D simulations.',
+        description: 'Complex 3D BIM modeling, clash detection, and underground station coordination across architectural, structural, and MEP disciplines.',
+        services: JSON.stringify(['BIM', 'Scan to BIM', 'Laser Scanning']),
+        disciplines: JSON.stringify(['Architecture', 'Structure', 'MEP', 'Underground Utilities']),
+        project_stage: 'Construction & As-Built',
+        bim_level: 'LOD 400',
+        scope_of_work: 'Complex 3D BIM modeling, clash detection, and underground station coordination across architectural and MEP disciplines.',
+        deliverables: JSON.stringify(['3D BIM Models', 'Clash Reports', '4D Scheduling Models']),
+        technologies: JSON.stringify(['Revit', 'Navisworks Manage', 'BIM 360']),
+        project_highlights: 'Zero-clash resolution across 12,000+ underground utility & MEP interfaces.',
+        image: '/project1.png',
+        display_order: 4
+      },
+      {
+        name: 'Bus Station & Transit Hub Depots',
+        slug: 'bus-station-depots',
+        division_type: 'BIM Projects',
+        client: 'Ashghal / Ministry of Transport',
+        contractor: 'HBK Contracting',
+        consultant: 'Parsons',
+        location: 'Doha & Al Wakra, Qatar',
+        sector: 'Transportation',
+        status: 'Completed',
+        year: '2024',
+        short_description: 'BIM modeling up to LOD 400 and GSAS green building certification for transit hubs.',
+        description: 'BIM modeling up to LOD 400 and GSAS green building certification for regional bus depots and transit hubs.',
+        services: JSON.stringify(['BIM', 'GSAS', 'Digital Twin']),
+        disciplines: JSON.stringify(['Architecture', 'Structure', 'MEP', 'Roads']),
+        project_stage: 'LOD 400 & As-Built',
+        bim_level: 'LOD 400',
+        scope_of_work: 'BIM modeling up to LOD 400 and GSAS green building certification for regional bus depots and transit hubs.',
+        deliverables: JSON.stringify(['BIM Models', 'GSAS Certification', 'As-Built Documentation']),
+        technologies: JSON.stringify(['Revit', 'Civil 3D', 'Navisworks']),
+        project_highlights: 'Fast-track BIM delivery and GSAS sustainability rating across multiple transit depots.',
+        image: '/project1.png',
+        display_order: 5
+      },
+      {
+        name: 'Hamad Airport Terminal Expansion',
+        slug: 'airport-expansion-project',
+        division_type: 'Laser Scanning Projects',
+        client: 'Hamad International Airport',
+        contractor: 'TAV Construction',
+        consultant: 'Meinhardt',
+        location: 'Doha, Qatar',
+        sector: 'Aviation & Transportation',
+        status: 'Completed',
+        year: '2023',
+        short_description: 'High-precision 3D laser scanning and point-cloud to BIM workflows.',
+        description: 'High-precision 3D laser scanning of existing terminal structures and point-cloud-to-BIM conversion for expansion integration.',
+        services: JSON.stringify(['Laser Scanning', 'Scan to BIM', 'BIM']),
+        disciplines: JSON.stringify(['Architecture', 'MEP', 'Façade']),
+        project_stage: 'Retrofit & Expansion',
+        bim_level: 'LOD 400',
+        scope_of_work: 'High-precision 3D laser scanning of existing terminal structures and point-cloud-to-BIM conversion for expansion integration.',
+        deliverables: JSON.stringify(['Point Cloud Scans', 'Scan-to-BIM Models', 'As-Built Verification Reports']),
+        technologies: JSON.stringify(['Leica RTC360', 'ReCap Pro', 'Revit']),
+        project_highlights: 'Millimeter-accurate 3D laser scanning without disrupting operational airport terminal traffic.',
+        image: '/project1.png',
+        display_order: 6
+      },
+      {
+        name: 'Qetaifan Island North Resort',
+        slug: 'qetaifan-island-resort',
+        division_type: 'Digital Twin Projects',
+        client: 'Qetaifan Projects',
+        contractor: 'Larsen & Toubro',
+        consultant: 'Atkins',
+        location: 'Lusail, Qatar',
+        sector: 'Hospitality & Real Estate',
+        status: 'Ongoing',
+        year: '2025',
+        short_description: 'Connecting physical assets with digital information for IoT monitoring and asset management.',
+        description: 'Digital Twin platform integration and GSAS sustainability facilitation for luxury island resort and waterpark development.',
+        services: JSON.stringify(['Digital Twin', 'BIM', 'Sustainability Services']),
+        disciplines: JSON.stringify(['Architecture', 'Structure', 'MEP', 'Landscape', 'Utilities']),
+        project_stage: 'Construction & Digital Twin Setup',
+        bim_level: 'LOD 500',
+        scope_of_work: 'Digital Twin platform integration and GSAS sustainability facilitation for luxury island resort and waterpark development.',
+        deliverables: JSON.stringify(['Digital Twin Models', 'IoT Sensor Connections', 'GSAS Reports']),
+        technologies: JSON.stringify(['Autodesk Tandem', 'Revit', 'Navisworks', 'Grafana']),
+        project_highlights: 'Real-time digital twin asset tracking and energy monitoring for waterfront luxury developments.',
+        image: '/project1.png',
+        display_order: 7
+      },
+      {
+        name: 'Qatar Foundation Research Complex',
+        slug: 'qatar-foundation-research-complex',
+        division_type: 'Sustainability Projects',
+        client: 'Qatar Foundation',
+        contractor: 'Midmac Contracting',
+        consultant: 'Ove Arup & Partners',
+        location: 'Education City, Doha',
+        sector: 'Education & Government',
+        status: 'Completed',
+        year: '2022',
+        short_description: 'Green building consulting, GSAS/LEED certification, and energy diagnostic audits.',
+        description: 'CAD documentation support, LEED Gold commissioning, and building thermal envelope energy auditing for institutional research facilities.',
+        services: JSON.stringify(['CAD', 'LEED', 'Sustainability Services']),
+        disciplines: JSON.stringify(['Architecture', 'MEP', 'Façade']),
+        project_stage: 'Design & LEED Commissioning',
+        bim_level: 'LOD 300',
+        scope_of_work: 'CAD documentation support, LEED Gold commissioning, and building thermal envelope energy auditing for institutional research facilities.',
+        deliverables: JSON.stringify(['LEED Gold Documentation', 'Energy Audit Reports', 'CAD Shop Drawings']),
+        technologies: JSON.stringify(['AutoCAD', 'eQUEST', 'IES VE']),
+        project_highlights: 'Successful LEED Gold certification for institutional research facilities.',
+        image: '/project1.png',
+        display_order: 8
+      }
+    ];
+
+    if (projCountRows[0].count === 0) {
+      console.log('Seeding initial verified projects data...');
+      for (const p of defaultSeedProjects) {
+        await pool.query(
+          `INSERT INTO projects (
+            name, slug, division_type, client, contractor, consultant, location, sector, status, year,
+            short_description, description, services, disciplines, project_stage, bim_level, scope_of_work,
+            deliverables, technologies, project_highlights, image, display_order
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            p.name, p.slug, p.division_type, p.client, p.contractor, p.consultant, p.location, p.sector, p.status, p.year,
+            p.short_description, p.description, p.services, p.disciplines, p.project_stage, p.bim_level, p.scope_of_work,
+            p.deliverables, p.technologies, p.project_highlights, p.image, p.display_order
+          ]
+        );
+      }
+    } else {
+      // Ensure existing records have valid slugs and structured data
+      const [existingProjs] = await pool.query('SELECT id, name, slug FROM projects');
+      for (const p of existingProjs) {
+        if (!p.slug) {
+          const generatedSlug = p.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+          await pool.query('UPDATE projects SET slug = ? WHERE id = ?', [generatedSlug, p.id]);
+        }
+      }
     }
 
     isConnected = true;

@@ -41,234 +41,60 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
       .catch(err => console.warn('Testimonials fetch warning:', err));
   }, []);
 
-  // Custom static fallback data map for all 12 sub-services
+  // Static fallback data map for all 16 sub-services
   const staticServiceDetailsMap = {
-    'Engineering Design support Services': {
-      description: 'We at Blue Crescent Engineering provide comprehensive Engineering Design Support Services spanning conceptual development, preliminary FEED engineering, detailed design calculations, and authority approval management across Qatar & GCC region.',
-      bulletsTitle: 'Key Design Support Services Include:',
-      bullets: [
-        'Comprehensive HVAC, Plumbing, Drainage, and Electrical Load Calculations.',
-        'Structural Load Analysis, Foundation Design & Frame Modeling.',
-        'Value Engineering & System Optimization to reduce CapEx & OpEx.',
-        'Peer Review & Technical Audit of third-party engineering packages.',
-        'Authority Approval Submissions (Kahramaa, Civil Defense, Ashghal, Qatar Municipality).'
-      ],
-      tools: [
-        ['AutoCAD', 'HAP (Hourly Analysis Program)'],
-        ['ETABS', 'SAFE'],
-        ['STAAD.Pro', 'Revit MEP']
-      ]
-    },
-    '2D CAD Drafting Services': {
-      description: 'High-precision 2D CAD drafting and shop drawing development for Mechanical, Electrical, Plumbing (MEP) systems, civil infrastructure networks, and transportation corridors.',
-      bulletsTitle: 'Key Shop Drawing Deliverables Include:',
-      bullets: [
-        'Coordinated Mechanical, Electrical & Plumbing (MEP) 2D Shop Drawings.',
-        'Infrastructure Utility Layouts (Stormwater, Foul Sewer, Potable Water, District Cooling).',
-        'Road Alignment, Pavement Marking & Traffic Signage 2D Drawings.',
-        'Builder’s Work & Penetration Coordination Drawings.',
-        'As-Built Drawings & Record Documentation for Handover.'
-      ],
-      tools: [
-        ['AutoCAD Electrical', 'AutoCAD MEP'],
-        ['MicroStation', 'Civil 3D']
-      ]
-    },
-    'BIM Services': {
-      description: 'Advanced Building Information Modeling (BIM) services up to LOD 500, enabling clash-free multi-disciplinary coordination, 4D construction scheduling, and 5D quantity extraction. Blue Crescent Engineering delivers BIM solutions that reduce rework, improve collaboration, and drive data-rich handovers across the full project lifecycle.',
-      bulletsTitle: 'Key BIM Capabilities Include:',
-      bullets: [
-        'Multi-Disciplinary 3D BIM Model Creation (Architectural, Structural, MEP) to LOD 500.',
-        'Automated Clash Detection & Matrix Resolution using Navisworks Manage.',
-        '4D Construction Sequencing & Phasing Visualizations linked to project schedules.',
-        '5D Quantity Take-off (QTO) & Cost Estimation Integration with project controls.',
-        'COBie Data Integration & Scan-to-BIM Point Cloud Modeling for existing structures.',
-        'BIM Execution Plan (BEP) preparation and Common Data Environment (CDE) management.',
-        'ISO 19650 compliant BIM delivery and digital handover documentation.'
-      ],
-      tools: [
-        ['Autodesk Revit', 'Navisworks Manage'],
-        ['Solibri Model Checker', 'BIM 360 / Autodesk Construction Cloud'],
-        ['Autodesk Civil 3D', 'Bentley OpenBuildings']
-      ]
-    },
-    'Outsourcing Technical Experts': {
-      description: 'Deployment of highly qualified, specialized engineering personnel and technical experts to client site teams and project management offices across Qatar and the Gulf region.',
-      bulletsTitle: 'Specialized Personnel Available for Deployment:',
-      bullets: [
-        'Senior MEP Project Engineers & Technical Coordinators.',
-        'Certified BIM Managers, Coordinators & Modellers.',
-        'Structural, Civil & Infrastructure Senior Engineers.',
-        'Certified QA/QC Inspectors & HSE Safety Managers.',
-        'Contract Specialists, Cost Engineers & Commercial Managers.'
-      ],
-      tools: [
-        ['On-Demand Talent Scaling', 'Deep Local Qatar Market Expertise'],
-        ['Immediate Site Mobilization', 'Full Regulatory Compliance']
-      ]
-    },
-    'GSAS Service': {
-      description: 'GSAS (Global Sustainability Assessment System) certification management, green building compliance facilitation, and design and construction consulting for commercial, residential, and institutional projects.',
-      bulletsTitle: 'GSAS Services Include:',
-      bullets: [
-        'GSAS Design & Build Certification management (1-Star to 5-Star).',
-        'GSAS Construction Management facilitation and site auditing.',
-        'Energy & Water optimization studies conforming to GSAS standards.',
-        'Indoor Environmental Quality (IEQ) assessment and daylight simulation.',
-        'Materials & lifecycle assessment (LCA) matching GSAS requirements.'
-      ],
-      tools: [
-        ['GSAS Gate Tool', 'IES VE'],
-        ['Sefaira', 'One Click LCA']
-      ]
-    },
-    'LEED Consulting Services': {
-      description: 'LEED (Leadership in Energy and Environmental Design) consulting and certification management from concept design through to final USGBC audit and commissioning.',
-      bulletsTitle: 'LEED Services Include:',
-      bullets: [
-        'LEED BD+C, ID+C, and O+M certification facilitation.',
-        'Fundamental & Enhanced Commissioning (Cx) satisfying USGBC standards.',
-        'Thermal comfort modeling, building energy simulation, and daylight calculations.',
-        'Indoor air quality testing and green materials sourcing strategies.',
-        'LEED Online portal management and submittal documentation compilation.'
-      ],
-      tools: [
-        ['USGBC LEED v4/v4.1 Guidelines', 'IES VE'],
-        ['CxAlloy Commissioning Platform', 'EnergyPlus']
-      ]
-    },
-    'Energy Audit and Analysis': {
-      description: 'Comprehensive energy auditing and diagnostic analysis services to maximize operational energy efficiency and achieve regulatory sustainability compliance.',
-      bulletsTitle: 'Energy Audit & Analysis Scope:',
-      bullets: [
-        'ASHRAE Level 1, 2, and 3 (Investment Grade) Energy Audits.',
-        'HVAC system thermal efficiency and central chiller plant optimization.',
-        'Building envelope thermal imaging (infrared thermography) and testing.',
-        'Electrical demand management, power quality analysis, and power factor correction.',
-        'Renewable energy (Solar PV) integration and economic feasibility analysis.'
-      ],
-      tools: [
-        ['FLIR Thermal Cameras', 'Power Quality Analyzers'],
-        ['Data Loggers', 'eQUEST / EnergyPlus']
-      ]
-    },
-    'ISO 14064 Consulting Services': {
-      description: 'Consulting services for Greenhouse Gas (GHG) inventory compilation, validation, and verification conforming to ISO 14064 international standards for carbon footprint auditing.',
-      bulletsTitle: 'ISO 14064 Consulting Scope:',
-      bullets: [
-        'ISO 14064-1: Organizational carbon footprint inventory and reporting.',
-        'ISO 14064-2: Project-level GHG emission reduction quantification.',
-        'ISO 14064-3: Validation and verification of GHG assertions.',
-        'Product carbon footprinting and corporate sustainability auditing.',
-        'Carbon offset and decarbonization roadmap strategy development.'
-      ],
-      tools: [
-        ['GHG Protocol Suite', 'ISO 14064 Guidelines'],
-        ['Carbon Calculation Tools', 'Decarbonization Models']
-      ]
-    },
-    'Life Cycle Twin Asset Management': {
-      description: 'Our Life Cycle Twin Asset Management service leverages Digital Twin technology to monitor, simulate, and optimize physical assets across their entire lifecycle — from design and construction through operation and decommissioning — delivering unprecedented visibility and control over asset performance.',
-      bulletsTitle: 'Key Life Cycle Twin Capabilities:',
-      bullets: [
-        'Real-time asset health monitoring using IoT sensor integration and AI-driven analytics.',
-        'Predictive maintenance scheduling based on twin simulation data to reduce downtime.',
-        'Asset performance benchmarking against design intent across full operational lifespan.',
-        'Digital handover documentation (COBie, IFC) linked to live twin models.',
-        'End-of-life decommissioning simulations for cost-effective asset retirement planning.',
-        'Integration with CMMS/EAM platforms for seamless facility management workflows.'
-      ],
-      tools: [
-        ['Autodesk Tandem', 'Bentley iTwin Platform'],
-        ['Azure Digital Twins', 'IBM Maximo / SAP PM'],
-        ['Siemens MindSphere', 'AVEVA Asset Performance Management']
-      ]
-    },
-    'Remote Work Automation': {
-      description: 'Blue Crescent Engineering\'s Remote Work Automation service harnesses Digital Twin environments to automate complex operational workflows, remote inspections, and process controls — enabling engineering teams to manage assets and systems from anywhere in the world with precision and confidence.',
-      bulletsTitle: 'Remote Work Automation Services Include:',
-      bullets: [
-        'Automated remote inspection workflows using drone integration and twin-synchronized imagery.',
-        'Virtual commissioning and remote FAT (Factory Acceptance Testing) through Digital Twin replicas.',
-        'Remote SCADA/PLC simulation and control via Digital Twin dashboards.',
-        'Automated anomaly detection and alert escalation using AI-powered twin analytics.',
-        'Cloud-based collaborative engineering workspaces eliminating on-site constraints.',
-        'Remote training simulation environments for field technicians and operators.'
-      ],
-      tools: [
-        ['AVEVA System Platform', 'Emerson DeltaV Digital Twin'],
-        ['Honeywell Connected Plant', 'GE Digital APM'],
-        ['PTC ThingWorx', 'Rockwell FactoryTalk']
-      ]
-    },
-    'System Integration and Analysis': {
-      description: 'Our System Integration and Analysis service provides end-to-end connectivity between heterogeneous engineering systems, IoT platforms, operational technology (OT), and enterprise IT — creating a unified Digital Twin ecosystem that drives smarter decisions, faster responses, and optimized performance.',
-      bulletsTitle: 'System Integration & Analysis Scope:',
-      bullets: [
-        'OT/IT convergence architecture design connecting PLCs, SCADA, BMS, and ERP systems.',
-        'API-driven integration of multi-vendor IoT platforms and sensor data streams.',
-        'Digital Twin federated model management across BIM, GIS, and simulation platforms.',
-        'Data normalization, cleansing, and real-time analytics pipeline configuration.',
-        'Interoperability compliance with ISO 19650, IEC 62443, and MQTT/OPC-UA protocols.',
-        'Custom dashboard and reporting toolchain development for stakeholder visibility.'
-      ],
-      tools: [
-        ['Microsoft Azure IoT Hub', 'AWS IoT Greengrass'],
-        ['MuleSoft / Boomi Integration', 'OPC-UA / MQTT Brokers'],
-        ['Esri ArcGIS Digital Twin', 'Trimble Connect']
-      ]
-    }
+    // Engineering Services
+    'cad': { title: 'CAD', category: 'Engineering Services', description: 'Professional multidisciplinary 2D/3D CAD drafting, shop drawing production, and engineering documentation support.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'], tools: [['AutoCAD', 'MicroStation'], ['Civil 3D', 'Revit CAD']] },
+    'CAD': { title: 'CAD', category: 'Engineering Services', description: 'Professional multidisciplinary 2D/3D CAD drafting, shop drawing production, and engineering documentation support.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'], tools: [['AutoCAD', 'MicroStation'], ['Civil 3D', 'Revit CAD']] },
+    'bim': { title: 'BIM', category: 'Engineering Services', description: 'End-to-end Building Information Modeling (BIM) up to LOD 500 across architectural, structural, and MEP disciplines.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D BIM Modeling', 'Clash Detection & Resolution', '4D Construction Scheduling', '5D Quantity Take-Off (QTO)'], tools: [['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']] },
+    'BIM': { title: 'BIM', category: 'Engineering Services', description: 'End-to-end Building Information Modeling (BIM) up to LOD 500 across architectural, structural, and MEP disciplines.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D BIM Modeling', 'Clash Detection & Resolution', '4D Construction Scheduling', '5D Quantity Take-Off (QTO)'], tools: [['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']] },
+    'laser-scanning': { title: 'Laser Scanning', category: 'Engineering Services', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Reality Capture'], tools: [['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']] },
+    'Laser Scanning': { title: 'Laser Scanning', category: 'Engineering Services', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Reality Capture'], tools: [['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']] },
+    'scan-to-bim': { title: 'Scan to BIM', category: 'Engineering Services', description: 'Converting raw point cloud scans into intelligent 3D BIM models for renovation, retrofit, and facility management.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Point Cloud to BIM Conversion', 'As-Built Model Verification', 'Retrofit Modeling', 'Deviation Analysis'], tools: [['Autodesk Revit', 'CloudCompare'], ['ClearEdge3D Edgewise', 'Recap Pro']] },
+    'Scan to BIM': { title: 'Scan to BIM', category: 'Engineering Services', description: 'Converting raw point cloud scans into intelligent 3D BIM models for renovation, retrofit, and facility management.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Point Cloud to BIM Conversion', 'As-Built Model Verification', 'Retrofit Modeling', 'Deviation Analysis'], tools: [['Autodesk Revit', 'CloudCompare'], ['ClearEdge3D Edgewise', 'Recap Pro']] },
+
+    // Sustainability Services
+    'gsas': { title: 'GSAS', category: 'Sustainability Services', description: 'Global Sustainability Assessment System (GSAS) certification management, green building compliance, and auditing.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['GSAS Design & Build Certification', 'GSAS Construction Management', 'Energy & Water Audits', 'Daylight Simulation'], tools: [['GSAS Gate Tool', 'IES VE'], ['Sefaira', 'One Click LCA']] },
+    'GSAS': { title: 'GSAS', category: 'Sustainability Services', description: 'Global Sustainability Assessment System (GSAS) certification management, green building compliance, and auditing.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['GSAS Design & Build Certification', 'GSAS Construction Management', 'Energy & Water Audits', 'Daylight Simulation'], tools: [['GSAS Gate Tool', 'IES VE'], ['Sefaira', 'One Click LCA']] },
+    'leed': { title: 'LEED', category: 'Sustainability Services', description: 'LEED BD+C, ID+C, and O+M consulting, energy modeling, and commissioning for USGBC green certification.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['LEED Certification Management', 'Fundamental & Enhanced Commissioning', 'Thermal Comfort Modeling', 'Green Materials Sourcing'], tools: [['USGBC LEED v4/v4.1', 'IES VE'], ['EnergyPlus', 'CxAlloy']] },
+    'LEED': { title: 'LEED', category: 'Sustainability Services', description: 'LEED BD+C, ID+C, and O+M consulting, energy modeling, and commissioning for USGBC green certification.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['LEED Certification Management', 'Fundamental & Enhanced Commissioning', 'Thermal Comfort Modeling', 'Green Materials Sourcing'], tools: [['USGBC LEED v4/v4.1', 'IES VE'], ['EnergyPlus', 'CxAlloy']] },
+    'energy-audit': { title: 'Energy Audit', category: 'Sustainability Services', description: 'Comprehensive ASHRAE Level 1, 2, and 3 energy diagnostic audits to optimize building energy efficiency.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['ASHRAE Level 1, 2 & 3 Audits', 'Chiller Plant Optimization', 'Infrared Thermography', 'Power Quality Analysis'], tools: [['FLIR Thermal Cameras', 'Power Quality Analyzers'], ['eQUEST', 'EnergyPlus']] },
+    'Energy Audit': { title: 'Energy Audit', category: 'Sustainability Services', description: 'Comprehensive ASHRAE Level 1, 2, and 3 energy diagnostic audits to optimize building energy efficiency.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['ASHRAE Level 1, 2 & 3 Audits', 'Chiller Plant Optimization', 'Infrared Thermography', 'Power Quality Analysis'], tools: [['FLIR Thermal Cameras', 'Power Quality Analyzers'], ['eQUEST', 'EnergyPlus']] },
+    'carbon-management': { title: 'Carbon Management', category: 'Sustainability Services', description: 'Greenhouse gas inventory compiling, organizational carbon footprinting, and ISO 14064 verification strategies.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['ISO 14064 GHG Accounting', 'Organizational Carbon Footprint', 'Decarbonization Roadmap', 'Lifecycle Assessment'], tools: [['GHG Protocol Suite', 'ISO 14064 Guidelines'], ['Carbon Calculation Tools', 'Decarbonization Models']] },
+    'Carbon Management': { title: 'Carbon Management', category: 'Sustainability Services', description: 'Greenhouse gas inventory compiling, organizational carbon footprinting, and ISO 14064 verification strategies.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['ISO 14064 GHG Accounting', 'Organizational Carbon Footprint', 'Decarbonization Roadmap', 'Lifecycle Assessment'], tools: [['GHG Protocol Suite', 'ISO 14064 Guidelines'], ['Carbon Calculation Tools', 'Decarbonization Models']] },
+
+    // Digital Twin
+    'asset-twin': { title: 'Asset Twin', category: 'Digital Twin', description: 'Virtual representation of physical assets connecting 3D spatial models with operational telemetry.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Asset Visualization', 'IoT Telemetry Integration', 'Predictive Asset Analytics', 'COBie Data Handover'], tools: [['Autodesk Tandem', 'Azure Digital Twins'], ['ThingWorx', 'Matterport']] },
+    'Asset Twin': { title: 'Asset Twin', category: 'Digital Twin', description: 'Virtual representation of physical assets connecting 3D spatial models with operational telemetry.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Asset Visualization', 'IoT Telemetry Integration', 'Predictive Asset Analytics', 'COBie Data Handover'], tools: [['Autodesk Tandem', 'Azure Digital Twins'], ['ThingWorx', 'Matterport']] },
+    'system-integration': { title: 'System Integration', category: 'Digital Twin', description: 'Connecting heterogeneous building automation, BMS, CAFM, and ERP software with Digital Twin hubs.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['REST/GraphQL API Middleware', 'BMS/BAS Integration', 'CAFM & ERP Connectors', 'Data Pipelines'], tools: [['Node-RED', 'Apache Kafka'], ['Grafana', 'Docker']] },
+    'System Integration': { title: 'System Integration', category: 'Digital Twin', description: 'Connecting heterogeneous building automation, BMS, CAFM, and ERP software with Digital Twin hubs.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['REST/GraphQL API Middleware', 'BMS/BAS Integration', 'CAFM & ERP Connectors', 'Data Pipelines'], tools: [['Node-RED', 'Apache Kafka'], ['Grafana', 'Docker']] },
+    'real-time-monitoring': { title: 'Real-Time Monitoring', category: 'Digital Twin', description: 'Continuous live sensor data monitoring, anomaly detection, and operational performance dashboards.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Live Sensor Data Streaming', 'Anomaly Alerts', 'Energy Consumption Monitoring', 'Space Utilization Analytics'], tools: [['Grafana', 'InfluxDB'], ['AWS IoT Core', 'Azure IoT']] },
+    'Real-Time Monitoring': { title: 'Real-Time Monitoring', category: 'Digital Twin', description: 'Continuous live sensor data monitoring, anomaly detection, and operational performance dashboards.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Live Sensor Data Streaming', 'Anomaly Alerts', 'Energy Consumption Monitoring', 'Space Utilization Analytics'], tools: [['Grafana', 'InfluxDB'], ['AWS IoT Core', 'Azure IoT']] },
+    'asset-management': { title: 'Asset Management', category: 'Digital Twin', description: 'Comprehensive facility asset lifecycle tracking, maintenance scheduling, and digital operations handover.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Maintenance Scheduling', 'Work Order Automation', 'Lifecycle Cost Analysis', 'Asset Register Management'], tools: [['IBM Maximo', 'SAP PM'], ['Autodesk Tandem', 'Archibus']] },
+    'Asset Management': { title: 'Asset Management', category: 'Digital Twin', description: 'Comprehensive facility asset lifecycle tracking, maintenance scheduling, and digital operations handover.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Maintenance Scheduling', 'Work Order Automation', 'Lifecycle Cost Analysis', 'Asset Register Management'], tools: [['IBM Maximo', 'SAP PM'], ['Autodesk Tandem', 'Archibus']] },
+
+    // Construction Technology
+    'remote-construction': { title: 'Remote Construction', category: 'Construction Technology', description: 'Remote site monitoring, virtual walkthroughs, and automated progress reporting for distributed teams.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Remote Site Walkthroughs', 'Progress Monitoring', 'Virtual Inspections', 'Cloud Collaboration'], tools: [['OpenSpace', 'Cupix'], ['Matterport', 'Autodesk ACC']] },
+    'Remote Construction': { title: 'Remote Construction', category: 'Construction Technology', description: 'Remote site monitoring, virtual walkthroughs, and automated progress reporting for distributed teams.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Remote Site Walkthroughs', 'Progress Monitoring', 'Virtual Inspections', 'Cloud Collaboration'], tools: [['OpenSpace', 'Cupix'], ['Matterport', 'Autodesk ACC']] },
+    '360-capture': { title: '360° Capture', category: 'Construction Technology', description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual tracking.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation'], tools: [['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']] },
+    '360° Capture': { title: '360° Capture', category: 'Construction Technology', description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual tracking.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation'], tools: [['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']] },
+    'ar-solutions': { title: 'AR Solutions', category: 'Construction Technology', description: 'Augmented reality visualization overlaying 3D BIM models directly onto job site physical spaces.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['BIM Overlay on Site', 'Clash Detection in AR', 'Remote Expert Assistance', 'Safety Hazard Training'], tools: [['Trimble Connect AR', 'HoloLens 2'], ['vGIS', 'Unity Industrial']] },
+    'AR Solutions': { title: 'AR Solutions', category: 'Construction Technology', description: 'Augmented reality visualization overlaying 3D BIM models directly onto job site physical spaces.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['BIM Overlay on Site', 'Clash Detection in AR', 'Remote Expert Assistance', 'Safety Hazard Training'], tools: [['Trimble Connect AR', 'HoloLens 2'], ['vGIS', 'Unity Industrial']] },
+    'robotics': { title: 'Robotics', category: 'Construction Technology', description: 'Robotic site layout, autonomous scanning, and robotic inspection integrations for modern job sites.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Autonomous Scanning Robots', 'Robotic Layout Marking', 'Drone Photogrammetry', 'Automated Surveys'], tools: [['Boston Dynamics Spot', 'Dusty Robotics'], ['Skydio Drones', 'Pix4D']] },
+    'Robotics': { title: 'Robotics', category: 'Construction Technology', description: 'Robotic site layout, autonomous scanning, and robotic inspection integrations for modern job sites.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Autonomous Scanning Robots', 'Robotic Layout Marking', 'Drone Photogrammetry', 'Automated Surveys'], tools: [['Boston Dynamics Spot', 'Dusty Robotics'], ['Skydio Drones', 'Pix4D']] }
   };
 
-  // Map core 6 categories
+  // Map 4 core categories
   const coreServiceMap = {
-    'cad-engineering-documentation': {
-      title: 'CAD & Engineering Documentation',
-      description: 'Professional multidisciplinary CAD production and engineering documentation for complex building, infrastructure and industrial projects.',
-      bulletsTitle: 'Key Scope & Deliverables Include:',
-      bullets: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'],
-      tools: [['AutoCAD', 'MicroStation'], ['DraftSight', 'Revit CAD']]
-    },
-    'bim-digital-construction': {
-      title: 'BIM & Digital Construction',
-      description: 'End-to-end BIM services supporting projects from design development through construction and final asset handover.',
-      bulletsTitle: 'Key Scope & Deliverables Include:',
-      bullets: ['3D BIM', '4D / 5D', 'Architectural BIM', 'Structural BIM', 'MEP BIM', 'Infrastructure BIM', 'Clash Coordination', 'COBie', 'As-Built BIM'],
-      tools: [['Revit', 'Navisworks'], ['BIM 360', 'Solibri']]
-    },
-    'laser-scanning-reality-capture': {
-      title: 'Laser Scanning & Reality Capture',
-      description: 'Transforming physical assets into accurate digital information through advanced reality-capture workflows.',
-      bulletsTitle: 'Key Scope & Deliverables Include:',
-      bullets: ['3D Laser Scanning', 'Point Cloud Processing', 'Scan-to-BIM', 'Existing Condition Modeling', 'As-Built Verification'],
-      tools: [['Leica Cyclone', 'Faro Scene'], ['Recap Pro', 'CloudCompare']]
-    },
-    'digital-twin-asset-lifecycle': {
-      title: 'Digital Twin & Asset Lifecycle',
-      description: 'Connecting physical assets with digital information to enable smarter operation, monitoring and lifecycle management.',
-      bulletsTitle: 'Key Scope & Deliverables Include:',
-      bullets: ['Digital Twin', 'BIM Integration', 'GIS', 'CAFM / IWMS', 'CMMS', 'BAS / BMS', 'ERP', 'EDMS', 'Asset Information Management'],
-      tools: [['Autodesk Tandem', 'Bentley iTwin'], ['Maximo', 'ArcGIS']]
-    },
-    'sustainability-consultancy': {
-      title: 'Sustainability Consultancy',
-      description: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
-      bulletsTitle: 'Key Scope & Deliverables Include:',
-      bullets: ['GSAS', 'LEED', 'Energy Audits', 'Green Building Gap Analysis', 'Carbon Footprint Management', 'ISO 14064', 'Environmental Consultancy'],
-      tools: [['eQUEST', 'EnergyPlus'], ['IES VE', 'One Click LCA']]
-    },
-    'remote-construction-solutions': {
-      title: 'Remote Construction Solutions',
-      description: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration and decision-making.',
-      bulletsTitle: 'Key Scope & Deliverables Include:',
-      bullets: ['Remote Site Support', 'AR Solutions', '360° Site Documentation', 'Remote Inspection', 'Digital Collaboration', 'Robotic Integration'],
-      tools: [['OpenSpace 360', 'Matterport'], ['HoloLens AR', 'Procore Remote']]
-    }
+    'engineering-services': { title: 'Engineering Services', description: 'Comprehensive engineering services including CAD drafting, BIM modeling, 3D laser scanning, and scan-to-BIM conversions.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM'], tools: [['AutoCAD', 'Revit'], ['Leica RTC360', 'CloudCompare']] },
+    'sustainability-services': { title: 'Sustainability Services', description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'], tools: [['GSAS Gate Tool', 'IES VE'], ['eQUEST', 'ISO 14064 Guidelines']] },
+    'digital-twin': { title: 'Digital Twin', description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'], tools: [['Autodesk Tandem', 'Grafana'], ['Node-RED', 'IBM Maximo']] },
+    'construction-technology': { title: 'Construction Technology', description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics'], tools: [['OpenSpace', 'Trimble AR'], ['Insta360', 'Boston Dynamics Spot']] }
   };
 
   // Convert dynamicServices database list to map structure
   const resolvedServiceDetailsMap = { ...staticServiceDetailsMap };
-  dynamicServices.forEach(s => {
+  dynamicServices.filter(s => s.status !== 'Inactive').forEach(s => {
     let bulletsParsed = [];
     let toolsParsed = null;
     try {
@@ -279,6 +105,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     }
     const itemData = {
       title: s.title,
+      slug: s.slug,
+      category: s.category,
       description: s.description,
       bulletsTitle: 'Key Scope & Deliverables Include:',
       bullets: bulletsParsed,
@@ -287,24 +115,21 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     };
     resolvedServiceDetailsMap[s.title] = itemData;
     if (s.slug) resolvedServiceDetailsMap[s.slug] = itemData;
-    resolvedServiceDetailsMap[s.category] = itemData;
   });
 
   const selectedDetails = resolvedServiceDetailsMap[activeSubTab] 
+    || Object.values(resolvedServiceDetailsMap).find(d => (d.slug && d.slug.toLowerCase() === (activeSubTab || '').toLowerCase()) || (d.title && d.title.toLowerCase() === (activeSubTab || '').toLowerCase()))
     || coreServiceMap[activeSubTab] 
     || Object.values(coreServiceMap).find(c => c.title.toLowerCase() === (activeSubTab || '').toLowerCase())
     || resolvedServiceDetailsMap[currentServiceTitle] 
     || staticServiceDetailsMap[currentServiceTitle]
-    || coreServiceMap['cad-engineering-documentation'];
+    || staticServiceDetailsMap['cad'];
 
   // Resolve banner image dynamically
   const getBannerForService = (title) => {
     if (!title) return serviceBanner;
     const lower = title.toLowerCase();
-    if (lower.includes('telecom') || lower.includes('ibs') || lower.includes('cellular') || lower.includes('microwave') || lower.includes('wi-fi') || lower.includes('antenna')) {
-      return projectBanner;
-    }
-    if (lower.includes('sustainability') || lower.includes('gsas') || lower.includes('leed') || lower.includes('commissioning') || lower.includes('environment') || lower.includes('acoustic') || lower.includes('noise')) {
+    if (lower.includes('sustainability') || lower.includes('gsas') || lower.includes('leed') || lower.includes('energy') || lower.includes('carbon')) {
       return aboutBanner;
     }
     return serviceBanner;
@@ -314,61 +139,27 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     ? selectedDetails.banner_image 
     : getBannerForService(currentServiceTitle);
 
-  // Resolve Categories list dynamically
+  // Resolve Categories list dynamically for the main overview
   const categoryGroups = {
-    'Engineering Services': [],
-    'Sustainability Services': [],
-    'Digital Twin Services': []
+    'Engineering Services': ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM'],
+    'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'],
+    'Digital Twin': ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'],
+    'Construction Technology': ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics']
   };
 
   if (dynamicServices.length > 0) {
-    dynamicServices
-      .filter(s => !s.category.toLowerCase().includes('telecom'))
-      .filter(s => !['Engineering Design support Services', 'Specialised Simulation & Analysis', 'BIM Modelling - 3D', 'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D'].includes(s.title))
-      .forEach(s => {
-        if (!categoryGroups[s.category]) {
-          categoryGroups[s.category] = [];
-        }
-        categoryGroups[s.category].push(s.title);
-      });
-
-    // Always guarantee Engineering Services has exactly these two items
-    if (categoryGroups['Engineering Services'].length === 0) {
-      categoryGroups['Engineering Services'] = ['BIM Services', '2D CAD Drafting Services', 'Outsourcing Technical Experts'];
-    } else {
-      if (!categoryGroups['Engineering Services'].includes('BIM Services'))
-        categoryGroups['Engineering Services'].unshift('BIM Services');
-      if (!categoryGroups['Engineering Services'].includes('2D CAD Drafting Services'))
-        categoryGroups['Engineering Services'].splice(1, 0, '2D CAD Drafting Services');
-      if (!categoryGroups['Engineering Services'].includes('Outsourcing Technical Experts'))
-        categoryGroups['Engineering Services'].push('Outsourcing Technical Experts');
+    const dynamicGroups = {};
+    dynamicServices.filter(s => s.status !== 'Inactive').forEach(s => {
+      const catName = s.category || 'Engineering Services';
+      if (!dynamicGroups[catName]) dynamicGroups[catName] = [];
+      const itemTitle = s.title;
+      if (!dynamicGroups[catName].includes(itemTitle)) {
+        dynamicGroups[catName].push(itemTitle);
+      }
+    });
+    if (Object.keys(dynamicGroups).length > 0) {
+      Object.assign(categoryGroups, dynamicGroups);
     }
-
-    // Always ensure Digital Twin Services items appear
-    if (categoryGroups['Digital Twin Services'].length === 0) {
-      categoryGroups['Digital Twin Services'] = [
-        'Life Cycle Twin Asset Management',
-        'Remote Work Automation',
-        'System Integration and Analysis'
-      ];
-    }
-  } else {
-    categoryGroups['Engineering Services'] = [
-      'BIM Services',
-      '2D CAD Drafting Services',
-      'Outsourcing Technical Experts'
-    ];
-    categoryGroups['Sustainability Services'] = [
-      'GSAS Service',
-      'LEED Consulting Services',
-      'Energy Audit and Analysis',
-      'ISO 14064 Consulting Services'
-    ];
-    categoryGroups['Digital Twin Services'] = [
-      'Life Cycle Twin Asset Management',
-      'Remote Work Automation',
-      'System Integration and Analysis'
-    ];
   }
 
   const getCategoryIcon = (category) => {
@@ -458,202 +249,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                   {currentServiceTitle}
                 </h2>
 
-                {/* Render Specialised Simulation & Analysis View */}
-                {currentServiceTitle === 'Specialised Simulation & Analysis' ? (
-                  <>
-                    <div className="service-flex-block">
-                      <div className="service-text-wrap">
-                        <p className="paragraph-text">
-                          We, at Blue Crescent Engineering Specialised Simulation and Analysis offers advanced engineering solution for Acoustics, HVAC, Power, Oil & Gas domains. We add values to our clients by providing the following services which really helps our clients to acquire a good decision during the early stages of projects by averting any possible future foilmes.
-                        </p>
-                        <p className="paragraph-text">
-                          We,Blue Crescent Engineering have collaborated with specialized service experts and providers to provide unique, feasible, cost effective, and environmental friendly solutions for our client's challenges by adopting the advanced tools like Numerical Methods, Simulation Algorithm and Finite Element Method with remarkable ease.
-                        </p>
-                        <p className="paragraph-text">
-                          The Key aspects of our Specialised Simulation and Analysis services includes,
-                        </p>
-
-                        <ul className="bullet-list">
-                          <li>CFD (Computational Fluid Dynamics) Analysis</li>
-                          <li>Piping Analysis (Fem)</li>
-                          <li>Structural Analysis</li>
-                          <li>Acoustic Study, Acoustic Analysis, Noise and Vibration Control</li>
-                        </ul>
-                      </div>
-
-                      {/* Side Simulation Visualizations */}
-                      <div className="service-image-sidebar">
-                        <img 
-                          src="/cfd_building_airflow.png"
-                          alt="CFD Building Airflow Simulation" 
-                          className="service-img"
-                        />
-                        <img 
-                          src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'><rect width='100%' height='100%' fill='%230f172a'/><g stroke='%2322c55e' stroke-width='1.5' fill='none'><rect x='60' y='30' width='180' height='140'/><line x1='60' y1='65' x2='240' y2='65' stroke='%23eab308'/><line x1='60' y1='100' x2='240' y2='100' stroke='%23ef4444'/><line x1='60' y1='135' x2='240' y2='135' stroke='%2306b6d4'/><line x1='120' y1='30' x2='120' y2='170'/><line x1='180' y1='30' x2='180' y2='170'/></g><text x='85' y='188' fill='%2394a3b8' font-family='sans-serif' font-size='10'>MULTI-STORY BUILDING STRESS MAP</text></svg>"
-                          alt="Multi-story Stress Map" 
-                          className="service-img"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Section 2: CFD Analysis */}
-                    <h3 className="section-heading-grey" style={{ fontSize: '24px', color: '#55606e' }}>
-                      CFD Analysis
-                    </h3>
-                    <p className="paragraph-text">
-                      This most Advanced Simulation technology can apply in various stages of building design to make buildings better with regard to safety, energy efficiency, comfort and health. Some applications of CFD Analysis,
-                    </p>
-                    
-                    <div className="service-flex-block">
-                      <div className="service-text-wrap">
-                        <ul className="bullet-list">
-                          <li>Temperature, Humidity and Velocity Simulation for Human Comfort</li>
-                          <li>Smoke Simulations- Atrium Ventilation and Tunnel Ventilation</li>
-                          <li>The are IAQ Simulations- Car park Ventilation and Mining Ventilation</li>
-                          <li>Design Optimization for Cooling Towers and Diffusers in Thermal Storage Tanks</li>
-                          <li>Optimization of Turbo Machineries, Simulation of Boilers and Steam Generators</li>
-                          <li>Flow Simulation and Analysis in Mixing Tanks, Heat Exchangers and Erosion Tubes.</li>
-                          <li>Fire Evacuation Modelling</li>
-                          <li>Offshore Rig Wind and Wave Analysis ( mainly in Oil and Gas Sector)</li>
-                          <li>CFD for oil and Gas Piping – Environmental Condition Impact on Oil & Gas Process</li>
-                          <li>Fuel Tank Sloshing Analysis</li>
-                        </ul>
-                      </div>
-
-                      <div className="service-image-sidebar">
-                        <img 
-                          src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='160' viewBox='0 0 300 160'><rect width='100%' height='100%' fill='%230284c7'/><circle cx='150' cy='80' r='50' fill='none' stroke='%23fef08a' stroke-width='4'/><path d='M100 80 Q150 20 200 80 T300 80' fill='none' stroke='%23ffffff' stroke-width='2'/><text x='75' y='145' fill='%23ffffff' font-family='sans-serif' font-size='10'>OFFSHORE RIG & PIPING 3D MODEL</text></svg>"
-                          alt="Offshore Rig Piping Model" 
-                          className="service-img"
-                        />
-                        <img 
-                          src="/simulation.png" 
-                          alt="CFD Spiral Vector Analysis" 
-                          className="service-img"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Section 3: Piping Analysis */}
-                    <h3 className="section-heading-grey" style={{ fontSize: '24px', color: '#55606e' }}>
-                      Piping Analysis
-                    </h3>
-                    <p className="paragraph-text">
-                      Finite Element Method along with aero-acoustic analysis is the tool used for doing the comprehensive piping network analysis. It is necessary to evaluate the mechanical behavior of the piping under regular loads (Internal pressure and thermal stresses) as well under occasional and intermittent loading cases such as noise, expansion, seismic loads or earthquake, high wind of special vibration, and water hammer. As the Piping network is complicated due to fluid-structure coupling an organized study and Analysis is required considering all the dissemination's. Some applications of Piping Analysis,
-                    </p>
-                    <ul className="bullet-list">
-                      <li>Thermal, Stress, Expansion and Seismic Analysis</li>
-                      <li>Pulsation Analysis (mainly in Oil and Gas Sectors)</li>
-                      <li>Surge Analysis</li>
-                      <li>Flow Assurance Analysis (mainly in Oil and Gas Sectors)</li>
-                    </ul>
-
-                    {/* Section 4: Structural Analysis */}
-                    <h3 className="section-heading-grey" style={{ fontSize: '24px', color: '#55606e' }}>
-                      Structural Analysis
-                    </h3>
-                    <p className="paragraph-text">
-                      Finite Element Method is the tool used to calculate the strength and failure properties of solids.The structures need to be designed based on the analysis of Material strength for various load conditions and simulation of stresses developed in structures for static and dynamic loads. Some applications of Structural Analysis,
-                    </p>
-
-                    <ul className="bullet-list">
-                      <li>
-                        <strong>Seismic Analysis includes,</strong>
-                        <ul className="nested-bullet-list">
-                          <li>Equivalent Static Analysis</li>
-                          <li>Response Spectrum Analysis</li>
-                          <li>Linear Dynamic Analysis</li>
-                          <li>Non-Linear Static Analysis and</li>
-                          <li>Non-Linear Dynamic Analysis</li>
-                        </ul>
-                      </li>
-                      <li>
-                        <strong>Vibration Isolation System Design Includes,</strong>
-                        <ul className="nested-bullet-list">
-                          <li>Design of Vibration Isolators for Structures and heavy machineries</li>
-                          <li>Design of shock mounts for equipments and structures</li>
-                          <li>Design of foundation for buildings to improve resistance to earthquakes.</li>
-                          <li>Design of foundation for buildings to improve resistance to earthquakes.</li>
-                        </ul>
-                      </li>
-                    </ul>
-
-                    {/* Section 5: Simulation Tools Table */}
-                    <div className="tools-section">
-                      <h3 className="tools-title">Tools</h3>
-                      <table className="tools-table">
-                        <tbody>
-                          <tr>
-                            <td>NASTRAN</td>
-                            <td>ANSYS CFX</td>
-                          </tr>
-                          <tr>
-                            <td>FEMAP</td>
-                            <td>FDS</td>
-                          </tr>
-                          <tr>
-                            <td>Open Cascade</td>
-                            <td>Bentley PLUS</td>
-                          </tr>
-                          <tr>
-                            <td>ANSYS FLUENT</td>
-                            <td>Bentley AUTOPIPE</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Section 6: Acoustic Study, Analysis, Noise and Vibration Control */}
-                    <h3 className="section-heading-grey" style={{ fontSize: '24px', color: '#55606e', marginTop: '40px' }}>
-                      Acoustic Study,Analysis,Noise and Vibration Control
-                    </h3>
-
-                    <h4 className="service-subheading" style={{ fontSize: '18px', color: '#637180', fontWeight: '400', marginTop: '16px' }}>
-                      Architectural and Engineering Acoustics
-                    </h4>
-                    <p className="paragraph-text">
-                      Our Acoustic services ranges from basic design support for individual residences to studies for major transportation systems, hotels, retail centers, offices, civic and condominium projects. Recommendations to achieve industry standards for acoustical performance by providing detailed report based on methods of standard engineering practices. We support our clients to achieve a comfortable atmosphere by providing feasible, cost effective and unique recommendations that is fully integrated to the design teams such as Architecture, Structure and Mechanical design.
-                    </p>
-
-                    <h4 className="service-subheading" style={{ fontSize: '18px', color: '#637180', fontWeight: '400', marginTop: '24px' }}>
-                      Products
-                    </h4>
-                    <ul className="bullet-list">
-                      <li>Floating Floors</li>
-                      <li>Acoustic Panels</li>
-                      <li>Acoustic Barriers</li>
-                      <li>Acoustic Doors</li>
-                      <li>Inertia Bases</li>
-                      <li>Sound Attenuators</li>
-                      <li>Acoustic Louvers</li>
-                    </ul>
-
-                    {/* Section 7: Acoustic Tools Table */}
-                    <div className="tools-section">
-                      <h3 className="tools-title">Tools</h3>
-                      <table className="tools-table">
-                        <tbody>
-                          <tr>
-                            <td>DIRAC</td>
-                            <td>Control Rome Calculator</td>
-                          </tr>
-                          <tr>
-                            <td>ODEON</td>
-                            <td>Porous Abcorber Calculator</td>
-                          </tr>
-                          <tr>
-                            <td>Duct Noise Calculator</td>
-                            <td>Speech Re-inforcement Calculator</td>
-                          </tr>
-                          <tr>
-                            <td>Acoustic Tools</td>
-                            <td>RION Sound Level Meter</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                ) : selectedDetails ? (
+                {selectedDetails ? (
                   /* Custom Dedicated Page View for Sub-Services */
                   <div style={{ marginTop: '20px' }}>
                     {/* Digital Twin sub-service badge */}
@@ -669,10 +265,10 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                           <rect x="2" y="3" width="9" height="9" rx="1.5"/><rect x="13" y="3" width="9" height="9" rx="1.5"/>
                           <rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/>
                         </svg>
-                        Digital Twin Services
+                        Digital Twin
                       </div>
                     )}
-                    <p className="paragraph-text">
+                    <p className="paragraph-text" style={{ whiteSpace: 'pre-line' }}>
                       {selectedDetails.description}
                     </p>
 
@@ -685,21 +281,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                       ))}
                     </ul>
 
-                    {selectedDetails.tools && Array.isArray(selectedDetails.tools) && (
-                      <div className="tools-section" style={{ marginTop: '30px' }}>
-                        <h3 className="tools-title">Tools & Frameworks</h3>
-                        <table className="tools-table">
-                          <tbody>
-                            {selectedDetails.tools.map((row, rIdx) => (
-                              <tr key={rIdx}>
-                                <td>{row && row[0]}</td>
-                                <td>{row && row[1]}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+
 
                     <div style={{ padding: '24px', background: '#f8fafc', borderLeft: '4px solid var(--primary-gold)', borderRadius: '4px', marginTop: '30px' }}>
                       <h4 style={{ margin: 0, color: '#334155', fontSize: '16px' }}>Need assistance with {currentServiceTitle}?</h4>

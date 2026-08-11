@@ -98,33 +98,33 @@ export default function Footer({ onNavigate }) {
           <h4 className="bce-footer-v2-heading">OUR SERVICES</h4>
           <ul className="bce-footer-v2-list services-list">
             <li>
-              <a href="#services-cad" onClick={(e) => { e.preventDefault(); handleNav('Services', '2D CAD Drafting Services'); }}>
-                <Building2 size={16} className="bce-service-icon" /> CAD & Engineering
+              <a href="#services-cad" onClick={(e) => { e.preventDefault(); handleNav('Services', 'cad'); }}>
+                <Building2 size={16} className="bce-service-icon" /> CAD
               </a>
             </li>
             <li>
-              <a href="#services-bim" onClick={(e) => { e.preventDefault(); handleNav('Services', 'BIM Services'); }}>
-                <Compass size={16} className="bce-service-icon" /> BIM & Digital Construction
+              <a href="#services-bim" onClick={(e) => { e.preventDefault(); handleNav('Services', 'bim'); }}>
+                <Compass size={16} className="bce-service-icon" /> BIM
               </a>
             </li>
             <li>
-              <a href="#services-reality-capture" onClick={(e) => { e.preventDefault(); handleNav('Services', 'BIM Services'); }}>
-                <Radio size={16} className="bce-service-icon" /> Reality Capture
+              <a href="#services-gsas" onClick={(e) => { e.preventDefault(); handleNav('Services', 'gsas'); }}>
+                <Leaf size={16} className="bce-service-icon" /> GSAS
               </a>
             </li>
             <li>
-              <a href="#services-digital-twin" onClick={(e) => { e.preventDefault(); handleNav('Services', 'Life Cycle Twin Asset Management'); }}>
-                <Layers size={16} className="bce-service-icon" /> Digital Twin
+              <a href="#services-leed" onClick={(e) => { e.preventDefault(); handleNav('Services', 'leed'); }}>
+                <Leaf size={16} className="bce-service-icon" /> LEED
               </a>
             </li>
             <li>
-              <a href="#services-sustainability" onClick={(e) => { e.preventDefault(); handleNav('Services', 'GSAS Service'); }}>
-                <Leaf size={16} className="bce-service-icon" /> Sustainability
+              <a href="#services-asset-twin" onClick={(e) => { e.preventDefault(); handleNav('Services', 'asset-twin'); }}>
+                <Layers size={16} className="bce-service-icon" /> Asset Twin
               </a>
             </li>
             <li>
-              <a href="#remote-construction" onClick={handleRemoteNav}>
-                <Cpu size={16} className="bce-service-icon" /> Remote Construction
+              <a href="#services-system-integration" onClick={(e) => { e.preventDefault(); handleNav('Services', 'system-integration'); }}>
+                <Layers size={16} className="bce-service-icon" /> System Integration
               </a>
             </li>
           </ul>

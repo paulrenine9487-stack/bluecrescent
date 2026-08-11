@@ -19,20 +19,27 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
       .catch(err => console.warn('Error fetching media items:', err));
   }, []);
 
+  const [playingVideoId, setPlayingVideoId] = useState(null);
+
   const galleryItems = mediaItems.filter(item => item.type === 'gallery');
   const videoItems = mediaItems.filter(item => item.type === 'video');
 
-  // Convert watch URLs to embed URLs if needed
+  const getYouTubeId = (url) => {
+    if (!url) return '';
+    const match = url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/);
+    return match ? match[1] : '';
+  };
+
   const getEmbedUrl = (url) => {
-    if (url.includes('youtube.com/watch?v=')) {
-      const id = url.split('v=')[1]?.split('&')[0];
-      return `https://www.youtube.com/embed/${id}`;
-    }
-    if (url.includes('youtu.be/')) {
-      const id = url.split('youtu.be/')[1]?.split('?')[0];
-      return `https://www.youtube.com/embed/${id}`;
-    }
-    return url;
+    const id = getYouTubeId(url);
+    if (!id) return url;
+    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&modestbranding=1&rel=0&controls=1&showinfo=0&iv_load_policy=3`;
+  };
+
+  const getYouTubeThumbnail = (url) => {
+    const id = getYouTubeId(url);
+    if (!id) return '/project1.png';
+    return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
   };
 
   return (
@@ -59,7 +66,7 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
             className={`media-tab-btn ${activeTab === 'Videos' ? 'active' : ''}`}
             onClick={() => setActiveTab('Videos')}
           >
-            🎥 Videos (YouTube)
+            🎥 Video Showcase
           </button>
         </div>
       </div>
@@ -108,22 +115,39 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
               <div className="media-empty-state">No videos posted yet.</div>
             ) : (
               <div className="media-video-grid">
-                {videoItems.map(item => (
-                  <div key={item.id} className="media-video-card">
-                    <div className="media-video-iframe-wrap">
-                      <iframe
-                        src={getEmbedUrl(item.url)}
-                        title={item.title}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
+                {videoItems.map(item => {
+                  const isPlaying = playingVideoId === item.id;
+                  const thumbUrl = getYouTubeThumbnail(item.url);
+
+                  return (
+                    <div key={item.id} className="media-video-card">
+                      <div className="media-video-thumb-wrap" onClick={() => setPlayingVideoId(item.id)}>
+                        {isPlaying ? (
+                          <iframe
+                            src={getEmbedUrl(item.url)}
+                            title={item.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="media-video-iframe"
+                          ></iframe>
+                        ) : (
+                          <div className="media-custom-video-preview">
+                            <img src={thumbUrl} alt={item.title} className="media-video-thumb-img" />
+                            <div className="media-video-gradient-overlay" />
+                            <div className="media-custom-play-btn" title="Play Video">
+                              <div className="media-play-icon-inner">▶</div>
+                            </div>
+                            <div className="media-video-badge">Engineering Showcase</div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="media-video-info">
+                        <h4 className="media-video-title">{item.title}</h4>
+                      </div>
                     </div>
-                    <div className="media-video-info">
-                      <h4 className="media-video-title">{item.title}</h4>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

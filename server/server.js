@@ -625,26 +625,36 @@ app.get('/api/service-categories', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query("SELECT * FROM service_categories ORDER BY display_order ASC, id ASC");
+      const showAll = req.query.all === 'true';
+      const sql = showAll 
+        ? "SELECT * FROM service_categories ORDER BY display_order ASC, id ASC"
+        : "SELECT * FROM service_categories WHERE status = 'Active' ORDER BY display_order ASC, id ASC";
+      const [rows] = await pool.query(sql);
       return res.json(rows);
     }
   } catch (err) {
     console.error(err);
   }
-  return res.json([]);
+  const showAll = req.query.all === 'true';
+  const list = fallbackData.service_categories || [];
+  return res.json(showAll ? list : list.filter(c => c.status === 'Active'));
 });
 
 app.post('/api/service-categories', async (req, res) => {
-  const { name, slug, short_description, icon, display_order, status, featured } = req.body;
+  const { name, slug, short_description, icon, image, display_order, status, featured } = req.body;
   try {
     const pool = getPool();
+    const catSlug = slug || (name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'category');
     if (getIsConnected() && pool) {
-      const catSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       const [result] = await pool.query(
-        'INSERT INTO service_categories (name, slug, short_description, icon, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [name, catSlug, short_description || '', icon || 'Building2', display_order || 0, status || 'Active', featured !== undefined ? featured : 1]
+        'INSERT INTO service_categories (name, slug, short_description, icon, image, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [name, catSlug, short_description || '', icon || 'Building2', image || '', display_order || 0, status || 'Active', featured !== undefined ? featured : 1]
       );
-      return res.status(201).json({ id: result.insertId, name, slug: catSlug, short_description, icon, display_order, status, featured });
+      return res.status(201).json({ id: result.insertId, name, slug: catSlug, short_description, icon, image, display_order, status: status || 'Active', featured });
+    } else {
+      const newCat = { id: Date.now(), name, slug: catSlug, short_description, icon: icon || 'Building2', image: image || '', display_order: display_order || 0, status: status || 'Active', featured: 1 };
+      fallbackData.service_categories.push(newCat);
+      return res.status(201).json(newCat);
     }
   } catch (err) {
     console.error(err);
@@ -654,16 +664,28 @@ app.post('/api/service-categories', async (req, res) => {
 
 app.put('/api/service-categories/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, slug, short_description, icon, display_order, status, featured } = req.body;
+  const { name, slug, short_description, icon, image, display_order, status, featured } = req.body;
   try {
     const pool = getPool();
+    const catSlug = slug || (name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'category');
     if (getIsConnected() && pool) {
-      const catSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      // Get old name first
+      const [oldCat] = await pool.query('SELECT name FROM service_categories WHERE id = ?', [id]);
       await pool.query(
-        'UPDATE service_categories SET name = ?, slug = ?, short_description = ?, icon = ?, display_order = ?, status = ?, featured = ? WHERE id = ?',
-        [name, catSlug, short_description, icon, display_order || 0, status || 'Active', featured !== undefined ? featured : 1, id]
+        'UPDATE service_categories SET name = ?, slug = ?, short_description = ?, icon = ?, image = ?, display_order = ?, status = ?, featured = ? WHERE id = ?',
+        [name, catSlug, short_description, icon, image || '', display_order || 0, status || 'Active', featured !== undefined ? featured : 1, id]
       );
-      return res.json({ id, name, slug: catSlug, short_description, icon, display_order, status, featured });
+      // Update sub-services category name if name changed
+      if (oldCat.length > 0 && oldCat[0].name !== name) {
+        await pool.query('UPDATE services SET category = ? WHERE category = ? OR category_id = ?', [name, oldCat[0].name, id]);
+      }
+      return res.json({ id: parseInt(id), name, slug: catSlug, short_description, icon, image, display_order, status, featured });
+    } else {
+      const idx = fallbackData.service_categories.findIndex(c => c.id === parseInt(id));
+      if (idx !== -1) {
+        fallbackData.service_categories[idx] = { ...fallbackData.service_categories[idx], name, slug: catSlug, short_description, icon, image, display_order, status, featured };
+        return res.json(fallbackData.service_categories[idx]);
+      }
     }
   } catch (err) {
     console.error(err);
@@ -678,6 +700,9 @@ app.delete('/api/service-categories/:id', async (req, res) => {
     if (getIsConnected() && pool) {
       await pool.query('DELETE FROM service_categories WHERE id = ?', [id]);
       return res.json({ success: true, id });
+    } else {
+      fallbackData.service_categories = fallbackData.service_categories.filter(c => c.id !== parseInt(id));
+      return res.json({ success: true, id });
     }
   } catch (err) {
     console.error(err);
@@ -689,32 +714,52 @@ app.get('/api/services', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query("SELECT * FROM services WHERE status = 'Active' ORDER BY display_order ASC, id ASC");
+      const showAll = req.query.all === 'true';
+      const sql = showAll 
+        ? "SELECT * FROM services ORDER BY display_order ASC, id ASC"
+        : "SELECT * FROM services WHERE status = 'Active' ORDER BY display_order ASC, id ASC";
+      const [rows] = await pool.query(sql);
       return res.json(rows);
     }
   } catch (err) {
     console.error(err);
   }
-  return res.json([]);
+  const showAll = req.query.all === 'true';
+  const list = fallbackData.services || [];
+  return res.json(showAll ? list : list.filter(s => s.status === 'Active'));
 });
 
 app.post('/api/services', async (req, res) => {
-  const { category, title, description, bullets, tools, banner_image } = req.body;
+  const { category, category_id, title, slug, description, bullets, tools, banner_image, icon, display_order, status, featured } = req.body;
   try {
     const pool = getPool();
+    const subSlug = slug || (title ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'service');
+    const bulletsStr = bullets ? (typeof bullets === 'string' ? bullets : JSON.stringify(bullets)) : '[]';
+    const toolsStr = tools ? (typeof tools === 'string' ? tools : JSON.stringify(tools)) : '[]';
+    
     if (getIsConnected() && pool) {
       const [result] = await pool.query(
-        'INSERT INTO services (category, title, description, bullets, tools, banner_image) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT INTO services (category, category_id, title, slug, description, bullets, tools, banner_image, icon, display_order, status, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
           category,
+          category_id || null,
           title,
+          subSlug,
           description || '',
-          bullets ? (typeof bullets === 'string' ? bullets : JSON.stringify(bullets)) : '[]',
-          tools ? (typeof tools === 'string' ? tools : JSON.stringify(tools)) : '[]',
-          banner_image || '/servicepage1.png'
+          bulletsStr,
+          toolsStr,
+          banner_image || '/servicepage1.png',
+          icon || '',
+          display_order || 0,
+          status || 'Active',
+          featured !== undefined ? featured : 1
         ]
       );
-      return res.status(201).json({ id: result.insertId, category, title, description, bullets, tools, banner_image });
+      return res.status(201).json({ id: result.insertId, category, category_id, title, slug: subSlug, description, bullets, tools, banner_image, icon, display_order, status: status || 'Active', featured });
+    } else {
+      const newSvc = { id: Date.now(), category, category_id, title, slug: subSlug, description, bullets: bulletsStr, tools: toolsStr, banner_image: banner_image || '/servicepage1.png', icon: icon || '', display_order: display_order || 0, status: status || 'Active', featured: 1 };
+      fallbackData.services.push(newSvc);
+      return res.status(201).json(newSvc);
     }
   } catch (err) {
     console.error(err);
@@ -724,23 +769,39 @@ app.post('/api/services', async (req, res) => {
 
 app.put('/api/services/:id', async (req, res) => {
   const { id } = req.params;
-  const { category, title, description, bullets, tools, banner_image } = req.body;
+  const { category, category_id, title, slug, description, bullets, tools, banner_image, icon, display_order, status, featured } = req.body;
   try {
     const pool = getPool();
+    const subSlug = slug || (title ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'service');
+    const bulletsStr = bullets ? (typeof bullets === 'string' ? bullets : JSON.stringify(bullets)) : '[]';
+    const toolsStr = tools ? (typeof tools === 'string' ? tools : JSON.stringify(tools)) : '[]';
+
     if (getIsConnected() && pool) {
       await pool.query(
-        'UPDATE services SET category = ?, title = ?, description = ?, bullets = ?, tools = ?, banner_image = ? WHERE id = ?',
+        'UPDATE services SET category = ?, category_id = ?, title = ?, slug = ?, description = ?, bullets = ?, tools = ?, banner_image = ?, icon = ?, display_order = ?, status = ?, featured = ? WHERE id = ?',
         [
           category,
+          category_id || null,
           title,
+          subSlug,
           description,
-          bullets ? (typeof bullets === 'string' ? bullets : JSON.stringify(bullets)) : '[]',
-          tools ? (typeof tools === 'string' ? tools : JSON.stringify(tools)) : '[]',
+          bulletsStr,
+          toolsStr,
           banner_image,
+          icon || '',
+          display_order || 0,
+          status || 'Active',
+          featured !== undefined ? featured : 1,
           id
         ]
       );
-      return res.json({ id, category, title, description, bullets, tools, banner_image });
+      return res.json({ id: parseInt(id), category, category_id, title, slug: subSlug, description, bullets, tools, banner_image, icon, display_order, status, featured });
+    } else {
+      const idx = fallbackData.services.findIndex(s => s.id === parseInt(id));
+      if (idx !== -1) {
+        fallbackData.services[idx] = { ...fallbackData.services[idx], category, category_id, title, slug: subSlug, description, bullets: bulletsStr, tools: toolsStr, banner_image, icon, display_order, status, featured };
+        return res.json(fallbackData.services[idx]);
+      }
     }
   } catch (err) {
     console.error(err);
@@ -754,7 +815,10 @@ app.delete('/api/services/:id', async (req, res) => {
     const pool = getPool();
     if (getIsConnected() && pool) {
       await pool.query('DELETE FROM services WHERE id = ?', [id]);
-      return res.json({ success: true });
+      return res.json({ success: true, id });
+    } else {
+      fallbackData.services = fallbackData.services.filter(s => s.id !== parseInt(id));
+      return res.json({ success: true, id });
     }
   } catch (err) {
     console.error(err);
@@ -934,59 +998,341 @@ app.delete('/api/contact/:id', async (req, res) => {
 // PROJECTS API
 // ==========================================
 const fallbackProjects = [
-  { id: 1, name: 'Engineering Design Support Works', division_type: 'Engineering Division', project_count: 24, description: '', image: '', status: 'Active' },
-  { id: 2, name: 'BIM Modeling & Coordination',       division_type: 'Engineering Division', project_count: 18, description: '', image: '', status: 'Active' },
-  { id: 3, name: 'LEED/GSAS Gold Commissioning',      division_type: 'Sustainability Division', project_count: 12, description: '', image: '', status: 'Active' },
-  { id: 4, name: 'Life Cycle Twin Asset Management',  division_type: 'Digital Twin Division', project_count: 12, description: '', image: '', status: 'Active' },
+  {
+    id: 1,
+    name: 'Qatar Free Zone Project',
+    slug: 'qatar-free-zone',
+    division_type: 'BIM Projects',
+    client: 'Free Zones Authority (QFZA)',
+    contractor: 'Consolidated Contractors Company (CCC)',
+    consultant: 'Dar Al-Handasah',
+    location: 'Doha, Qatar',
+    sector: 'Infrastructure & Buildings',
+    status: 'Completed',
+    year: '2024',
+    short_description: 'Multidisciplinary BIM coordination and digital asset information supporting infrastructure and building requirements.',
+    description: 'Development and coordination of multidisciplinary BIM models and preparation of digital asset information to support operational requirements for Qatar Free Zone development.',
+    services: JSON.stringify(['BIM', 'Digital Twin', 'Laser Scanning']),
+    disciplines: JSON.stringify(['Architecture', 'Structure', 'MEP', 'Infrastructure']),
+    project_stage: 'As-Built / Asset Handover',
+    bim_level: 'LOD 500',
+    scope_of_work: 'Development and coordination of multidisciplinary BIM models and preparation of digital asset information to support operational requirements.',
+    deliverables: JSON.stringify(['BIM Models', 'As-Built Information', 'Asset Data', 'Digital Twin Integration']),
+    technologies: JSON.stringify(['Revit', 'Navisworks', 'Digital Twin Platform', 'AutoCAD']),
+    project_highlights: 'Multidisciplinary BIM coordination and digital asset information supporting infrastructure and building requirements.',
+    image: '/project1.png',
+    display_order: 1
+  },
+  {
+    id: 2,
+    name: 'Hamad Port Maritime Facilities',
+    slug: 'hamad-port-maritime',
+    division_type: 'CAD Projects',
+    client: 'Mwani Qatar / Ministry of Transport',
+    contractor: 'China Harbour Engineering Company',
+    consultant: 'AECOM',
+    location: 'Umm Said, Qatar',
+    sector: 'Transportation & Maritime',
+    status: 'Completed',
+    year: '2023',
+    short_description: 'Multidisciplinary CAD drafting, shop drawings, and engineering documentation support.',
+    description: 'Comprehensive CAD drafting, shop drawings, as-built documentation, and GSAS green building compliance management for maritime port facilities.',
+    services: JSON.stringify(['CAD', 'GSAS', 'Engineering Services']),
+    disciplines: JSON.stringify(['Infrastructure', 'Roads', 'Utilities', 'MEP']),
+    project_stage: 'Construction & As-Built',
+    bim_level: 'LOD 300',
+    scope_of_work: 'Comprehensive CAD drafting, shop drawings, and GSAS green building compliance management for maritime port facilities.',
+    deliverables: JSON.stringify(['Shop Drawings', 'As-Built Documentation', 'GSAS Certification Data']),
+    technologies: JSON.stringify(['AutoCAD', 'Civil 3D', 'MicroStation']),
+    project_highlights: 'Large-scale maritime infrastructure CAD documentation and environmental sustainability verification.',
+    image: '/project1.png',
+    display_order: 2
+  },
+  {
+    id: 3,
+    name: 'Doha Port Terminal Renovation',
+    slug: 'doha-port-terminal',
+    division_type: 'Sustainability Projects',
+    client: 'Mwani Qatar',
+    contractor: 'Al Jaber Engineering',
+    consultant: 'KEO International Consultants',
+    location: 'Doha, Qatar',
+    sector: 'Hospitality & Maritime',
+    status: 'Completed',
+    year: '2023',
+    short_description: 'GSAS green building certification management and energy diagnostic audits.',
+    description: 'GSAS green building certification management, energy diagnostic audits, and sustainable material sourcing for commercial cruise terminal facilities.',
+    services: JSON.stringify(['Sustainability Services', 'GSAS', 'Energy Audit']),
+    disciplines: JSON.stringify(['Architecture', 'MEP', 'Landscape']),
+    project_stage: 'Design & Commissioning',
+    bim_level: 'LOD 300',
+    scope_of_work: 'GSAS green building certification management, energy diagnostic audits, and sustainable material sourcing.',
+    deliverables: JSON.stringify(['GSAS Documentation', 'Energy Audit Reports', 'Sustainability Guidelines']),
+    technologies: JSON.stringify(['IES VE', 'EnergyPlus', 'GSAS Gate Tool']),
+    project_highlights: 'Achievement of 3-Star GSAS Design & Build rating for commercial cruise terminal facilities.',
+    image: '/project1.png',
+    display_order: 3
+  },
+  {
+    id: 4,
+    name: 'Qatar Rail Station Project',
+    slug: 'qatar-rail-station',
+    division_type: 'BIM Projects',
+    client: 'Qatar Rail',
+    contractor: 'RHK Joint Venture',
+    consultant: 'Atkins',
+    location: 'Doha, Qatar',
+    sector: 'Transportation & Metro',
+    status: 'Completed',
+    year: '2022',
+    short_description: 'Building Information Modeling up to LOD 400, clash detection, and 4D/5D simulations.',
+    description: 'Complex 3D BIM modeling, clash detection, and underground station coordination across architectural, structural, and MEP disciplines.',
+    services: JSON.stringify(['BIM', 'Scan to BIM', 'Laser Scanning']),
+    disciplines: JSON.stringify(['Architecture', 'Structure', 'MEP', 'Underground Utilities']),
+    project_stage: 'Construction & As-Built',
+    bim_level: 'LOD 400',
+    scope_of_work: 'Complex 3D BIM modeling, clash detection, and underground station coordination across architectural and MEP disciplines.',
+    deliverables: JSON.stringify(['3D BIM Models', 'Clash Reports', '4D Scheduling Models']),
+    technologies: JSON.stringify(['Revit', 'Navisworks Manage', 'BIM 360']),
+    project_highlights: 'Zero-clash resolution across 12,000+ underground utility & MEP interfaces.',
+    image: '/project1.png',
+    display_order: 4
+  }
 ];
+
+// Helper: safe JSON parsing
+const safeParseJSON = (str, fallback = []) => {
+  if (!str) return fallback;
+  if (Array.isArray(str)) return str;
+  try {
+    const parsed = JSON.parse(str);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch (e) {
+    if (typeof str === 'string') {
+      return str.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return fallback;
+  }
+};
+
+// Helper: safe Slug generation
+const safeSlug = (name) => {
+  return (name || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+};
 
 // GET all projects
 app.get('/api/projects', async (req, res) => {
+  const { category, all } = req.query;
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query("SELECT * FROM projects ORDER BY id ASC");
+      let query = "SELECT * FROM projects";
+      let params = [];
+      let conditions = [];
+
+      if (!all || all === 'false') {
+        conditions.push("status != 'Inactive'");
+      }
+
+      if (category) {
+        conditions.push("(division_type LIKE ? OR category LIKE ?)");
+        params.push(`%${category}%`, `%${category}%`);
+      }
+
+      if (conditions.length > 0) {
+        query += " WHERE " + conditions.join(" AND ");
+      }
+
+      query += " ORDER BY display_order ASC, id ASC";
+      const [rows] = await pool.query(query, params);
       if (rows.length > 0) return res.json(rows);
     }
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error('Error fetching projects:', err);
+  }
   return res.json(fallbackProjects);
 });
 
-// POST create project
+// GET single project by slug or ID
+app.get('/api/projects/:identifier', async (req, res) => {
+  const { identifier } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      let [rows] = await pool.query("SELECT * FROM projects WHERE slug = ? OR id = ?", [identifier, identifier]);
+      if (rows.length > 0) {
+        const project = rows[0];
+        
+        // Fetch 3 related projects (same category or general active)
+        const [related] = await pool.query(
+          "SELECT * FROM projects WHERE id != ? AND status != 'Inactive' AND (division_type = ? OR sector = ?) ORDER BY id DESC LIMIT 3",
+          [project.id, project.division_type || '', project.sector || '']
+        );
+
+        let finalRelated = related;
+        if (finalRelated.length < 3) {
+          const [moreRelated] = await pool.query(
+            "SELECT * FROM projects WHERE id != ? AND status != 'Inactive' ORDER BY id ASC LIMIT 3",
+            [project.id]
+          );
+          finalRelated = moreRelated;
+        }
+
+        return res.json({ project, relatedProjects: finalRelated });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching project by identifier:', err);
+  }
+
+  // Fallback lookup
+  const found = fallbackProjects.find(p => p.slug === identifier || String(p.id) === String(identifier)) || fallbackProjects[0];
+  const related = fallbackProjects.filter(p => p.id !== found.id).slice(0, 3);
+  return res.json({ project: found, relatedProjects: related });
+});
+
+// POST create project (Admin)
 app.post('/api/projects', async (req, res) => {
-  const { name, division_type, project_count, description, image, status } = req.body;
-  if (!name || !division_type) return res.status(400).json({ error: 'Name and division type are required.' });
+  const {
+    name,
+    slug,
+    division_type,
+    category,
+    project_count,
+    client,
+    contractor,
+    consultant,
+    location,
+    sector,
+    status,
+    year,
+    short_description,
+    description,
+    services,
+    disciplines,
+    project_stage,
+    bim_level,
+    scope_of_work,
+    deliverables,
+    technologies,
+    project_highlights,
+    image,
+    gallery,
+    display_order,
+    seo_title,
+    seo_description
+  } = req.body;
+
+  if (!name) return res.status(400).json({ error: 'Project name is required.' });
+
+  const finalSlug = slug ? safeSlug(slug) : safeSlug(name);
+  const divType = division_type || category || 'BIM Projects';
+  const servicesJson = typeof services === 'string' ? services : JSON.stringify(services || []);
+  const disciplinesJson = typeof disciplines === 'string' ? disciplines : JSON.stringify(disciplines || []);
+  const deliverablesJson = typeof deliverables === 'string' ? deliverables : JSON.stringify(deliverables || []);
+  const technologiesJson = typeof technologies === 'string' ? technologies : JSON.stringify(technologies || []);
+  const galleryJson = typeof gallery === 'string' ? gallery : JSON.stringify(gallery || []);
+
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
       const [result] = await pool.query(
-        'INSERT INTO projects (name, division_type, project_count, description, image, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [name, division_type, project_count || 0, description || '', image || '', status || 'Active']
+        `INSERT INTO projects (
+          name, slug, division_type, project_count, client, contractor, consultant, location, sector, status, year,
+          short_description, description, services, disciplines, project_stage, bim_level, scope_of_work,
+          deliverables, technologies, project_highlights, image, gallery, display_order, seo_title, seo_description
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          name, finalSlug, divType, project_count || 0, client || '', contractor || '', consultant || '',
+          location || 'Qatar', sector || 'Infrastructure & Buildings', status || 'Completed', year || '2024',
+          short_description || '', description || '', servicesJson, disciplinesJson, project_stage || '',
+          bim_level || '', scope_of_work || '', deliverablesJson, technologiesJson, project_highlights || '',
+          image || '/project1.png', galleryJson, display_order || 0, seo_title || '', seo_description || ''
+        ]
       );
-      return res.status(201).json({ id: result.insertId, name, division_type, project_count, description, image, status });
+      return res.status(201).json({ id: result.insertId, name, slug: finalSlug, division_type: divType, status });
     }
-  } catch (err) { console.error(err); return res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    console.error('Error creating project:', err);
+    return res.status(500).json({ error: err.message });
+  }
   return res.status(503).json({ error: 'Database not connected.' });
 });
 
-// PUT update project
+// PUT update project (Admin)
 app.put('/api/projects/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, division_type, project_count, description, image, status } = req.body;
+  const {
+    name,
+    slug,
+    division_type,
+    category,
+    project_count,
+    client,
+    contractor,
+    consultant,
+    location,
+    sector,
+    status,
+    year,
+    short_description,
+    description,
+    services,
+    disciplines,
+    project_stage,
+    bim_level,
+    scope_of_work,
+    deliverables,
+    technologies,
+    project_highlights,
+    image,
+    gallery,
+    display_order,
+    seo_title,
+    seo_description
+  } = req.body;
+
+  const finalSlug = slug ? safeSlug(slug) : (name ? safeSlug(name) : 'project');
+  const divType = division_type || category || 'BIM Projects';
+  const servicesJson = typeof services === 'string' ? services : JSON.stringify(services || []);
+  const disciplinesJson = typeof disciplines === 'string' ? disciplines : JSON.stringify(disciplines || []);
+  const deliverablesJson = typeof deliverables === 'string' ? deliverables : JSON.stringify(deliverables || []);
+  const technologiesJson = typeof technologies === 'string' ? technologies : JSON.stringify(technologies || []);
+  const galleryJson = typeof gallery === 'string' ? gallery : JSON.stringify(gallery || []);
+
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
       await pool.query(
-        'UPDATE projects SET name=?, division_type=?, project_count=?, description=?, image=?, status=? WHERE id=?',
-        [name, division_type, project_count || 0, description || '', image || '', status || 'Active', id]
+        `UPDATE projects SET
+          name=?, slug=?, division_type=?, project_count=?, client=?, contractor=?, consultant=?, location=?, sector=?,
+          status=?, year=?, short_description=?, description=?, services=?, disciplines=?, project_stage=?,
+          bim_level=?, scope_of_work=?, deliverables=?, technologies=?, project_highlights=?, image=?,
+          gallery=?, display_order=?, seo_title=?, seo_description=?
+        WHERE id=?`,
+        [
+          name, finalSlug, divType, project_count || 0, client || '', contractor || '', consultant || '',
+          location || 'Qatar', sector || 'Infrastructure & Buildings', status || 'Completed', year || '2024',
+          short_description || '', description || '', servicesJson, disciplinesJson, project_stage || '',
+          bim_level || '', scope_of_work || '', deliverablesJson, technologiesJson, project_highlights || '',
+          image || '/project1.png', galleryJson, display_order || 0, seo_title || '', seo_description || '', id
+        ]
       );
-      return res.json({ id, name, division_type, project_count, description, image, status });
+      return res.json({ id, name, slug: finalSlug, division_type: divType, status });
     }
-  } catch (err) { console.error(err); return res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    console.error('Error updating project:', err);
+    return res.status(500).json({ error: err.message });
+  }
   return res.status(503).json({ error: 'Database not connected.' });
 });
 
-// DELETE project
+// DELETE project (Admin)
 app.delete('/api/projects/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -995,7 +1341,10 @@ app.delete('/api/projects/:id', async (req, res) => {
       await pool.query('DELETE FROM projects WHERE id = ?', [id]);
       return res.json({ success: true });
     }
-  } catch (err) { console.error(err); return res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    console.error('Error deleting project:', err);
+    return res.status(500).json({ error: err.message });
+  }
   return res.status(503).json({ error: 'Database not connected.' });
 });
 

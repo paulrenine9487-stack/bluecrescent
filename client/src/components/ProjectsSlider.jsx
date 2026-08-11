@@ -3,68 +3,63 @@ import { ChevronLeft, ChevronRight, Briefcase, ArrowRight, Building2, Compass, R
 
 const CATEGORIES = [
   'ALL',
-  'ENGINEERING & BIM',
-  'DIGITAL TWIN',
-  'REALITY CAPTURE',
-  'SUSTAINABILITY',
-  'REMOTE CONSTRUCTION',
-  'INFRASTRUCTURE'
+  'CAD PROJECTS',
+  'BIM PROJECTS',
+  'LASER SCANNING PROJECTS',
+  'DIGITAL TWIN PROJECTS',
+  'SUSTAINABILITY PROJECTS'
 ];
 
 const FALLBACK_PROJECTS = [
   {
     id: 'p1',
-    name: 'Advanced BIM Coordination & MEP Engineering',
-    division_type: 'ENGINEERING & BIM',
+    name: 'Hamad Port Maritime Facilities CAD Documentation',
+    slug: 'hamad-port-maritime',
+    division_type: 'CAD Projects',
     icon: 'Building2',
-    description: 'Advanced engineering, BIM coordination and digital construction solutions for complex building and infrastructure projects.',
+    description: 'Comprehensive 2D/3D CAD drafting, shop drawings, as-built documentation, and engineering support for port facilities.',
     project_count: 24,
     image: '/project1.png'
   },
   {
     id: 'p2',
-    name: 'Integrated Life Cycle Digital Twin Platform',
-    division_type: 'DIGITAL TWIN',
-    icon: 'Compass',
-    description: 'Connected digital asset solutions supporting smarter operations, monitoring and asset lifecycle management.',
+    name: 'Qatar Free Zone BIM Coordination & LOD 500',
+    slug: 'qatar-free-zone',
+    division_type: 'BIM Projects',
+    icon: 'Layers',
+    description: 'Multidisciplinary BIM modeling, clash detection, 4D/5D simulations, and asset handover up to LOD 500.',
+    project_count: 28,
+    image: '/project1.png'
+  },
+  {
+    id: 'p3',
+    name: 'Hamad Airport Terminal 3D Laser Scanning',
+    slug: 'airport-expansion-project',
+    division_type: 'Laser Scanning Projects',
+    icon: 'Radio',
+    description: 'High-precision 3D laser scanning of existing terminal structures and point-cloud-to-BIM conversion.',
+    project_count: 18,
+    image: '/project1.png'
+  },
+  {
+    id: 'p4',
+    name: 'Qetaifan Island North Digital Twin Platform',
+    slug: 'qetaifan-island-resort',
+    division_type: 'Digital Twin Projects',
+    icon: 'Cpu',
+    description: 'Connecting physical assets with digital spatial models for IoT sensor monitoring and operational asset management.',
     project_count: 15,
     image: '/why.png'
   },
   {
-    id: 'p3',
-    name: '3D Laser Scanning & Scan-to-BIM As-Built Verification',
-    division_type: 'REALITY CAPTURE',
-    icon: 'Radio',
-    description: 'Reality capture and point-cloud processing solutions for accurate existing-condition documentation and Scan-to-BIM workflows.',
-    project_count: 18,
-    image: '/simulation.png'
-  },
-  {
-    id: 'p4',
-    name: 'GSAS & LEED Sustainable Building Certification',
-    division_type: 'SUSTAINABILITY',
+    id: 'p5',
+    name: 'Doha Port Terminal GSAS Green Certification',
+    slug: 'doha-port-terminal',
+    division_type: 'Sustainability Projects',
     icon: 'Leaf',
-    description: 'Sustainable engineering solutions supporting energy efficiency, environmental performance and internationally recognized sustainability objectives.',
+    description: 'GSAS green building certification management, energy diagnostic audits, and sustainable materials facilitation.',
     project_count: 12,
     image: '/sust_workshop.png'
-  },
-  {
-    id: 'p5',
-    name: 'Remote Construction Site Documentation & Inspection',
-    division_type: 'REMOTE CONSTRUCTION',
-    icon: 'Cpu',
-    description: 'Digital technologies connecting project teams, sites and technical specialists for improved collaboration, inspection and decision-making.',
-    project_count: 9,
-    image: '/eng_tower.png'
-  },
-  {
-    id: 'p6',
-    name: 'Major Infrastructure & Transportation Engineering',
-    division_type: 'INFRASTRUCTURE',
-    icon: 'Layers',
-    description: 'Engineering and digital solutions supporting complex infrastructure, transportation, utilities and large-scale development projects.',
-    project_count: 20,
-    image: '/eng_stadium.png'
   }
 ];
 
@@ -97,7 +92,12 @@ export default function ProjectsSlider({ onNavigate }) {
   // Filter projects by active category
   const filteredProjects = activeCategory === 'ALL'
     ? projects
-    : projects.filter(p => (p.division_type || '').toUpperCase().includes(activeCategory) || activeCategory.includes((p.division_type || '').toUpperCase()));
+    : projects.filter(p => {
+        const divType = (p.division_type || p.category || '').toUpperCase().trim();
+        const active = activeCategory.toUpperCase().trim();
+        const activeShort = active.replace(' PROJECTS', '').trim();
+        return divType === active || divType.includes(activeShort) || active.includes(divType);
+      });
 
   const displayProjects = filteredProjects.length > 0 ? filteredProjects : projects;
 
@@ -141,18 +141,18 @@ export default function ProjectsSlider({ onNavigate }) {
     >
       <div className="projects-container-inner">
         {/* Centered Section Header */}
-        <div className="projects-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '36px', padding: '0 100px' }}>
-          <h2 style={{ margin: '0 0 10px 0', color: '#063B73', fontSize: '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
+        <div className="projects-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '32px', padding: windowWidth < 768 ? '0 16px' : '0 100px' }}>
+          <h2 style={{ margin: '0 0 10px 0', color: '#063B73', fontSize: windowWidth < 640 ? '24px' : '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
             Our Projects
           </h2>
           <div style={{ width: '48px', height: '4px', background: 'linear-gradient(90deg, #087CFF, #00B8FF)', borderRadius: '2px', margin: '0 auto 14px auto' }} />
-          <p style={{ margin: '0 auto', maxWidth: '760px', color: '#475569', fontSize: '15px', lineHeight: 1.6, fontWeight: '400' }}>
+          <p style={{ margin: '0 auto', maxWidth: '760px', color: '#475569', fontSize: windowWidth < 640 ? '13.5px' : '15px', lineHeight: 1.6, fontWeight: '400' }}>
             Explore our engineering, BIM coordination, digital twin, and sustainability portfolio across key industry sectors.
           </p>
 
           {/* Navigation Controls */}
           {displayProjects.length > cardsToShow && (
-            <div className="carousel-nav-arrows" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '10px' }}>
+            <div className="carousel-nav-arrows" style={{ position: 'absolute', right: windowWidth < 768 ? '16px' : 0, top: windowWidth < 768 ? '-10px' : '50%', transform: windowWidth < 768 ? 'none' : 'translateY(-50%)', display: 'flex', gap: '10px' }}>
               <button
                 className="carousel-arrow-btn"
                 onClick={handlePrev}
@@ -208,13 +208,12 @@ export default function ProjectsSlider({ onNavigate }) {
           className="projects-category-tab-bar"
           style={{
             display: 'flex',
+            flexWrap: 'wrap',
             justifyContent: 'center',
-            gap: '8px',
-            overflowX: 'auto',
-            paddingBottom: '12px',
-            marginBottom: '40px',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none'
+            gap: windowWidth < 768 ? '8px 6px' : '8px',
+            padding: windowWidth < 768 ? '0 12px 12px 12px' : '0 0 12px 0',
+            marginBottom: windowWidth < 768 ? '24px' : '40px',
+            WebkitOverflowScrolling: 'touch'
           }}
         >
           {CATEGORIES.map(cat => (
@@ -225,12 +224,12 @@ export default function ProjectsSlider({ onNavigate }) {
                 setStartIndex(0);
               }}
               style={{
-                padding: '9px 18px',
+                padding: windowWidth < 768 ? '8px 14px' : '9px 18px',
                 borderRadius: '20px',
                 border: activeCategory === cat ? '1px solid #087CFF' : '1px solid rgba(6, 59, 115, 0.12)',
                 background: activeCategory === cat ? '#087CFF' : '#FFFFFF',
                 color: activeCategory === cat ? '#FFFFFF' : '#475569',
-                fontSize: '12px',
+                fontSize: windowWidth < 768 ? '11px' : '12px',
                 fontWeight: '700',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
@@ -289,7 +288,7 @@ export default function ProjectsSlider({ onNavigate }) {
                   }}
                   onClick={() => {
                     if (onNavigate) {
-                      onNavigate('Projects', project.division_type);
+                      onNavigate('ProjectDetail', project.slug || project.id);
                     }
                   }}
                 >

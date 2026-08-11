@@ -6,7 +6,9 @@ import {
   ChevronLeft, ChevronRight, CheckSquare, X,
   LayoutDashboard, Newspaper, Briefcase, Wrench, Star, FolderTree,
   Mail, Send, History, Sliders, Database, Terminal, ChevronDown, FileCode,
-  Building, MapPin, Phone, Map, Clock, Cpu
+  Building, MapPin, Phone, Map, Clock, Cpu, ExternalLink,
+  Radio, Leaf, Building2, Wind, Volume2, Droplet, Activity, Zap, Users,
+  Monitor, Cloud, TrendingUp, Share2, ClipboardCheck, Heart, RefreshCw
 } from 'lucide-react';
 import './AdminPanel.css';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
@@ -44,6 +46,7 @@ export default function AdminPanel({ onNavigate }) {
   // Entities lists state
   const [heroSlides, setHeroSlides] = useState([]);
   const [services, setServices] = useState([]);
+  const [serviceCategories, setServiceCategories] = useState([]);
   const [projects, setProjects] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [news, setNews] = useState([]);
@@ -320,7 +323,31 @@ export default function AdminPanel({ onNavigate }) {
   };
 
   // Project form modal state
-  const defaultProjectForm = { name: '', division_type: 'Engineering Division', project_count: 0, description: '', status: 'Active' };
+  const defaultProjectForm = {
+    name: '',
+    slug: '',
+    division_type: 'BIM Projects',
+    client: '',
+    contractor: '',
+    consultant: '',
+    location: 'Qatar',
+    sector: 'Infrastructure & Buildings',
+    status: 'Completed',
+    year: '2024',
+    short_description: '',
+    description: '',
+    services: 'BIM, Digital Twin',
+    disciplines: 'Architecture, Structure, MEP',
+    project_stage: 'As-Built / Asset Handover',
+    bim_level: 'LOD 500',
+    scope_of_work: '',
+    deliverables: 'BIM Models, As-Built Information, Asset Data',
+    technologies: 'Revit, Navisworks, AutoCAD',
+    project_highlights: '',
+    image: '/project1.png',
+    gallery: '',
+    display_order: 1
+  };
   const [projectForm, setProjectForm] = useState(defaultProjectForm);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState(null);
@@ -361,7 +388,7 @@ export default function AdminPanel({ onNavigate }) {
     whoWeArePara1: "Blue Crescent Engineering is based upon pillars of engineering excellence, a proven system of quality assurance and a dedication in meeting the client's needs and schedules. The company is incorporated by the core values of teamwork, Respect and Integrity.",
     whoWeArePara2: 'Our client-centered culture and teamwork based approach integrate the knowledge and skills of our network with local awareness, technical leadership and innovative approaches to solve our client\'s challenges.',
     whoWeArePara3: 'Across our spectrum of expertise, We make the connection for each client that best serves their immediate objectives while fulfilling our shared purpose.',
-    whoWeArePara4: 'We offer premium services in Engineering Design Support for MEP, Infrastructure and Transportation, Simulations and Analysis, BIM Modelling, Outsourcing Technical Experts, Energy Audit, Commissioning for LEED and GSAS, LEED Facilitation and Academics & Trainings.',
+    whoWeArePara4: 'We offer multidisciplinary engineering solutions across our 4 core service verticals: Engineering Services (CAD, BIM, Laser Scanning, Scan to BIM), Sustainability Services (GSAS, LEED, Energy Audit, Carbon Management), Digital Twin, and Construction Technology.',
     mission: '"With the sustainable approach in all activities that are undertaken and an uncompromising commitment to quality in all the process and deliverable that are undertaken"',
     vision: 'Become the leading support services provider and become a recognized reputed company in the following fields: Engineering Support Services, Contracting Support Services, and Trading Services.',
     qaqc: '"Establishing and enhancing on a continuous basis an uncompromising quality assured and controlled procedures resulting in the most Client satisfied deliverables, in time"',
@@ -460,29 +487,24 @@ export default function AdminPanel({ onNavigate }) {
   const [activeEditItem, setActiveEditItem] = useState(null); // holds item being edited
   const [showAddModal, setShowAddModal] = useState(false);
   const serviceSubmenuOptions = {
-    'Engineering Services': [
-      'Engineering Design support Services',
-      'Specialised Simulation & Analysis',
-      'Engineering (MEP, Infrastructure, Transportation) shop Drawings - 2D',
-      'BIM Modelling - 3D',
-      'Outsourcing Technical Experts'
-    ],
-    'Sustainability Services': [
-      'Energy Auditing',
-      'Commissioning LEED & GSAS',
-      'Green Building Facilitation'
-    ],
-    'Telecom Services': [
-      'Fiber Optic (Indoor & Outdoor)',
-      'Cellular (IBS & Outdoor Sites)',
-      'Microwave Links',
-      'Wi-Fi Systems'
-    ]
+    'Engineering Services': ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM'],
+    'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'],
+    'Digital Twin': ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'],
+    'Construction Technology': ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics']
   };
 
   // Form fields states
+  const defaultCategoryForm = { name: '', slug: '', short_description: '', icon: 'Building2', image: '', display_order: 1, status: 'Active' };
+  const [categoryForm, setCategoryForm] = useState(defaultCategoryForm);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+
+  const defaultServiceForm = { category: 'Engineering Services', category_id: null, title: '', slug: '', description: '', bullets: [''], tools: [['', '']], banner_image: '/servicepage1.png', icon: '', display_order: 1, status: 'Active' };
+  const [serviceForm, setServiceForm] = useState(defaultServiceForm);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingServiceId, setEditingServiceId] = useState(null);
+
   const [heroForm, setHeroForm] = useState({ title: '', subtitle: '', btn1_text: '', btn2_text: '', image: '', status: 'published', order_num: 1 });
-  const [serviceForm, setServiceForm] = useState({ category: 'Engineering Services', title: 'Engineering Design support Services', description: '', bullets: [''], tools: [['', '']], banner_image: '' });
   const [certForm, setCertForm] = useState({ title: '', org: '', licenseNo: '', territory: '', validity: 'Valid & Recognized', borderColor: 'border-blue', badgeText: 'CERTIFIED', image: '', scope: '' });
   const [newsForm, setNewsForm] = useState({ title: '', content: '', category: 'NEWS', image: '', date: '' });
   const [testimonialForm, setTestimonialForm] = useState({ title: '', content: '', author_name: '', company_name: '', status: 'approved' });
@@ -491,6 +513,14 @@ export default function AdminPanel({ onNavigate }) {
   const [userForm, setUserForm] = useState({ username: '', password: '', role: 'admin' });
   const [partnerForm, setPartnerForm] = useState({ name: '', role: 'Working Partner', image: '', order_num: 0 });
   const [mediaForm, setMediaForm] = useState({ type: 'gallery', title: '', url: '' });
+
+  // Mobile sidebar state
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleNavClick = (tabRoute) => {
+    setActiveTab(tabRoute);
+    setIsMobileSidebarOpen(false);
+  };
 
   // Pagination mocks
   const [currentPage, setCurrentPage] = useState(1);
@@ -577,8 +607,10 @@ export default function AdminPanel({ onNavigate }) {
         const res = await fetch('/api/hero_slides');
         if (res.ok) setHeroSlides(await res.json());
       } else if (tab === 'services') {
-        const res = await fetch('/api/services');
-        if (res.ok) setServices(await res.json());
+        const resSvc = await fetch('/api/services?all=true');
+        if (resSvc.ok) setServices(await resSvc.json());
+        const resCat = await fetch('/api/service-categories?all=true');
+        if (resCat.ok) setServiceCategories(await resCat.json());
       } else if (tab === 'certificates') {
         const res = await fetch('/api/certificates');
         if (res.ok) setCertificates(await res.json());
@@ -608,7 +640,7 @@ export default function AdminPanel({ onNavigate }) {
         const res = await fetch('/api/contact');
         if (res.ok) setContactInquiries(await res.json());
       } else if (tab === 'projects') {
-        const res = await fetch('/api/projects');
+        const res = await fetch('/api/projects?all=true');
         if (res.ok) setProjects(await res.json());
       } else if (tab === 'partners') {
         const res = await fetch('/api/partners');
@@ -689,8 +721,9 @@ export default function AdminPanel({ onNavigate }) {
 
   // Reset forms helper
   const resetForms = () => {
+    setActiveEditItem(null);
     setHeroForm({ title: '', subtitle: '', btn1_text: '', btn2_text: '', image: '', status: 'published', order_num: 1 });
-    setServiceForm({ category: 'Engineering Services', title: 'Engineering Design support Services', description: '', bullets: [''], tools: [['', '']], banner_image: '/servicepage1.png' });
+    setServiceForm({ category: 'Engineering Services', title: 'CAD', description: '', bullets: [''], tools: [['', '']], banner_image: '/servicepage1.png' });
     setCertForm({ title: '', org: '', licenseNo: '', territory: '', validity: 'Valid & Recognized', borderColor: 'border-blue', badgeText: 'CERTIFIED', image: '', scope: '' });
     setNewsForm({ title: '', content: '', category: 'NEWS', image: '', date: '' });
     setTestimonialForm({ title: '', content: '', author_name: '', company_name: '', status: 'approved' });
@@ -699,6 +732,31 @@ export default function AdminPanel({ onNavigate }) {
     setProjectForm(defaultProjectForm);
     setPartnerForm({ name: '', role: 'Working Partner', image: '', order_num: 0 });
     setMediaForm({ type: 'gallery', title: '', url: '' });
+  };
+
+  // Explicit close handlers for modals (Cancels only the active modal without page/route side effects)
+  const handleCloseAddModal = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+    setShowAddModal(false);
+    setActiveEditItem(null);
+    resetForms();
+  };
+
+  const handleCloseCategoryModal = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+    setShowCategoryModal(false);
+    setEditingCategoryId(null);
+    setCategoryForm(defaultCategoryForm);
+  };
+
+  const handleCloseServiceModal = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+    setShowServiceModal(false);
+    setEditingServiceId(null);
+    setServiceForm(defaultServiceForm);
   };
 
   // General CRUD handlers
@@ -838,9 +896,223 @@ export default function AdminPanel({ onNavigate }) {
     setServiceForm(prev => ({ ...prev, tools: [...prev.tools, ['', '']] }));
   };
 
-  const removeToolRow = (idx) => {
-    const updated = serviceForm.tools.filter((_, i) => i !== idx);
-    setServiceForm(prev => ({ ...prev, tools: updated }));
+  const resetCategoryForm = () => {
+    setCategoryForm({ name: '', slug: '', short_description: '', icon: 'Building2', image: '', display_order: (serviceCategories.length + 1), status: 'Active' });
+  };
+
+  const resetServiceForm = () => {
+    setServiceForm({ category: 'Engineering Services', category_id: null, title: '', slug: '', description: '', bullets: [''], tools: [['', '']], banner_image: '/servicepage1.png', icon: '', display_order: 1, status: 'Active' });
+  };
+
+  const startEditCategory = (cat) => {
+    setEditingCategoryId(cat.id);
+    setCategoryForm({
+      name: cat.name || '',
+      slug: cat.slug || '',
+      short_description: cat.short_description || '',
+      icon: cat.icon || 'Building2',
+      image: cat.image || '',
+      display_order: cat.display_order || 1,
+      status: cat.status || 'Active'
+    });
+    setShowCategoryModal(true);
+  };
+
+  const handleSaveCategory = async (e) => {
+    if (e) e.preventDefault();
+    if (!categoryForm.name) {
+      alert('Please enter a Category Name');
+      return;
+    }
+    const method = editingCategoryId ? 'PUT' : 'POST';
+    const url = editingCategoryId ? `/api/service-categories/${editingCategoryId}` : '/api/service-categories';
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoryForm)
+      });
+      if (res.ok) {
+        setShowCategoryModal(false);
+        setEditingCategoryId(null);
+        resetCategoryForm();
+        fetchDataForTab('services');
+      } else {
+        alert('Failed to save Category');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!confirm('Are you sure you want to delete this Category? Sub-services under it may be affected.')) return;
+    try {
+      const res = await fetch(`/api/service-categories/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchDataForTab('services');
+      } else {
+        alert('Failed to delete category.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleCategoryStatus = async (cat) => {
+    const newStatus = cat.status === 'Inactive' ? 'Active' : 'Inactive';
+    try {
+      const res = await fetch(`/api/service-categories/${cat.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...cat, status: newStatus })
+      });
+      if (res.ok) {
+        fetchDataForTab('services');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const moveCategoryOrder = async (cat, direction) => {
+    const sorted = [...serviceCategories].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    const idx = sorted.findIndex(c => c.id === cat.id);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sorted.length) return;
+
+    const otherCat = sorted[targetIdx];
+    const tempOrder = cat.display_order || (idx + 1);
+    const otherOrder = otherCat.display_order || (targetIdx + 1);
+
+    try {
+      await fetch(`/api/service-categories/${cat.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...cat, display_order: otherOrder })
+      });
+      await fetch(`/api/service-categories/${otherCat.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...otherCat, display_order: tempOrder })
+      });
+      fetchDataForTab('services');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const startEditService = (svc) => {
+    setEditingServiceId(svc.id);
+    let bulletsParsed = [''];
+    let toolsParsed = [['', '']];
+    try {
+      bulletsParsed = typeof svc.bullets === 'string' ? JSON.parse(svc.bullets) : (svc.bullets || ['']);
+    } catch(e) {}
+    try {
+      toolsParsed = typeof svc.tools === 'string' ? JSON.parse(svc.tools) : (svc.tools || [['', '']]);
+    } catch(e) {}
+
+    setServiceForm({
+      category: svc.category || 'Engineering Services',
+      category_id: svc.category_id || null,
+      title: svc.title || '',
+      slug: svc.slug || '',
+      description: svc.description || '',
+      bullets: Array.isArray(bulletsParsed) && bulletsParsed.length > 0 ? bulletsParsed : [''],
+      tools: Array.isArray(toolsParsed) && toolsParsed.length > 0 ? toolsParsed : [['', '']],
+      banner_image: svc.banner_image || '/servicepage1.png',
+      icon: svc.icon || '',
+      display_order: svc.display_order || 1,
+      status: svc.status || 'Active'
+    });
+    setShowServiceModal(true);
+  };
+
+  const handleSaveService = async (e) => {
+    if (e) e.preventDefault();
+    if (!serviceForm.title) {
+      alert('Please enter a Sub-Service Title');
+      return;
+    }
+    const method = editingServiceId ? 'PUT' : 'POST';
+    const url = editingServiceId ? `/api/services/${editingServiceId}` : '/api/services';
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(serviceForm)
+      });
+      if (res.ok) {
+        setShowServiceModal(false);
+        setEditingServiceId(null);
+        resetServiceForm();
+        fetchDataForTab('services');
+      } else {
+        alert('Failed to save Sub-Service');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteService = async (id) => {
+    if (!confirm('Are you sure you want to delete this sub-service?')) return;
+    try {
+      const res = await fetch(`/api/services/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchDataForTab('services');
+      } else {
+        alert('Failed to delete sub-service.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleServiceStatus = async (svc) => {
+    const newStatus = svc.status === 'Inactive' ? 'Active' : 'Inactive';
+    try {
+      const res = await fetch(`/api/services/${svc.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...svc, status: newStatus })
+      });
+      if (res.ok) {
+        fetchDataForTab('services');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const moveServiceOrder = async (svc, direction, siblingList) => {
+    const sorted = [...siblingList].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    const idx = sorted.findIndex(s => s.id === svc.id);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sorted.length) return;
+
+    const otherSvc = sorted[targetIdx];
+    const tempOrder = svc.display_order || (idx + 1);
+    const otherOrder = otherSvc.display_order || (targetIdx + 1);
+
+    try {
+      await fetch(`/api/services/${svc.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...svc, display_order: otherOrder })
+      });
+      await fetch(`/api/services/${otherSvc.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...otherSvc, display_order: tempOrder })
+      });
+      fetchDataForTab('services');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Set up edit item state
@@ -914,11 +1186,29 @@ export default function AdminPanel({ onNavigate }) {
       });
     } else if (tab === 'projects') {
       setProjectForm({
-        name: item.name,
-        division_type: item.division_type || 'Engineering Division',
-        project_count: item.project_count || 0,
+        name: item.name || '',
+        slug: item.slug || '',
+        division_type: item.division_type || item.category || 'BIM Projects',
+        client: item.client || '',
+        contractor: item.contractor || '',
+        consultant: item.consultant || '',
+        location: item.location || 'Qatar',
+        sector: item.sector || 'Infrastructure & Buildings',
+        status: item.status || 'Completed',
+        year: item.year || '2024',
+        short_description: item.short_description || item.description || '',
         description: item.description || '',
-        status: item.status || 'Active'
+        services: typeof item.services === 'string' ? item.services : (Array.isArray(item.services) ? item.services.join(', ') : ''),
+        disciplines: typeof item.disciplines === 'string' ? item.disciplines : (Array.isArray(item.disciplines) ? item.disciplines.join(', ') : ''),
+        project_stage: item.project_stage || '',
+        bim_level: item.bim_level || '',
+        scope_of_work: item.scope_of_work || '',
+        deliverables: typeof item.deliverables === 'string' ? item.deliverables : (Array.isArray(item.deliverables) ? item.deliverables.join(', ') : ''),
+        technologies: typeof item.technologies === 'string' ? item.technologies : (Array.isArray(item.technologies) ? item.technologies.join(', ') : ''),
+        project_highlights: item.project_highlights || '',
+        image: item.image || '/project1.png',
+        gallery: typeof item.gallery === 'string' ? item.gallery : (Array.isArray(item.gallery) ? item.gallery.join(', ') : ''),
+        display_order: item.display_order || 1
       });
     } else if (tab === 'partners') {
       setPartnerForm({
@@ -980,13 +1270,16 @@ export default function AdminPanel({ onNavigate }) {
     }
 
     if (apiTab === 'services') {
+      const activeServices = services.filter(s => s.status !== 'Inactive');
+      const countFor = (cat) => activeServices.filter(s => s.category && s.category.toLowerCase().includes(cat.toLowerCase())).length;
+
       return (
-        <div className="admin-stats-grid">
+        <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
           <div className="admin-stat-card">
             <div className="admin-stat-icon-wrapper blue"><Layers size={20} /></div>
             <div className="admin-stat-content">
               <h4>Total Services</h4>
-              <div className="value">{String(services.length).padStart(2, '0')}</div>
+              <div className="value">{String(activeServices.length).padStart(2, '0')}</div>
               <span className="active">Active</span>
             </div>
           </div>
@@ -994,24 +1287,32 @@ export default function AdminPanel({ onNavigate }) {
             <div className="admin-stat-icon-wrapper green"><Layers size={20} /></div>
             <div className="admin-stat-content">
               <h4>Engineering</h4>
-              <div className="value">{String(services.filter(s => s.category.includes('Engineering')).length).padStart(2, '0')}</div>
-              <span className="active">Subcategories</span>
+              <div className="value">{String(countFor('Engineering')).padStart(2, '0')}</div>
+              <span className="active">Sub-services</span>
             </div>
           </div>
           <div className="admin-stat-card">
             <div className="admin-stat-icon-wrapper orange"><Layers size={20} /></div>
             <div className="admin-stat-content">
               <h4>Sustainability</h4>
-              <div className="value">{String(services.filter(s => s.category.includes('Sustainability')).length).padStart(2, '0')}</div>
-              <span className="active">Subcategories</span>
+              <div className="value">{String(countFor('Sustainability')).padStart(2, '0')}</div>
+              <span className="active">Sub-services</span>
             </div>
           </div>
           <div className="admin-stat-card">
             <div className="admin-stat-icon-wrapper purple"><Layers size={20} /></div>
             <div className="admin-stat-content">
-              <h4>Telecom</h4>
-              <div className="value">{String(services.filter(s => s.category.includes('Telecom')).length).padStart(2, '0')}</div>
-              <span className="active">Subcategories</span>
+              <h4>Digital Twin</h4>
+              <div className="value">{String(countFor('Digital Twin')).padStart(2, '0')}</div>
+              <span className="active">Sub-services</span>
+            </div>
+          </div>
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon-wrapper blue"><Layers size={20} /></div>
+            <div className="admin-stat-content">
+              <h4>Construction Tech</h4>
+              <div className="value">{String(countFor('Construction')).padStart(2, '0')}</div>
+              <span className="active">Sub-services</span>
             </div>
           </div>
         </div>
@@ -1227,17 +1528,33 @@ export default function AdminPanel({ onNavigate }) {
 
   return (
     <div className="admin-panel-root">
+      {/* Mobile Sidebar Backdrop Overlay */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="admin-sidebar-backdrop" 
+          onClick={() => setIsMobileSidebarOpen(false)} 
+        />
+      )}
+
       {/* Left Navigation Sidebar */}
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-logo-group" style={{ display: 'flex', alignItems: 'center', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0', marginBottom: '20px' }}>
+      <aside className={`admin-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
+        <div className="admin-sidebar-logo-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0', marginBottom: '20px' }}>
           <img src={logoBlueImg} alt="Blue Crescent Engineering" className="admin-sidebar-logo-img" style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }} />
+          <button 
+            type="button" 
+            className="admin-sidebar-mobile-close"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-label="Close Mobile Navigation Menu"
+          >
+            <X size={20} />
+          </button>
         </div>
 
           <div className="admin-sidebar-nav">
             {/* Dashboard Item */}
             <button 
               className={`admin-nav-item ${activeTab === '/admin/dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('/admin/dashboard')}
+              onClick={() => handleNavClick('/admin/dashboard')}
             >
               <div className="admin-nav-item-left">
                 <LayoutDashboard size={20} /> Dashboard
@@ -1251,7 +1568,7 @@ export default function AdminPanel({ onNavigate }) {
               style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
               onClick={() => {
                 if (currentUser?.role === 'super_admin') {
-                  setActiveTab('/admin/users');
+                  handleNavClick('/admin/users');
                 }
               }}
             >
@@ -1275,7 +1592,7 @@ export default function AdminPanel({ onNavigate }) {
               <>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/news' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/news')}
+                  onClick={() => handleNavClick('/admin/news')}
                 >
                   <div className="admin-nav-item-left">
                     <Newspaper size={20} /> News
@@ -1284,7 +1601,7 @@ export default function AdminPanel({ onNavigate }) {
                 </button>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/projects' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/projects')}
+                  onClick={() => handleNavClick('/admin/projects')}
                 >
                   <div className="admin-nav-item-left">
                     <Briefcase size={20} /> Projects
@@ -1293,7 +1610,7 @@ export default function AdminPanel({ onNavigate }) {
                 </button>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/services' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/services')}
+                  onClick={() => handleNavClick('/admin/services')}
                 >
                   <div className="admin-nav-item-left">
                     <Wrench size={20} /> Services
@@ -1302,7 +1619,7 @@ export default function AdminPanel({ onNavigate }) {
                 </button>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/certificates' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/certificates')}
+                  onClick={() => handleNavClick('/admin/certificates')}
                 >
                   <div className="admin-nav-item-left">
                     <Award size={20} /> Certificates
@@ -1311,7 +1628,7 @@ export default function AdminPanel({ onNavigate }) {
                 </button>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/testimonials' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/testimonials')}
+                  onClick={() => handleNavClick('/admin/testimonials')}
                 >
                   <div className="admin-nav-item-left">
                     <Star size={20} /> Testimonials
@@ -1320,7 +1637,7 @@ export default function AdminPanel({ onNavigate }) {
                 </button>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/partners' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/partners')}
+                  onClick={() => handleNavClick('/admin/partners')}
                 >
                   <div className="admin-nav-item-left">
                     <Building size={20} /> Working Partners
@@ -1329,7 +1646,7 @@ export default function AdminPanel({ onNavigate }) {
                 </button>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/media' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/media')}
+                  onClick={() => handleNavClick('/admin/media')}
                 >
                   <div className="admin-nav-item-left">
                     <ImageIcon size={20} /> Media Library
@@ -1338,11 +1655,6 @@ export default function AdminPanel({ onNavigate }) {
                 </button>
               </>
             )}
-
-
-
-
-
 
             {/* Website Settings Section */}
             <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('settings')}>
@@ -1356,7 +1668,7 @@ export default function AdminPanel({ onNavigate }) {
                   style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   onClick={() => {
                     if (currentUser?.role === 'super_admin') {
-                      setActiveTab('/admin/settings/company');
+                      handleNavClick('/admin/settings/company');
                     }
                   }}
                 >
@@ -1375,7 +1687,7 @@ export default function AdminPanel({ onNavigate }) {
                   style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   onClick={() => {
                     if (currentUser?.role === 'super_admin') {
-                      setActiveTab('/admin/settings/contact');
+                      handleNavClick('/admin/settings/contact');
                     }
                   }}
                 >
@@ -1394,7 +1706,7 @@ export default function AdminPanel({ onNavigate }) {
                   style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   onClick={() => {
                     if (currentUser?.role === 'super_admin') {
-                      setActiveTab('/admin/settings/footer');
+                      handleNavClick('/admin/settings/footer');
                     }
                   }}
                 >
@@ -1414,7 +1726,7 @@ export default function AdminPanel({ onNavigate }) {
                   style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   onClick={() => {
                     if (currentUser?.role === 'super_admin') {
-                      setActiveTab('/admin/seo');
+                      handleNavClick('/admin/seo');
                     }
                   }}
                 >
@@ -1431,8 +1743,6 @@ export default function AdminPanel({ onNavigate }) {
               </>
             )}
 
-
-
             {/* System Section */}
             <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('system')}>
               <span className="admin-sidebar-header">System</span>
@@ -1442,7 +1752,7 @@ export default function AdminPanel({ onNavigate }) {
               <>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/backup' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('/admin/backup')}
+                  onClick={() => handleNavClick('/admin/backup')}
                 >
                   <div className="admin-nav-item-left">
                     <Database size={20} /> Backup & Restore
@@ -1469,8 +1779,16 @@ export default function AdminPanel({ onNavigate }) {
         <div className="admin-main-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
           {/* Top Main Header */}
           <header className="admin-header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', padding: '0 24px', borderBottom: '1px solid #E2E8F0', background: '#FFFFFF', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <Menu size={20} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <button 
+                type="button" 
+                className="admin-hamburger-btn"
+                onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+                aria-label="Toggle Navigation Menu"
+                title="Toggle Sidebar Menu"
+              >
+                <Menu size={22} />
+              </button>
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'capitalize' }}>
                 {activeTab.split('/').pop().replace(/-/g, ' ')}
               </h2>
@@ -3355,81 +3673,215 @@ export default function AdminPanel({ onNavigate }) {
             {/* SERVICES WORKSPACE */}
             {activeTab === '/admin/services' && (
               <div>
-                <div className="admin-table-card-header">
-                  <h3>Services Listing</h3>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <select
-                      className="admin-input"
-                      style={{ width: '220px', height: '38px', padding: '0 12px', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', background: '#FFFFFF', color: 'var(--text-dark)', fontWeight: '600', cursor: 'pointer' }}
-                      value={selectedCategoryFilter}
-                      onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                <div className="admin-table-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#0F172A' }}>Services Management</h3>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage your 4 main service categories and 16 dynamic sub-services structure.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      className="admin-add-btn"
+                      style={{ background: '#0F172A', color: '#FFF' }}
+                      onClick={() => {
+                        resetCategoryForm();
+                        setEditingCategoryId(null);
+                        setShowCategoryModal(true);
+                      }}
                     >
-                      <option value="All">All Categories</option>
-                      <option value="Engineering Services">Engineering Services</option>
-                      <option value="Sustainability Services">Sustainability Services</option>
-                      <option value="Telecom Services">Telecom Services</option>
-                    </select>
-
-                    <div className="admin-search-bar">
-                      <input 
-                        type="text" 
-                        className="admin-input" 
-                        placeholder="Search services..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
+                      <Plus size={16} /> Add Main Category
+                    </button>
+                    <button
+                      className="admin-add-btn"
+                      onClick={() => {
+                        resetServiceForm();
+                        setEditingServiceId(null);
+                        setShowServiceModal(true);
+                      }}
+                    >
+                      <Plus size={16} /> Add Sub-Service
+                    </button>
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '40px' }}>#</th>
-                      <th>Title</th>
-                      <th>Category</th>
-                      <th>Scope items</th>
-                      <th>Tools</th>
-                      <th style={{ width: '100px' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(services, ['title', 'category'])
-                      .filter(item => selectedCategoryFilter === 'All' || item.category === selectedCategoryFilter)
-                      .map((item, idx) => {
-                      let bullets = [];
-                      let tools = [];
-                      try {
-                        bullets = typeof item.bullets === 'string' ? JSON.parse(item.bullets) : (item.bullets || []);
-                        tools = typeof item.tools === 'string' ? JSON.parse(item.tools) : (item.tools || []);
-                      } catch(e) {}
+                {/* HIERARCHICAL DISPLAY */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  {serviceCategories
+                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                    .map((cat, catIdx) => {
+                      const categoryServices = services
+                        .filter(s => s.category === cat.name || s.category_id === cat.id)
+                        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+                      const isActiveCat = cat.status !== 'Inactive';
 
                       return (
-                        <tr key={item.id}>
-                          <td>{idx + 1}</td>
-                          <td style={{ fontWeight: '600' }}>{item.title}</td>
-                          <td>{item.category}</td>
-                          <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            {bullets.length} items configured
-                          </td>
-                          <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            {Array.isArray(tools) ? tools.flat().filter(Boolean).join(', ') : ''}
-                          </td>
-                          <td>
-                            <div className="admin-actions">
-                              <button className="admin-action-btn" title="Edit" onClick={() => startEdit('services', item)}>
-                                <Edit size={13} />
+                        <div key={cat.id || cat.name} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                          
+                          {/* Category Header Bar */}
+                          <div style={{ padding: '16px 20px', background: isActiveCat ? '#F8FAFC' : '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: '800', background: '#003E8A', color: '#FFF', width: '28px', height: '28px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                0{catIdx + 1}
+                              </span>
+                              <div>
+                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: isActiveCat ? '#0F172A' : '#94A3B8', letterSpacing: '0.5px' }}>
+                                  {cat.name.toUpperCase()}
+                                </h4>
+                                {cat.short_description && (
+                                  <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748B' }}>{cat.short_description}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span className={`admin-badge ${isActiveCat ? 'approved' : 'pending'}`}>
+                                {isActiveCat ? 'Active Category' : 'Inactive'}
+                              </span>
+
+                              {/* Category Reorder Buttons */}
+                              <button
+                                style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: catIdx === 0 ? 'not-allowed' : 'pointer', opacity: catIdx === 0 ? 0.4 : 1 }}
+                                disabled={catIdx === 0}
+                                onClick={() => moveCategoryOrder(cat, 'up')}
+                                title="Move Up"
+                              >
+                                ▲
                               </button>
-                              <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('services', item.id)}>
-                                <Trash size={13} />
+                              <button
+                                style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: catIdx === serviceCategories.length - 1 ? 'not-allowed' : 'pointer', opacity: catIdx === serviceCategories.length - 1 ? 0.4 : 1 }}
+                                disabled={catIdx === serviceCategories.length - 1}
+                                onClick={() => moveCategoryOrder(cat, 'down')}
+                                title="Move Down"
+                              >
+                                ▼
+                              </button>
+
+                              {/* Toggle Status */}
+                              <button
+                                style={{ background: isActiveCat ? '#FFF1F2' : '#F0FDF4', color: isActiveCat ? '#DC2626' : '#166534', border: `1px solid ${isActiveCat ? '#FECDD3' : '#BBF7D0'}`, padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                onClick={() => toggleCategoryStatus(cat)}
+                              >
+                                {isActiveCat ? 'Disable' : 'Enable'}
+                              </button>
+
+                              {/* Edit Category */}
+                              <button className="admin-action-btn" title="Edit Category" onClick={() => startEditCategory(cat)}>
+                                <Edit size={14} />
+                              </button>
+
+                              {/* Delete Category */}
+                              <button className="admin-action-btn delete" title="Delete Category" onClick={() => handleDeleteCategory(cat.id)}>
+                                <Trash size={14} />
+                              </button>
+
+                              {/* Add Sub-Service under this Category */}
+                              <button
+                                style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                onClick={() => {
+                                  resetServiceForm();
+                                  setServiceForm(prev => ({ ...prev, category: cat.name, category_id: cat.id }));
+                                  setEditingServiceId(null);
+                                  setShowServiceModal(true);
+                                }}
+                              >
+                                <Plus size={14} /> Sub-Service
                               </button>
                             </div>
-                          </td>
-                        </tr>
+                          </div>
+
+                          {/* Sub-Services List */}
+                          <div style={{ padding: '0', background: '#FFFFFF' }}>
+                            {categoryServices.length === 0 ? (
+                              <div style={{ padding: '24px', textAlign: 'center', color: '#94A3B8', fontSize: '13px', fontStyle: 'italic' }}>
+                                No sub-services configured under {cat.name}. Click "+ Sub-Service" above to add one.
+                              </div>
+                            ) : (
+                              <div className="admin-table-wrapper" style={{ margin: 0, border: 'none', borderRadius: 0 }}>
+                                <table className="admin-table" style={{ margin: 0, border: 'none' }}>
+                                  <thead>
+                                    <tr style={{ background: '#FAF5FF' }}>
+                                      <th style={{ width: '40px' }}>#</th>
+                                      <th>Sub-Service Name</th>
+                                      <th>Slug Path</th>
+                                      <th>Scope / Bullets</th>
+                                      <th>Status</th>
+                                      <th style={{ width: '170px' }}>Actions</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {categoryServices.map((subSvc, subIdx) => {
+                                      const isActiveSub = subSvc.status !== 'Inactive';
+                                      let bullets = [];
+                                      try { bullets = typeof subSvc.bullets === 'string' ? JSON.parse(subSvc.bullets) : (subSvc.bullets || []); } catch(e) {}
+
+                                      return (
+                                        <tr key={subSvc.id || subSvc.title} style={{ opacity: isActiveSub ? 1 : 0.65 }}>
+                                          <td>{subIdx + 1}</td>
+                                          <td style={{ fontWeight: '700', color: '#0F172A' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                              <span style={{ color: '#003E8A' }}>↳</span>
+                                              <span>{subSvc.title}</span>
+                                            </div>
+                                          </td>
+                                          <td><code style={{ fontSize: '12px', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px', color: '#475569' }}>/services/{subSvc.slug || subSvc.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}</code></td>
+                                          <td style={{ fontSize: '11px', color: '#64748B' }}>
+                                            {bullets.length > 0 ? `${bullets.length} items` : 'Default'}
+                                          </td>
+                                          <td>
+                                            <span className={`admin-badge ${isActiveSub ? 'approved' : 'pending'}`}>
+                                              {isActiveSub ? 'Active' : 'Inactive'}
+                                            </span>
+                                          </td>
+                                          <td>
+                                            <div className="admin-actions" style={{ gap: '6px' }}>
+                                              {/* Reorder Sub-Service */}
+                                              <button
+                                                style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '2px 6px', borderRadius: '4px', cursor: subIdx === 0 ? 'not-allowed' : 'pointer', fontSize: '10px', opacity: subIdx === 0 ? 0.4 : 1 }}
+                                                disabled={subIdx === 0}
+                                                onClick={() => moveServiceOrder(subSvc, 'up', categoryServices)}
+                                                title="Move Up"
+                                              >
+                                                ▲
+                                              </button>
+                                              <button
+                                                style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '2px 6px', borderRadius: '4px', cursor: subIdx === categoryServices.length - 1 ? 'not-allowed' : 'pointer', fontSize: '10px', opacity: subIdx === categoryServices.length - 1 ? 0.4 : 1 }}
+                                                disabled={subIdx === categoryServices.length - 1}
+                                                onClick={() => moveServiceOrder(subSvc, 'down', categoryServices)}
+                                                title="Move Down"
+                                              >
+                                                ▼
+                                              </button>
+                                              {/* Toggle Enable/Disable */}
+                                              <button
+                                                style={{ background: isActiveSub ? '#FFF1F2' : '#F0FDF4', color: isActiveSub ? '#DC2626' : '#166534', border: `1px solid ${isActiveSub ? '#FECDD3' : '#BBF7D0'}`, padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                                                onClick={() => toggleServiceStatus(subSvc)}
+                                              >
+                                                {isActiveSub ? 'Disable' : 'Enable'}
+                                              </button>
+                                              {/* Edit Sub-Service */}
+                                              <button className="admin-action-btn" title="Edit Sub-Service" onClick={() => startEditService(subSvc)}>
+                                                <Edit size={13} />
+                                              </button>
+                                              {/* Delete Sub-Service */}
+                                              <button className="admin-action-btn delete" title="Delete Sub-Service" onClick={() => handleDeleteService(subSvc.id)}>
+                                                <Trash size={13} />
+                                              </button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+
+                        </div>
                       );
                     })}
-                  </tbody>
-                </table>
+                </div>
               </div>
             )}
 
@@ -3449,41 +3901,43 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Document</th>
-                      <th>Title</th>
-                      <th>Issuer</th>
-                      <th>License No</th>
-                      <th>Territory</th>
-                      <th>Validity</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(certificates, ['title', 'org']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td>
-                          <img src={item.image} alt="cert preview" className="admin-table-preview-img" style={{ height: '50px', width: '38px', objectFit: 'contain' }} />
-                        </td>
-                        <td style={{ fontWeight: '600' }}>{item.title}</td>
-                        <td>{item.org}</td>
-                        <td><code>{item.licenseNo}</code></td>
-                        <td>{item.territory}</td>
-                        <td><span className="admin-badge approved">{item.validity}</span></td>
-                        <td>
-                          <div className="admin-actions">
-                            <button className="admin-action-btn" onClick={() => startEdit('certificates', item)}><Edit size={13} /></button>
-                            <button className="admin-action-btn delete" onClick={() => handleDelete('certificates', item.id)}><Trash size={13} /></button>
-                          </div>
-                        </td>
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Document</th>
+                        <th>Title</th>
+                        <th>Issuer</th>
+                        <th>License No</th>
+                        <th>Territory</th>
+                        <th>Validity</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(certificates, ['title', 'org']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            <img src={item.image} alt="cert preview" className="admin-table-preview-img" style={{ height: '50px', width: '38px', objectFit: 'contain' }} />
+                          </td>
+                          <td style={{ fontWeight: '600' }}>{item.title}</td>
+                          <td>{item.org}</td>
+                          <td><code>{item.licenseNo}</code></td>
+                          <td>{item.territory}</td>
+                          <td><span className="admin-badge approved">{item.validity}</span></td>
+                          <td>
+                            <div className="admin-actions">
+                              <button className="admin-action-btn" onClick={() => startEdit('certificates', item)}><Edit size={13} /></button>
+                              <button className="admin-action-btn delete" onClick={() => handleDelete('certificates', item.id)}><Trash size={13} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -3503,37 +3957,39 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Thumbnail</th>
-                      <th>Headline Title</th>
-                      <th>Category</th>
-                      <th>Published Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(news, ['title', 'category']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td>
-                          <img src={item.image || '/project1.png'} alt="news preview" className="admin-table-preview-img" />
-                        </td>
-                        <td style={{ fontWeight: '600' }}>{item.title}</td>
-                        <td><span className="admin-badge approved" style={{ textTransform: 'uppercase' }}>{item.category}</span></td>
-                        <td>{item.date || 'Today'}</td>
-                        <td>
-                          <div className="admin-actions">
-                            <button className="admin-action-btn" onClick={() => startEdit('news', item)}><Edit size={13} /></button>
-                            <button className="admin-action-btn delete" onClick={() => handleDelete('news', item.id)}><Trash size={13} /></button>
-                          </div>
-                        </td>
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Thumbnail</th>
+                        <th>Headline Title</th>
+                        <th>Category</th>
+                        <th>Published Date</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(news, ['title', 'category']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            <img src={item.image || '/project1.png'} alt="news preview" className="admin-table-preview-img" />
+                          </td>
+                          <td style={{ fontWeight: '600' }}>{item.title}</td>
+                          <td><span className="admin-badge approved" style={{ textTransform: 'uppercase' }}>{item.category}</span></td>
+                          <td>{item.date || 'Today'}</td>
+                          <td>
+                            <div className="admin-actions">
+                              <button className="admin-action-btn" onClick={() => startEdit('news', item)}><Edit size={13} /></button>
+                              <button className="admin-action-btn delete" onClick={() => handleDelete('news', item.id)}><Trash size={13} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -3553,52 +4009,54 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Headline</th>
-                      <th>Client Name</th>
-                      <th>Company</th>
-                      <th>Quote Content</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(testimonials, ['title', 'author_name', 'company_name']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td style={{ fontWeight: '600' }}>{item.title}</td>
-                        <td>{item.author_name}</td>
-                        <td>{item.company_name}</td>
-                        <td style={{ color: 'var(--text-muted)', fontSize: '11px', maxWidth: '300px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          "{item.content}"
-                        </td>
-                        <td>
-                          <span className={`admin-badge ${item.status}`}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="admin-actions">
-                            {item.status === 'pending' && (
-                              <button 
-                                className="admin-action-btn approve" 
-                                title="Approve Testimonial"
-                                onClick={() => handleApproveTestimonial(item)}
-                              >
-                                <Check size={13} />
-                              </button>
-                            )}
-                            <button className="admin-action-btn" onClick={() => startEdit('testimonials', item)}><Edit size={13} /></button>
-                            <button className="admin-action-btn delete" onClick={() => handleDelete('testimonials', item.id)}><Trash size={13} /></button>
-                          </div>
-                        </td>
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Headline</th>
+                        <th>Client Name</th>
+                        <th>Company</th>
+                        <th>Quote Content</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(testimonials, ['title', 'author_name', 'company_name']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td style={{ fontWeight: '600' }}>{item.title}</td>
+                          <td>{item.author_name}</td>
+                          <td>{item.company_name}</td>
+                          <td style={{ color: 'var(--text-muted)', fontSize: '11px', maxWidth: '300px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            "{item.content}"
+                          </td>
+                          <td>
+                            <span className={`admin-badge ${item.status}`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="admin-actions">
+                              {item.status === 'pending' && (
+                                <button 
+                                  className="admin-action-btn approve" 
+                                  title="Approve Testimonial"
+                                  onClick={() => handleApproveTestimonial(item)}
+                                >
+                                  <Check size={13} />
+                                </button>
+                              )}
+                              <button className="admin-action-btn" onClick={() => startEdit('testimonials', item)}><Edit size={13} /></button>
+                              <button className="admin-action-btn delete" onClick={() => handleDelete('testimonials', item.id)}><Trash size={13} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -3618,19 +4076,20 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Route / URL</th>
-                      <th>Parent Item</th>
-                      <th>Sort Index</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(menus, ['name', 'url']).map((item, idx) => {
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Route / URL</th>
+                        <th>Parent Item</th>
+                        <th>Sort Index</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterList(menus, ['name', 'url']).map((item, idx) => {
                       const parent = menus.find(m => m.id === item.parent_id);
                       return (
                         <tr key={item.id}>
@@ -3651,7 +4110,8 @@ export default function AdminPanel({ onNavigate }) {
                   </tbody>
                 </table>
               </div>
-            )}
+            </div>
+          )}
 
             {/* FOOTER SETTINGS (SUPERADMIN EXCLUSIVE) */}
             {activeTab === '/admin/settings/footer' && currentUser?.role === 'super_admin' && footer && (
@@ -3766,43 +4226,45 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Account Username</th>
-                      <th>Role Authority</th>
-                      <th>Creation Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(users, ['username', 'role']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td style={{ fontWeight: '600' }}>{item.username}</td>
-                        <td>
-                          <span className={`admin-badge ${item.role === 'super_admin' ? 'approved' : 'draft'}`}>
-                            {item.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-                          </span>
-                        </td>
-                        <td>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Seeded'}</td>
-                        <td>
-                          <div className="admin-actions">
-                            <button className="admin-action-btn" onClick={() => startEdit('users', item)}><Edit size={13} /></button>
-                            <button 
-                              className="admin-action-btn delete" 
-                              onClick={() => handleDelete('users', item.id)}
-                              disabled={item.username === currentUser?.username} // Cannot delete self
-                            >
-                              <Trash size={13} />
-                            </button>
-                          </div>
-                        </td>
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Account Username</th>
+                        <th>Role Authority</th>
+                        <th>Creation Date</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(users, ['username', 'role']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td style={{ fontWeight: '600' }}>{item.username}</td>
+                          <td>
+                            <span className={`admin-badge ${item.role === 'super_admin' ? 'approved' : 'draft'}`}>
+                              {item.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                            </span>
+                          </td>
+                          <td>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Seeded'}</td>
+                          <td>
+                            <div className="admin-actions">
+                              <button className="admin-action-btn" onClick={() => startEdit('users', item)}><Edit size={13} /></button>
+                              <button 
+                                className="admin-action-btn delete" 
+                                onClick={() => handleDelete('users', item.id)}
+                                disabled={item.username === currentUser?.username} // Cannot delete self
+                              >
+                                <Trash size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -3822,43 +4284,45 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '40px' }}>#</th>
-                      <th>Sender Name</th>
-                      <th>Email Address</th>
-                      <th>Message Details</th>
-                      <th>Date Received</th>
-                      <th style={{ width: '60px' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(contactInquiries, ['name', 'email', 'message']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td style={{ fontWeight: '600' }}>{item.name}</td>
-                        <td>{item.email}</td>
-                        <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.message}</td>
-                        <td>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Today'}</td>
-                        <td>
-                          <div className="admin-actions">
-                            <button className="admin-action-btn delete" title="Delete Inquiry" onClick={() => handleDelete('contact', item.id)}>
-                              <Trash size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {contactInquiries.length === 0 && (
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
                       <tr>
-                        <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-                          No client inquiries found in database.
-                        </td>
+                        <th style={{ width: '40px' }}>#</th>
+                        <th>Sender Name</th>
+                        <th>Email Address</th>
+                        <th>Message Details</th>
+                        <th>Date Received</th>
+                        <th style={{ width: '60px' }}>Actions</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(contactInquiries, ['name', 'email', 'message']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td style={{ fontWeight: '600' }}>{item.name}</td>
+                          <td>{item.email}</td>
+                          <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.message}</td>
+                          <td>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Today'}</td>
+                          <td>
+                            <div className="admin-actions">
+                              <button className="admin-action-btn delete" title="Delete Inquiry" onClick={() => handleDelete('contact', item.id)}>
+                                <Trash size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {contactInquiries.length === 0 && (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
+                            No client inquiries found in database.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -3878,39 +4342,41 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '40px' }}>#</th>
-                      <th>Email Address</th>
-                      <th>Subscribed Date</th>
-                      <th style={{ width: '60px' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(subscribers, ['email']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td style={{ fontWeight: '600' }}>{item.email}</td>
-                        <td>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Seeded'}</td>
-                        <td>
-                          <div className="admin-actions">
-                            <button className="admin-action-btn delete" title="Remove Subscriber" onClick={() => handleDelete('subscribers', item.id)}>
-                              <Trash size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {subscribers.length === 0 && (
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
                       <tr>
-                        <td colSpan="4" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-                          No email subscribers found.
-                        </td>
+                        <th style={{ width: '40px' }}>#</th>
+                        <th>Email Address</th>
+                        <th>Subscribed Date</th>
+                        <th style={{ width: '60px' }}>Actions</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(subscribers, ['email']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td style={{ fontWeight: '600' }}>{item.email}</td>
+                          <td>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Seeded'}</td>
+                          <td>
+                            <div className="admin-actions">
+                              <button className="admin-action-btn delete" title="Remove Subscriber" onClick={() => handleDelete('subscribers', item.id)}>
+                                <Trash size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {subscribers.length === 0 && (
+                        <tr>
+                          <td colSpan="4" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
+                            No email subscribers found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -3961,23 +4427,99 @@ export default function AdminPanel({ onNavigate }) {
             {activeTab === '/admin/projects' && (
               <div>
                 {/* Stats strip */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                  {['Engineering Division', 'Sustainability Division', 'Digital Twin Division'].map(div => (
-                    <div key={div} className="admin-stat-card" style={{ padding: '18px 20px' }}>
-                      <p style={{ margin: 0, fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                        {div.replace(' Division', '')}
-                      </p>
-                      <p style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: 'var(--primary-blue)' }}>
-                        {projects.filter(p => p.division_type === div).reduce((s, p) => s + (parseInt(p.project_count) || 0), 0)}
-                      </p>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>Total projects</p>
-                    </div>
-                  ))}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '16px',
+                  marginBottom: '28px'
+                }}>
+                  {[
+                    { name: 'CAD Projects', label: 'CAD Projects', icon: FileCode, bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+                    { name: 'BIM Projects', label: 'BIM Projects', icon: Layers, bg: '#F0FDFA', color: '#0D9488', border: '#99F6E4' },
+                    { name: 'Laser Scanning Projects', label: 'Laser Scanning', icon: Radio, bg: '#FFF7ED', color: '#EA580C', border: '#FFEDD5' },
+                    { name: 'Digital Twin Projects', label: 'Digital Twin', icon: Cpu, bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
+                    { name: 'Sustainability Projects', label: 'Sustainability', icon: Leaf, bg: '#ECFDF5', color: '#059669', border: '#A7F3D0' }
+                  ].map(item => {
+                    const IconComp = item.icon;
+                    const count = projects.filter(p => (p.division_type || p.category) === item.name).length;
+                    return (
+                      <div
+                        key={item.name}
+                        style={{
+                          background: '#FFFFFF',
+                          borderRadius: '16px',
+                          padding: '20px 22px',
+                          border: `1px solid ${item.border}`,
+                          boxShadow: '0 4px 16px rgba(6, 59, 115, 0.04)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                          cursor: 'default',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.transform = 'translateY(-3px)';
+                          e.currentTarget.style.boxShadow = '0 10px 24px rgba(6, 59, 115, 0.1)';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(6, 59, 115, 0.04)';
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                          <span style={{
+                            fontSize: '12px',
+                            fontWeight: '800',
+                            color: '#1E293B',
+                            letterSpacing: '0.4px',
+                            textTransform: 'uppercase'
+                          }}>
+                            {item.label}
+                          </span>
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '10px',
+                            background: item.bg,
+                            color: item.color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            <IconComp size={18} />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                          <span style={{ fontSize: '32px', fontWeight: '800', color: '#063B73', lineHeight: 1 }}>
+                            {count}
+                          </span>
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748B' }}>
+                            {count === 1 ? 'Project' : 'Projects'}
+                          </span>
+                        </div>
+
+                        {/* Bottom accent indicator bar */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: '4px',
+                          background: item.color,
+                          opacity: 0.85
+                        }} />
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Projects Table */}
                 <div className="admin-table-card-header">
-                  <h3>Company Projects Divisions</h3>
+                  <h3>Managed Projects ({projects.length})</h3>
                   <div className="admin-search-bar">
                     <input
                       type="text"
@@ -3988,46 +4530,82 @@ export default function AdminPanel({ onNavigate }) {
                     />
                   </div>
                 </div>
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '40px' }}>#</th>
-                      <th>Project Area Name</th>
-                      <th>Division Type</th>
-                      <th>Project Count</th>
-                      <th>Status</th>
-                      <th style={{ width: '90px' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(projects, ['name', 'division_type']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td style={{ fontWeight: '600' }}>{item.name}</td>
-                        <td>{item.division_type}</td>
-                        <td>{item.project_count} Projects</td>
-                        <td>
-                          <span className={`admin-badge ${item.status === 'Active' ? 'approved' : 'pending'}`}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="admin-actions">
-                            <button className="admin-action-btn" title="Edit" onClick={() => startEdit('projects', item)}>
-                              <Edit size={13} />
-                            </button>
-                            <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('projects', item.id)}>
-                              <Trash size={13} />
-                            </button>
-                          </div>
-                        </td>
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '40px' }}>#</th>
+                        <th>Project Name</th>
+                        <th>Category</th>
+                        <th>Client / Location</th>
+                        <th>Status</th>
+                        <th style={{ width: '120px' }}>Actions</th>
                       </tr>
-                    ))}
-                    {projects.length === 0 && (
-                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No projects yet. Click "Add New Project" to get started.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(projects, ['name', 'division_type', 'client', 'location']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div style={{ width: '44px', height: '44px', borderRadius: '8px', overflow: 'hidden', background: '#F1F5F9', flexShrink: 0 }}>
+                                <img
+                                  src={item.image || '/project1.png'}
+                                  alt={item.name}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  onError={(e) => { e.target.onerror = null; e.target.src = '/project1.png'; }}
+                                />
+                              </div>
+                              <div>
+                                <strong style={{ color: '#063B73', display: 'block', fontSize: '14px' }}>{item.name}</strong>
+                                <span style={{ fontSize: '12px', color: '#64748B' }}>/projects/{item.slug || item.id}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: '12px', fontWeight: '700', color: '#087CFF', background: 'rgba(8,124,255,0.08)', padding: '4px 10px', borderRadius: '12px' }}>
+                              {item.division_type || item.category || 'BIM Projects'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '13px', color: '#334155' }}>
+                              {item.client || 'Client N/A'}
+                              <div style={{ fontSize: '11px', color: '#64748B' }}>{item.location || 'Qatar'} • {item.year || '2024'}</div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`admin-badge ${item.status === 'Completed' || item.status === 'Active' ? 'approved' : 'pending'}`}>
+                              {item.status || 'Completed'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="admin-actions">
+                              <button
+                                className="admin-action-btn"
+                                title="View Project Detail Page"
+                                onClick={() => {
+                                  if (onNavigate) onNavigate('ProjectDetail', item.slug || item.id);
+                                }}
+                                style={{ color: '#087CFF' }}
+                              >
+                                <ExternalLink size={13} />
+                              </button>
+                              <button className="admin-action-btn" title="Edit Project" onClick={() => startEdit('projects', item)}>
+                                <Edit size={13} />
+                              </button>
+                              <button className="admin-action-btn delete" title="Delete Project" onClick={() => handleDelete('projects', item.id)}>
+                                <Trash size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {projects.length === 0 && (
+                        <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No projects found. Click "+ Add New Item" to create one.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -4046,48 +4624,50 @@ export default function AdminPanel({ onNavigate }) {
                     />
                   </div>
                 </div>
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '40px' }}>#</th>
-                      <th>Logo</th>
-                      <th>Partner Name</th>
-                      <th>Role Description</th>
-                      <th>Sort Order</th>
-                      <th style={{ width: '90px' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterList(partners, ['name', 'role']).map((item, idx) => (
-                      <tr key={item.id}>
-                        <td>{idx + 1}</td>
-                        <td>
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="admin-table-preview-img" style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '8px' }} />
-                          ) : (
-                            <div style={{ height: '40px', width: '40px', borderRadius: '8px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#94A3B8', fontWeight: '700' }}>No Logo</div>
-                          )}
-                        </td>
-                        <td style={{ fontWeight: '600' }}>{item.name}</td>
-                        <td style={{ color: '#00B8A0', fontWeight: '600' }}>{item.role}</td>
-                        <td>{item.order_num}</td>
-                        <td>
-                          <div className="admin-actions">
-                            <button className="admin-action-btn" title="Edit" onClick={() => startEdit('partners', item)}>
-                              <Edit size={13} />
-                            </button>
-                            <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('partners', item.id)}>
-                              <Trash size={13} />
-                            </button>
-                          </div>
-                        </td>
+                <div className="admin-table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '40px' }}>#</th>
+                        <th>Logo</th>
+                        <th>Partner Name</th>
+                        <th>Role Description</th>
+                        <th>Sort Order</th>
+                        <th style={{ width: '90px' }}>Actions</th>
                       </tr>
-                    ))}
-                    {partners.length === 0 && (
-                      <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No partners yet. Click "Add Partner" to get started.</td></tr>
-                    )}
-                </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filterList(partners, ['name', 'role']).map((item, idx) => (
+                        <tr key={item.id}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            {item.image ? (
+                              <img src={item.image} alt={item.name} className="admin-table-preview-img" style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '8px' }} />
+                            ) : (
+                              <div style={{ height: '40px', width: '40px', borderRadius: '8px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#94A3B8', fontWeight: '700' }}>No Logo</div>
+                            )}
+                          </td>
+                          <td style={{ fontWeight: '600' }}>{item.name}</td>
+                          <td style={{ color: '#00B8A0', fontWeight: '600' }}>{item.role}</td>
+                          <td>{item.order_num}</td>
+                          <td>
+                            <div className="admin-actions">
+                              <button className="admin-action-btn" title="Edit" onClick={() => startEdit('partners', item)}>
+                                <Edit size={13} />
+                              </button>
+                              <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('partners', item.id)}>
+                                <Trash size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {partners.length === 0 && (
+                        <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No partners yet. Click "Add Partner" to get started.</td></tr>
+                      )}
+                  </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -4132,43 +4712,45 @@ export default function AdminPanel({ onNavigate }) {
                 {/* Videos Section */}
                 <div>
                   <h4 style={{ color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '1px' }}>🎥 YouTube Videos</h4>
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '40px' }}>#</th>
-                        <th style={{ width: '120px' }}>Thumbnail</th>
-                        <th>Title</th>
-                        <th>YouTube URL</th>
-                        <th style={{ width: '90px' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filterList(mediaItems.filter(m => m.type === 'video'), ['title', 'url']).map((item, idx) => {
-                        const ytId = item.url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/)?.[1];
-                        return (
-                          <tr key={item.id}>
-                            <td>{idx + 1}</td>
-                            <td>
-                              {ytId ? (
-                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={item.title} style={{ width: '100px', height: '56px', objectFit: 'cover', borderRadius: '6px' }} />
-                              ) : <span style={{ color: '#94A3B8', fontSize: '12px' }}>No Thumb</span>}
-                            </td>
-                            <td style={{ fontWeight: 600 }}>{item.title}</td>
-                            <td style={{ color: '#00B8A0', fontSize: '13px', wordBreak: 'break-all' }}>{item.url}</td>
-                            <td>
-                              <div className="admin-actions">
-                                <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={13} /></button>
-                                <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('media', item.id)}><Trash size={13} /></button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {mediaItems.filter(m => m.type === 'video').length === 0 && (
-                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No videos yet. Click "Add Media" above.</td></tr>
-                      )}
-                    </tbody>
-                  </table>
+                  <div className="admin-table-wrapper">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '40px' }}>#</th>
+                          <th style={{ width: '120px' }}>Thumbnail</th>
+                          <th>Title</th>
+                          <th>YouTube URL</th>
+                          <th style={{ width: '90px' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filterList(mediaItems.filter(m => m.type === 'video'), ['title', 'url']).map((item, idx) => {
+                          const ytId = item.url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/)?.[1];
+                          return (
+                            <tr key={item.id}>
+                              <td>{idx + 1}</td>
+                              <td>
+                                {ytId ? (
+                                  <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={item.title} style={{ width: '100px', height: '56px', objectFit: 'cover', borderRadius: '6px' }} />
+                                ) : <span style={{ color: '#94A3B8', fontSize: '12px' }}>No Thumb</span>}
+                              </td>
+                              <td style={{ fontWeight: 600 }}>{item.title}</td>
+                              <td style={{ color: '#00B8A0', fontSize: '13px', wordBreak: 'break-all' }}>{item.url}</td>
+                              <td>
+                                <div className="admin-actions">
+                                  <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={13} /></button>
+                                  <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('media', item.id)}><Trash size={13} /></button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {mediaItems.filter(m => m.type === 'video').length === 0 && (
+                          <tr><td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No videos yet. Click "Add Media" above.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -4193,22 +4775,29 @@ export default function AdminPanel({ onNavigate }) {
                     <tr>
                       <td>1</td>
                       <td style={{ fontWeight: '600' }}>Engineering Services</td>
-                      <td>5 Submenus</td>
-                      <td>Three-Column Grid</td>
+                      <td>4 Submenus</td>
+                      <td>Dropdown Grid</td>
                       <td><span className="admin-badge approved">Active</span></td>
                     </tr>
                     <tr>
                       <td>2</td>
                       <td style={{ fontWeight: '600' }}>Sustainability Services</td>
-                      <td>3 Submenus</td>
-                      <td>Three-Column Grid</td>
+                      <td>4 Submenus</td>
+                      <td>Dropdown Grid</td>
                       <td><span className="admin-badge approved">Active</span></td>
                     </tr>
                     <tr>
                       <td>3</td>
-                      <td style={{ fontWeight: '600' }}>Telecom Services</td>
+                      <td style={{ fontWeight: '600' }}>Digital Twin</td>
                       <td>4 Submenus</td>
-                      <td>Three-Column Grid</td>
+                      <td>Dropdown Grid</td>
+                      <td><span className="admin-badge approved">Active</span></td>
+                    </tr>
+                    <tr>
+                      <td>4</td>
+                      <td style={{ fontWeight: '600' }}>Construction Technology</td>
+                      <td>4 Submenus</td>
+                      <td>Dropdown Grid</td>
                       <td><span className="admin-badge approved">Active</span></td>
                     </tr>
                   </tbody>
@@ -4337,13 +4926,13 @@ export default function AdminPanel({ onNavigate }) {
 
       {/* DYNAMIC FORM MODALS FOR TAB CRUD */}
       {showAddModal && (
-        <div className="admin-modal-backdrop" onClick={() => { setShowAddModal(false); setActiveEditItem(null); }}>
+        <div className="admin-modal-backdrop" onClick={handleCloseAddModal}>
           <div className="admin-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <h3>
                 {activeEditItem ? `Modify ${activeTab.split('/').pop().replace(/-/g, ' ')}` : `Create New ${activeTab.split('/').pop().replace(/-/g, ' ')}`}
               </h3>
-              <button className="admin-modal-close" onClick={() => { setShowAddModal(false); setActiveEditItem(null); }}>
+              <button type="button" className="admin-modal-close" onClick={handleCloseAddModal}>
                 <X size={20} />
               </button>
             </div>
@@ -4455,12 +5044,10 @@ export default function AdminPanel({ onNavigate }) {
                         value={serviceForm.category}
                         onChange={(e) => setServiceForm(prev => ({ ...prev, category: e.target.value }))}
                       >
-                        <option value="CAD & Engineering Documentation">CAD & Engineering Documentation</option>
-                        <option value="BIM & Digital Construction">BIM & Digital Construction</option>
-                        <option value="Laser Scanning & Reality Capture">Laser Scanning & Reality Capture</option>
-                        <option value="Digital Twin & Asset Lifecycle">Digital Twin & Asset Lifecycle</option>
-                        <option value="Sustainability Consultancy">Sustainability Consultancy</option>
-                        <option value="Remote Construction Solutions">Remote Construction Solutions</option>
+                        <option value="Engineering Services">Engineering Services</option>
+                        <option value="Sustainability Services">Sustainability Services</option>
+                        <option value="Digital Twin">Digital Twin</option>
+                        <option value="Construction Technology">Construction Technology</option>
                       </select>
                     </div>
 
@@ -4469,7 +5056,7 @@ export default function AdminPanel({ onNavigate }) {
                       <input
                         type="text"
                         className="admin-input"
-                        placeholder="e.g. BIM & Digital Construction"
+                        placeholder="e.g. BIM"
                         value={serviceForm.title}
                         onChange={(e) => setServiceForm(prev => ({ ...prev, title: e.target.value }))}
                       />
@@ -4477,7 +5064,7 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
 
                   <div className="admin-form-group">
-                    <label>Detailed HTML / Text Description</label>
+                    <label>Detailed Description</label>
                     <textarea
                       rows="4"
                       className="admin-input"
@@ -4507,40 +5094,6 @@ export default function AdminPanel({ onNavigate }) {
                             onChange={(e) => handleBulletChange(idx, e.target.value)}
                           />
                           <button className="admin-action-btn delete" onClick={() => removeBullet(idx)}>
-                            <Trash size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tools columns mapping */}
-                  <div className="admin-form-group">
-                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      Tools & Frameworks Rows (Pairs)
-                      <button className="admin-btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={addToolRow}>
-                        + Add Tool Row
-                      </button>
-                    </label>
-
-                    <div className="admin-dynamic-list">
-                      {serviceForm.tools.map((pair, idx) => (
-                        <div key={idx} className="admin-dynamic-row">
-                          <input
-                            type="text"
-                            className="admin-input"
-                            placeholder="Tool Column 1"
-                            value={pair[0] || ''}
-                            onChange={(e) => handleToolChange(idx, 0, e.target.value)}
-                          />
-                          <input
-                            type="text"
-                            className="admin-input"
-                            placeholder="Tool Column 2"
-                            value={pair[1] || ''}
-                            onChange={(e) => handleToolChange(idx, 1, e.target.value)}
-                          />
-                          <button className="admin-action-btn delete" onClick={() => removeToolRow(idx)}>
                             <Trash size={14} />
                           </button>
                         </div>
@@ -4744,66 +5297,230 @@ export default function AdminPanel({ onNavigate }) {
               {/* project form */}
               {activeTab === '/admin/projects' && (
                 <div>
-                  <div className="admin-form-group">
-                    <label>Project Area Name</label>
-                    <input
-                      type="text"
-                      className="admin-input"
-                      placeholder="e.g. BIM Modeling & Coordination"
-                      value={projectForm.name}
-                      onChange={e => setProjectForm(prev => ({ ...prev, name: e.target.value }))}
-                    />
+                  <div className="admin-form-grid">
+                    <div className="admin-form-group">
+                      <label>Project Title / Name *</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. Qatar Free Zone Project"
+                        value={projectForm.name}
+                        onChange={e => setProjectForm(prev => ({ ...prev, name: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>URL Slug (SEO Friendly)</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. qatar-free-zone"
+                        value={projectForm.slug}
+                        onChange={e => setProjectForm(prev => ({ ...prev, slug: e.target.value }))}
+                      />
+                    </div>
                   </div>
 
                   <div className="admin-form-grid">
                     <div className="admin-form-group">
-                      <label>Division Type</label>
+                      <label>Project Category / Division *</label>
                       <select
                         className="admin-input"
                         value={projectForm.division_type}
                         onChange={e => setProjectForm(prev => ({ ...prev, division_type: e.target.value }))}
                       >
-                        <option value="Engineering Division">Engineering Division</option>
-                        <option value="Sustainability Division">Sustainability Division</option>
-                        <option value="Digital Twin Division">Digital Twin Division</option>
+                        <option value="CAD Projects">CAD Projects</option>
+                        <option value="BIM Projects">BIM Projects</option>
+                        <option value="Laser Scanning Projects">Laser Scanning Projects</option>
+                        <option value="Digital Twin Projects">Digital Twin Projects</option>
+                        <option value="Sustainability Projects">Sustainability Projects</option>
                       </select>
                     </div>
 
                     <div className="admin-form-group">
-                      <label>Project Count</label>
-                      <input
-                        type="number"
-                        min="0"
+                      <label>Project Status</label>
+                      <select
                         className="admin-input"
-                        placeholder="0"
-                        value={projectForm.project_count}
-                        onChange={e => setProjectForm(prev => ({ ...prev, project_count: parseInt(e.target.value) || 0 }))}
+                        value={projectForm.status}
+                        onChange={e => setProjectForm(prev => ({ ...prev, status: e.target.value }))}
+                      >
+                        <option value="Completed">Completed</option>
+                        <option value="Ongoing">Ongoing</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="admin-form-grid">
+                    <div className="admin-form-group">
+                      <label>Client Name</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. Free Zones Authority (QFZA)"
+                        value={projectForm.client}
+                        onChange={e => setProjectForm(prev => ({ ...prev, client: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>Main Contractor / Consultant</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. CCC / Dar Al-Handasah"
+                        value={projectForm.contractor}
+                        onChange={e => setProjectForm(prev => ({ ...prev, contractor: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="admin-form-grid">
+                    <div className="admin-form-group">
+                      <label>Location</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. Doha, Qatar"
+                        value={projectForm.location}
+                        onChange={e => setProjectForm(prev => ({ ...prev, location: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>Sector</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. Infrastructure & Buildings"
+                        value={projectForm.sector}
+                        onChange={e => setProjectForm(prev => ({ ...prev, sector: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="admin-form-grid">
+                    <div className="admin-form-group">
+                      <label>Year</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. 2024"
+                        value={projectForm.year}
+                        onChange={e => setProjectForm(prev => ({ ...prev, year: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>BIM Level / Project Stage</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. LOD 500 / As-Built"
+                        value={projectForm.bim_level}
+                        onChange={e => setProjectForm(prev => ({ ...prev, bim_level: e.target.value, project_stage: e.target.value }))}
                       />
                     </div>
                   </div>
 
                   <div className="admin-form-group">
-                    <label>Status</label>
-                    <select
+                    <label>Short Project Summary</label>
+                    <textarea
+                      rows="2"
                       className="admin-input"
-                      value={projectForm.status}
-                      onChange={e => setProjectForm(prev => ({ ...prev, status: e.target.value }))}
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
+                      style={{ fontFamily: 'inherit', resize: 'vertical' }}
+                      placeholder="Brief 1-2 sentence project overview..."
+                      value={projectForm.short_description}
+                      onChange={e => setProjectForm(prev => ({ ...prev, short_description: e.target.value }))}
+                    />
                   </div>
 
                   <div className="admin-form-group">
-                    <label>Description (Optional)</label>
+                    <label>Detailed Scope of Work</label>
                     <textarea
-                      rows="4"
+                      rows="3"
                       className="admin-input"
                       style={{ fontFamily: 'inherit', resize: 'vertical' }}
-                      placeholder="Brief description of this project division area..."
-                      value={projectForm.description}
-                      onChange={e => setProjectForm(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Detailed explanation of Blue Crescent engineering scope..."
+                      value={projectForm.scope_of_work}
+                      onChange={e => setProjectForm(prev => ({ ...prev, scope_of_work: e.target.value }))}
                     />
+                  </div>
+
+                  <div className="admin-form-group">
+                    <label>Services Provided (Comma-separated)</label>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. BIM, Digital Twin, Laser Scanning"
+                      value={projectForm.services}
+                      onChange={e => setProjectForm(prev => ({ ...prev, services: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="admin-form-group">
+                    <label>Technical Disciplines (Comma-separated)</label>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. Architecture, Structure, MEP, Infrastructure"
+                      value={projectForm.disciplines}
+                      onChange={e => setProjectForm(prev => ({ ...prev, disciplines: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="admin-form-group">
+                    <label>Key Deliverables (Comma-separated)</label>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. BIM Models, As-Built Information, Asset Data"
+                      value={projectForm.deliverables}
+                      onChange={e => setProjectForm(prev => ({ ...prev, deliverables: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="admin-form-group">
+                    <label>Software & Technology Used (Comma-separated)</label>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="e.g. Revit, Navisworks, Digital Twin Platform"
+                      value={projectForm.technologies}
+                      onChange={e => setProjectForm(prev => ({ ...prev, technologies: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="admin-form-group">
+                    <label>Project Highlights / Quote Statement</label>
+                    <textarea
+                      rows="2"
+                      className="admin-input"
+                      style={{ fontFamily: 'inherit', resize: 'vertical' }}
+                      placeholder="Highlight complexity, zero-clash achievement, or technical scale..."
+                      value={projectForm.project_highlights}
+                      onChange={e => setProjectForm(prev => ({ ...prev, project_highlights: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="admin-form-group">
+                    <label>Main Project Image</label>
+                    <div className="admin-file-upload">
+                      <label className="admin-file-label">
+                        <span>Select project image...</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e.target.files[0], setProjectForm, 'image')}
+                        />
+                      </label>
+                    </div>
+                    {projectForm.image && (
+                      <div className="admin-upload-preview">
+                        <img src={projectForm.image} alt="Project preview" />
+                        <button className="admin-upload-preview-remove" onClick={() => setProjectForm(prev => ({ ...prev, image: '' }))}>✕</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -5103,11 +5820,241 @@ export default function AdminPanel({ onNavigate }) {
             </div>
 
             <div className="admin-modal-footer">
-              <button className="admin-btn-secondary" onClick={() => { setShowAddModal(false); setActiveEditItem(null); }}>
+              <button type="button" className="admin-btn-secondary" onClick={handleCloseAddModal}>
                 Cancel
               </button>
-              <button className="admin-btn" style={{ width: 'auto', padding: '10px 24px' }} onClick={() => handleSave(activeTab, activeEditItem?.id)}>
+              <button type="button" className="admin-btn" style={{ width: 'auto', padding: '10px 24px' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSave(activeTab, activeEditItem?.id); }}>
                 {activeEditItem ? 'Save Updates' : 'Add Item'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MAIN CATEGORY MODAL */}
+      {showCategoryModal && (
+        <div className="admin-modal-backdrop" onClick={handleCloseCategoryModal}>
+          <div className="admin-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3>{editingCategoryId ? 'Edit Main Category' : 'Add Main Category'}</h3>
+              <button type="button" className="admin-modal-close" onClick={handleCloseCategoryModal}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="admin-modal-body">
+              <div className="admin-form-group">
+                <label>Category Name *</label>
+                <input
+                  type="text"
+                  className="admin-input"
+                  placeholder="e.g. Engineering Services"
+                  value={categoryForm.name}
+                  onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Category Slug (Auto-generated if empty)</label>
+                <input
+                  type="text"
+                  className="admin-input"
+                  placeholder="e.g. engineering-services"
+                  value={categoryForm.slug}
+                  onChange={(e) => setCategoryForm(prev => ({ ...prev, slug: e.target.value }))}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Short Description</label>
+                <textarea
+                  rows="3"
+                  className="admin-input"
+                  style={{ fontFamily: 'inherit', resize: 'vertical' }}
+                  placeholder="Brief summary of category..."
+                  value={categoryForm.short_description}
+                  onChange={(e) => setCategoryForm(prev => ({ ...prev, short_description: e.target.value }))}
+                />
+              </div>
+
+              <div className="admin-form-grid">
+                <div className="admin-form-group">
+                  <label>Icon Identifier</label>
+                  <select
+                    className="admin-input"
+                    value={categoryForm.icon}
+                    onChange={(e) => setCategoryForm(prev => ({ ...prev, icon: e.target.value }))}
+                  >
+                    <option value="Building2">Building2 (Engineering)</option>
+                    <option value="Leaf">Leaf (Sustainability)</option>
+                    <option value="Layers">Layers (Digital Twin)</option>
+                    <option value="Cpu">Cpu (Construction Tech)</option>
+                    <option value="Compass">Compass</option>
+                    <option value="Wrench">Wrench</option>
+                  </select>
+                </div>
+
+                <div className="admin-form-group">
+                  <label>Display Order</label>
+                  <input
+                    type="number"
+                    className="admin-input"
+                    value={categoryForm.display_order}
+                    onChange={(e) => setCategoryForm(prev => ({ ...prev, display_order: parseInt(e.target.value) || 1 }))}
+                  />
+                </div>
+              </div>
+
+              <div className="admin-form-group">
+                <label>Status</label>
+                <select
+                  className="admin-input"
+                  value={categoryForm.status}
+                  onChange={(e) => setCategoryForm(prev => ({ ...prev, status: e.target.value }))}
+                >
+                  <option value="Active">Active (Visible on Website)</option>
+                  <option value="Inactive">Inactive (Hidden)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="admin-modal-footer">
+              <button type="button" className="admin-btn-secondary" onClick={handleCloseCategoryModal}>
+                Cancel
+              </button>
+              <button type="button" className="admin-btn" style={{ width: 'auto', padding: '10px 24px' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveCategory(e); }}>
+                {editingCategoryId ? 'Save Category Updates' : 'Create Category'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUB-SERVICE MODAL */}
+      {showServiceModal && (
+        <div className="admin-modal-backdrop" onClick={handleCloseServiceModal}>
+          <div className="admin-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '680px' }}>
+            <div className="admin-modal-header">
+              <h3>{editingServiceId ? 'Edit Sub-Service' : 'Add Sub-Service'}</h3>
+              <button type="button" className="admin-modal-close" onClick={handleCloseServiceModal}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="admin-modal-body">
+              <div className="admin-form-grid">
+                <div className="admin-form-group">
+                  <label>Parent Category *</label>
+                  <select
+                    className="admin-input"
+                    value={serviceForm.category}
+                    onChange={(e) => {
+                      const selectedCatName = e.target.value;
+                      const matchedCat = serviceCategories.find(c => c.name === selectedCatName);
+                      setServiceForm(prev => ({ ...prev, category: selectedCatName, category_id: matchedCat ? matchedCat.id : null }));
+                    }}
+                  >
+                    {serviceCategories.map(cat => (
+                      <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="admin-form-group">
+                  <label>Sub-Service Title *</label>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="e.g. CAD or Laser Scanning"
+                    value={serviceForm.title}
+                    onChange={(e) => setServiceForm(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="admin-form-grid">
+                <div className="admin-form-group">
+                  <label>URL Slug Path (Auto-generated if empty)</label>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="e.g. cad or laser-scanning"
+                    value={serviceForm.slug}
+                    onChange={(e) => setServiceForm(prev => ({ ...prev, slug: e.target.value }))}
+                  />
+                </div>
+
+                <div className="admin-form-group">
+                  <label>Display Order</label>
+                  <input
+                    type="number"
+                    className="admin-input"
+                    value={serviceForm.display_order}
+                    onChange={(e) => setServiceForm(prev => ({ ...prev, display_order: parseInt(e.target.value) || 1 }))}
+                  />
+                </div>
+              </div>
+
+              <div className="admin-form-group">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  className="admin-input"
+                  style={{ fontFamily: 'inherit', resize: 'vertical' }}
+                  placeholder="Detailed description of sub-service..."
+                  value={serviceForm.description}
+                  onChange={(e) => setServiceForm(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
+
+              {/* Scope Bullets */}
+              <div className="admin-form-group">
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  Scope & Key Deliverables List
+                  <button type="button" className="admin-btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); addBullet(); }}>
+                    + Add Scope Bullet
+                  </button>
+                </label>
+
+                <div className="admin-dynamic-list">
+                  {serviceForm.bullets.map((bullet, idx) => (
+                    <div key={idx} className="admin-dynamic-row">
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="e.g. 2D Drafting or Shop Drawings"
+                        value={bullet}
+                        onChange={(e) => handleBulletChange(idx, e.target.value)}
+                      />
+                      <button type="button" className="admin-action-btn delete" onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeBullet(idx); }}>
+                        <Trash size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+
+
+              <div className="admin-form-group">
+                <label>Status</label>
+                <select
+                  className="admin-input"
+                  value={serviceForm.status}
+                  onChange={(e) => setServiceForm(prev => ({ ...prev, status: e.target.value }))}
+                >
+                  <option value="Active">Active (Visible on Website)</option>
+                  <option value="Inactive">Inactive (Hidden)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="admin-modal-footer">
+              <button type="button" className="admin-btn-secondary" onClick={handleCloseServiceModal}>
+                Cancel
+              </button>
+              <button type="button" className="admin-btn" style={{ width: 'auto', padding: '10px 24px' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveService(e); }}>
+                {editingServiceId ? 'Save Sub-Service Updates' : 'Create Sub-Service'}
               </button>
             </div>
           </div>

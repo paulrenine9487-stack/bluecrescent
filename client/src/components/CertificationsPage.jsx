@@ -38,7 +38,7 @@ export default function CertificationsPage({ onNavigate }) {
       borderColor: 'border-gold',
       badgeText: 'ISO 9001:2015 CERTIFIED',
       image: '/certificate IAF.png',
-      scope: 'Providing Engineering Design Work & GSAS Consultancy Services adhering to international quality control standards.'
+      scope: 'Providing Engineering Services & Sustainability Consultancy adhering to international quality control standards.'
     }
   ];
 

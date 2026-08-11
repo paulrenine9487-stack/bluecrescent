@@ -3080,14 +3080,19 @@ body,
   font-size: 18px !important;
   font-weight: 700 !important;
   text-decoration: none !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #063B73 !important;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 12px !important;
   transition: all 0.25s ease !important;
 }
 
-.mobile-nav-link:hover {
-  padding-left: 26px !important;
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
+  color: #0A5BFF !important;
+  background: #EBF3FF !important;
+  border-color: #BFDBFE !important;
+  padding-left: 24px !important;
 }
 
 /* Accordion Trigger Styles */
@@ -3100,8 +3105,9 @@ body,
   font-family: 'Space Grotesk', sans-serif !important;
   font-size: 18px !important;
   font-weight: 700 !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #063B73 !important;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 12px !important;
   cursor: pointer !important;
   text-align: left !important;
@@ -3110,8 +3116,9 @@ body,
 
 .mobile-dropdown-trigger:hover,
 .mobile-dropdown-trigger.active {
-  background: rgba(0, 102, 255, 0.15) !important;
-  border-color: rgba(0, 217, 255, 0.25) !important;
+  color: #0A5BFF !important;
+  background: #EBF3FF !important;
+  border-color: #BFDBFE !important;
 }
 
 /* Submenu container (Level 1 dropdown) */
@@ -3122,7 +3129,7 @@ body,
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
-  border-left: 2px dashed rgba(0, 217, 255, 0.25) !important;
+  border-left: 2px solid #BFDBFE !important;
 }
 
 .mobile-submenu-lvl1 a {
@@ -3131,20 +3138,20 @@ body,
   font-size: 15px !important;
   font-weight: 600 !important;
   text-decoration: none !important;
-  background: rgba(255, 255, 255, 0.02) !important;
-  border: 1px solid rgba(255, 255, 255, 0.03) !important;
+  color: #063B73 !important;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 8px !important;
   transition: all 0.2s ease !important;
 }
 
 .mobile-submenu-lvl1 a:hover,
 .mobile-submenu-lvl1 a.active-sub {
-  background: rgba(0, 217, 255, 0.08) !important;
-  border-color: rgba(0, 217, 255, 0.2) !important;
-}
-
-.mobile-submenu-lvl1 a:hover {
-  padding-left: 22px !important;
+  color: #0A5BFF !important;
+  background: #EBF3FF !important;
+  border-color: #BFDBFE !important;
+  font-weight: 700 !important;
+  padding-left: 20px !important;
 }
 
 /* Sub-category header in Services (Level 2 dropdown) */
@@ -3157,15 +3164,19 @@ body,
   font-family: 'Space Grotesk', sans-serif !important;
   font-size: 15px !important;
   font-weight: 700 !important;
-  background: rgba(255, 255, 255, 0.01) !important;
-  border: 1px solid rgba(255, 255, 255, 0.02) !important;
+  color: #063B73 !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 8px !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
 }
 
-.mobile-submenu-cat-trigger:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
+.mobile-submenu-cat-trigger:hover,
+.mobile-submenu-cat-trigger.active {
+  color: #0A5BFF !important;
+  background: #F1F7FF !important;
+  border-color: #BFDBFE !important;
 }
 
 /* Sub-category list items */
@@ -3176,45 +3187,43 @@ body,
   display: flex !important;
   flex-direction: column !important;
   gap: 4px !important;
-  border-left: 1px solid rgba(0, 217, 255, 0.15) !important;
+  border-left: 2px solid #93C5FD !important;
 }
 
 .mobile-submenu-lvl2 a {
   font-size: 14px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   padding: 10px 14px !important;
+  color: #0B3D91 !important;
+  background: #FFFFFF !important;
+  border: 1px solid #EFF6FF !important;
+}
+
+.mobile-submenu-lvl2 a:hover,
+.mobile-submenu-lvl2 a.active-sub {
+  color: #0A5BFF !important;
+  background: #EBF3FF !important;
+  border-color: #BFDBFE !important;
+  font-weight: 700 !important;
 }
 
 /* --- Global Mobile Drawer Text Color Enforcements --- */
 .mobile-menu-drawer,
-.mobile-menu-drawer *,
 .mobile-menu-drawer button,
-.mobile-menu-drawer button *,
-.mobile-menu-drawer a,
-.mobile-menu-drawer a * {
-  color: #FFFFF0 !important;
-  /* Ivory text */
+.mobile-menu-drawer a {
+  color: #063B73 !important;
 }
 
-/* Hover and Active highlights override global ivory text */
+.mobile-menu-drawer span,
+.mobile-menu-drawer div,
+.mobile-menu-drawer li,
+.mobile-menu-drawer svg {
+  color: inherit !important;
+}
+
 .mobile-menu-drawer a:hover,
-.mobile-menu-drawer a:hover *,
-.mobile-menu-drawer button:hover,
-.mobile-menu-drawer button:hover *,
-.mobile-menu-drawer .active,
-.mobile-menu-drawer .active *,
-.mobile-menu-drawer .active-sub,
-.mobile-menu-drawer .active-sub * {
-  color: #74D2FF !important;
-  /* Premium Cyan/Sky Blue highlight */
-}
-
-.mobile-menu-drawer .mobile-submenu-lvl1 a:hover,
-.mobile-menu-drawer .mobile-submenu-lvl1 a:hover *,
-.mobile-menu-drawer .mobile-submenu-lvl1 a.active-sub,
-.mobile-menu-drawer .mobile-submenu-lvl1 a.active-sub * {
-  color: #00D9FF !important;
-  /* Bright Cyan highlight for subpages */
+.mobile-menu-drawer button:hover {
+  color: #0A5BFF !important;
 }
 
 

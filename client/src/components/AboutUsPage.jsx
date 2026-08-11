@@ -1922,17 +1922,15 @@ function IndustriesArc({ windowWidth, activeIdx, setActiveIdx }) {
     // ── MOBILE & TABLET LAYOUT ──
     return (
       <div style={{ width: '100%', boxSizing: 'border-box' }}>
-        {/* Horizontal tabs */}
+        {/* Horizontal & Wrapped tabs for Mobile */}
         <div style={{
           display: 'flex',
-          overflowX: 'auto',
-          gap: '10px',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '10px 8px',
           padding: '12px 4px',
-          marginBottom: '32px',
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none', // Firefox
-          justifyContent: windowWidth > 640 ? 'center' : 'flex-start'
-        }} className="custom-scrollbar-hide">
+          marginBottom: '32px'
+        }}>
           {INDUSTRIES_DATA.map((item, idx) => {
             const isActive = idx === activeIdx;
             return (

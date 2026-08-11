@@ -16,6 +16,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   // Dynamic Navigation & Services data states
   const [dynamicMenus, setDynamicMenus] = useState([]);
   const [dynamicServices, setDynamicServices] = useState([]);
+  const [dynamicCategories, setDynamicCategories] = useState([]);
 
   useEffect(() => {
     // Fetch menus
@@ -25,6 +26,14 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
         if (data && data.length > 0) setDynamicMenus(data);
       })
       .catch(err => console.warn('Menus fetch warning:', err));
+
+    // Fetch categories
+    fetch('/api/service-categories')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (data && data.length > 0) setDynamicCategories(data);
+      })
+      .catch(err => console.warn('Categories fetch warning:', err));
 
     // Fetch services
     fetch('/api/services')
@@ -59,37 +68,47 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
 
   // Fallbacks
   const defaultNavItems = ['Home', 'About Us', 'Services', 'Projects', 'Media', 'Contact Us'];
-  const defaultProjectSubItems = ['Engineering Division', 'Sustainability Division', 'Digital Twin Division'];
+  const defaultProjectSubItems = ['CAD Projects', 'BIM Projects', 'Laser Scanning Projects', 'Digital Twin Projects', 'Sustainability Projects'];
   const defaultServiceCategories = [
     {
-      name: 'CAD & Engineering Documentation',
-      slug: 'cad-engineering-documentation',
-      items: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination']
+      name: 'Engineering Services',
+      slug: 'engineering-services',
+      items: [
+        { title: 'CAD', slug: 'cad' },
+        { title: 'BIM', slug: 'bim' },
+        { title: 'Laser Scanning', slug: 'laser-scanning' },
+        { title: 'Scan to BIM', slug: 'scan-to-bim' }
+      ]
     },
     {
-      name: 'BIM & Digital Construction',
-      slug: 'bim-digital-construction',
-      items: ['3D BIM', '4D / 5D', 'Architectural BIM', 'Structural BIM', 'MEP BIM', 'Infrastructure BIM', 'Clash Coordination', 'COBie', 'As-Built BIM']
+      name: 'Sustainability Services',
+      slug: 'sustainability-services',
+      items: [
+        { title: 'GSAS', slug: 'gsas' },
+        { title: 'LEED', slug: 'leed' },
+        { title: 'Energy Audit', slug: 'energy-audit' },
+        { title: 'Carbon Management', slug: 'carbon-management' }
+      ]
     },
     {
-      name: 'Laser Scanning & Reality Capture',
-      slug: 'laser-scanning-reality-capture',
-      items: ['3D Laser Scanning', 'Point Cloud Processing', 'Scan-to-BIM', 'Existing Condition Modeling', 'As-Built Verification']
+      name: 'Digital Twin',
+      slug: 'digital-twin',
+      items: [
+        { title: 'Asset Twin', slug: 'asset-twin' },
+        { title: 'System Integration', slug: 'system-integration' },
+        { title: 'Real-Time Monitoring', slug: 'real-time-monitoring' },
+        { title: 'Asset Management', slug: 'asset-management' }
+      ]
     },
     {
-      name: 'Digital Twin & Asset Lifecycle',
-      slug: 'digital-twin-asset-lifecycle',
-      items: ['Digital Twin', 'BIM Integration', 'GIS', 'CAFM / IWMS', 'CMMS', 'BAS / BMS', 'ERP', 'EDMS', 'Asset Information Management']
-    },
-    {
-      name: 'Sustainability Consultancy',
-      slug: 'sustainability-consultancy',
-      items: ['GSAS', 'LEED', 'Energy Audits', 'Green Building Gap Analysis', 'Carbon Footprint Management', 'ISO 14064', 'Environmental Consultancy']
-    },
-    {
-      name: 'Remote Construction Solutions',
-      slug: 'remote-construction-solutions',
-      items: ['Remote Site Support', 'AR Solutions', '360° Site Documentation', 'Remote Inspection', 'Digital Collaboration', 'Robotic Integration']
+      name: 'Construction Technology',
+      slug: 'construction-technology',
+      items: [
+        { title: 'Remote Construction', slug: 'remote-construction' },
+        { title: '360° Capture', slug: '360-capture' },
+        { title: 'AR Solutions', slug: 'ar-solutions' },
+        { title: 'Robotics', slug: 'robotics' }
+      ]
     }
   ];
 
@@ -112,31 +131,58 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
     }
   }
 
+  // Allowed Main Category Names
+  const ALLOWED_CATEGORY_NAMES = [
+    'Engineering Services',
+    'Sustainability Services',
+    'Digital Twin',
+    'Construction Technology'
+  ];
+
   // Resolve service categories dynamically from API or fallbacks
   let serviceCategories = defaultServiceCategories;
-  if (dynamicServices.length > 0) {
+
+  if (dynamicServices.length > 0 || dynamicCategories.length > 0) {
+    const activeCats = dynamicCategories.length > 0
+      ? dynamicCategories
+        .filter(c => c.status !== 'Inactive' && ALLOWED_CATEGORY_NAMES.includes(c.name))
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+      : defaultServiceCategories;
+
     const categoriesMap = {};
-    dynamicServices.forEach(s => {
-      if (!categoriesMap[s.category]) {
-        categoriesMap[s.category] = {
-          name: s.category,
-          slug: s.slug || s.category.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+
+    // Initialize map from categories
+    activeCats.forEach(cat => {
+      if (ALLOWED_CATEGORY_NAMES.includes(cat.name)) {
+        categoriesMap[cat.name] = {
+          name: cat.name,
+          slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           items: []
         };
       }
-      try {
-        const subList = typeof s.bullets === 'string' ? JSON.parse(s.bullets) : (s.bullets || []);
-        if (Array.isArray(subList)) {
-          subList.forEach(item => {
-            if (!categoriesMap[s.category].items.includes(item)) {
-              categoriesMap[s.category].items.push(item);
-            }
-          });
-        }
-      } catch (e) {}
     });
 
-    const parsedCats = Object.values(categoriesMap);
+    // Populate sub-services from dynamicServices
+    if (dynamicServices.length > 0) {
+      dynamicServices
+        .filter(s => s.status !== 'Inactive' && ALLOWED_CATEGORY_NAMES.includes(s.category))
+        .forEach(s => {
+          if (categoriesMap[s.category]) {
+            const itemObj = {
+              id: s.id,
+              title: s.title,
+              slug: s.slug || s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+            };
+
+            const exists = categoriesMap[s.category].items.some(i => (i.title || i) === s.title);
+            if (!exists) {
+              categoriesMap[s.category].items.push(itemObj);
+            }
+          }
+        });
+    }
+
+    const parsedCats = Object.values(categoriesMap).filter(c => c.items.length > 0);
     if (parsedCats.length > 0) {
       serviceCategories = parsedCats;
     }
@@ -210,23 +256,27 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
 
                               {activeCategory === cat.name && (
                                 <ul className="secondary-dropdown-menu">
-                                  {cat.items.map((subService) => (
-                                    <li key={subService} className="dropdown-item">
-                                      <a
-                                        href="#"
-                                        className={`dropdown-item-link ${activeSubTab === subService ? 'active-sub' : ''}`}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setServicesDropdownOpen(false);
-                                          setActiveCategory(null);
-                                          if (onNavigate) onNavigate('Services', subService);
-                                        }}
-                                      >
-                                        {subService}
-                                      </a>
-                                    </li>
-                                  ))}
+                                  {cat.items.map((subItem) => {
+                                    const subTitle = typeof subItem === 'string' ? subItem : subItem.title;
+                                    const subTarget = typeof subItem === 'string' ? subItem : (subItem.slug || subItem.title);
+                                    return (
+                                      <li key={subTitle} className="dropdown-item">
+                                        <a
+                                          href="#"
+                                          className={`dropdown-item-link ${activeSubTab === subTitle || activeSubTab === subTarget ? 'active-sub' : ''}`}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setServicesDropdownOpen(false);
+                                            setActiveCategory(null);
+                                            if (onNavigate) onNavigate('Services', subTarget);
+                                          }}
+                                        >
+                                          {subTitle}
+                                        </a>
+                                      </li>
+                                    );
+                                  })}
                                 </ul>
                               )}
                             </li>
@@ -398,21 +448,25 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
 
                               {isCatOpen && (
                                 <ul className="mobile-submenu-lvl2">
-                                  {cat.items.map((sub) => (
-                                    <li key={sub}>
-                                      <a
-                                        href="#"
-                                        className={activeSubTab === sub ? 'active-sub' : ''}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          setIsMobileMenuOpen(false);
-                                          if (onNavigate) onNavigate('Services', sub);
-                                        }}
-                                      >
-                                        {sub}
-                                      </a>
-                                    </li>
-                                  ))}
+                                  {cat.items.map((sub) => {
+                                    const subTitle = typeof sub === 'string' ? sub : sub.title;
+                                    const subTarget = typeof sub === 'string' ? sub : (sub.slug || sub.title);
+                                    return (
+                                      <li key={subTitle}>
+                                        <a
+                                          href="#"
+                                          className={activeSubTab === subTitle || activeSubTab === subTarget ? 'active-sub' : ''}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            setIsMobileMenuOpen(false);
+                                            if (onNavigate) onNavigate('Services', subTarget);
+                                          }}
+                                        >
+                                          {subTitle}
+                                        </a>
+                                      </li>
+                                    );
+                                  })}
                                 </ul>
                               )}
                             </li>
