@@ -2184,7 +2184,91 @@
     width: 100% !important;
     justify-content: center !important;
   }
+
+  .admin-modal-footer {
+    flex-direction: column !important;
+  }
+
+  .admin-modal-footer button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
 }
 
+/* === ADMIN-WIDE OVERFLOW PREVENTION === */
+.admin-panel-root input,
+.admin-panel-root select,
+.admin-panel-root textarea {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
 
+.admin-panel-root img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Dashboard split layout responsive */
+@media (max-width: 768px) {
+  .admin-dashboard-split-layout {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .admin-dashboard-left-col,
+  .admin-dashboard-right-col {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .admin-quick-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .admin-executive-card {
+    width: 100% !important;
+  }
+
+  /* Service management category header responsive */
+  .admin-panel-root [style*="justifyContent: 'space-between'"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Table action buttons wrap */
+  .admin-actions {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* Pagination compact */
+  .admin-table-pagination {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    justify-content: center !important;
+  }
+
+  .admin-page-number {
+    min-width: 32px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+  }
+
+  /* Image upload preview responsive */
+  .admin-upload-preview {
+    max-width: 100% !important;
+  }
+
+  .admin-upload-preview img {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-quick-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
 

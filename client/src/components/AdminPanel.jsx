@@ -2799,7 +2799,7 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                     
                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div className="admin-form-grid-2col">
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Main Title</label>
                           <input type="text" value={companySettings.sustainabilityTitle || 'SUSTAINABILITY CONSULTANCY'} onChange={e => updateCompanyField('sustainabilityTitle', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} />
@@ -2907,7 +2907,7 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
 
                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div className="admin-form-grid-2col">
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Heading</label>
                           <input type="text" value={companySettings.remoteTitle || 'Remote Construction Solutions'} onChange={e => updateCompanyField('remoteTitle', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} />
@@ -3164,7 +3164,7 @@ export default function AdminPanel({ onNavigate }) {
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
                           />
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="admin-form-grid-2col">
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>City</label>
                             <input
@@ -3531,7 +3531,7 @@ export default function AdminPanel({ onNavigate }) {
                             />
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div className="admin-form-grid-2col">
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Canonical URL</label>
                               <input 
@@ -3552,7 +3552,7 @@ export default function AdminPanel({ onNavigate }) {
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div className="admin-form-grid-2col">
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Robots Indexing</label>
                               <select 
@@ -3587,7 +3587,7 @@ export default function AdminPanel({ onNavigate }) {
                             <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', borderBottom: '1px solid #F1F5F9', paddingBottom: '6px' }}>
                               Open Graph (OG) Facebook Configuration
                             </h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                            <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>OG Title</label>
                                 <input 
@@ -3607,7 +3607,7 @@ export default function AdminPanel({ onNavigate }) {
                                 />
                               </div>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                            <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>OG Page URL</label>
                                 <input 
@@ -3643,7 +3643,7 @@ export default function AdminPanel({ onNavigate }) {
                             <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', borderBottom: '1px solid #F1F5F9', paddingBottom: '6px' }}>
                               Twitter Card Integration
                             </h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                            <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>Twitter Card Title</label>
                                 <input 
@@ -3663,7 +3663,7 @@ export default function AdminPanel({ onNavigate }) {
                                 />
                               </div>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                            <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>Twitter Card Type</label>
                                 <select 
@@ -3695,7 +3695,7 @@ export default function AdminPanel({ onNavigate }) {
                           <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', borderBottom: '1px solid #F1F5F9', paddingBottom: '6px' }}>
                             Dynamic Page Image Alt & Title Configuration
                           </h4>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div className="admin-form-grid-2col">
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Global Image Alt Attribute</label>
                               <input 
@@ -3810,7 +3810,7 @@ export default function AdminPanel({ onNavigate }) {
                             />
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '24px', alignItems: 'center' }}>
+                          <div className="admin-form-grid-2col">
                             <div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                                 <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Sitemap Priority Score</label>
