@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import TestimonialsSection from './TestimonialsSection';
 import {
   Building2,
   Compass,
@@ -45,6 +46,7 @@ import credentialsCityscape from '../assets/credentials_cityscape_bg.png';
 import projectStructureImg from '../assets/project1.png';
 import aboutus5 from '../assets/aboutus5.png';
 import aboutus6 from '../assets/aboutus6.png';
+import bimmodelImg from '../assets/bimmodel.png';
 import './AboutUsPage.css';
 
 const getLucideIcon = (name, size = 22, color = '#0057B8') => {
@@ -211,6 +213,15 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
 
   // Fetch approved testimonials from the API
   const [testimonialsList, setTestimonialsList] = useState([]);
+  const [activeTestimonialIdx, setActiveTestimonialIdx] = useState(0);
+
+  useEffect(() => {
+    const total = testimonialsList.length > 0 ? testimonialsList.length : 1;
+    const interval = setInterval(() => {
+      setActiveTestimonialIdx((prev) => (prev + 1) % total);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [testimonialsList.length]);
 
   const [companySettings, setCompanySettings] = useState(() => {
     const DEFAULT_COMPANY = {
@@ -318,27 +329,33 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
   }, [companySettings.aboutUsCountriesJson]);
 
   const disciplines = React.useMemo(() => {
+    const DEFAULT_DISCIPLINES = [
+      { name: 'BIM Modeling & Coordination', image: '/uploads/bimmodel.png' },
+      { name: 'CAD Documentation', image: '/our capacity/cad.png' },
+      { name: 'Reality Capture & Laser Scanning', image: '/our capacity/reality.png' },
+      { name: 'Specialized Engineering support', image: '/our capacity/special.png' },
+      { name: 'Computational fluid dynamics (CFD)', image: '/our capacity/cfd.png' },
+      { name: 'Acoustic & Vibration Analysis', image: '/our capacity/vibration.png' },
+      { name: 'Advanced Hydraulic Analysis', image: '/our capacity/hydralic.png' },
+      { name: 'Stress Analysis (Piping & Static)', image: '/our capacity/stress.png' },
+      { name: 'Energy Auditing & Commissioning', image: '/our capacity/energy.png' },
+      { name: 'Green Building Facilitation', image: '/our capacity/green.png' },
+      { name: 'Technical experts outsourcing', image: '/our capacity/technical.png' }
+    ];
     try {
       if (companySettings.aboutUsDisciplinesJson) {
         const parsed = JSON.parse(companySettings.aboutUsDisciplinesJson);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item, idx) => ({
+            ...item,
+            image: (item.name && item.name.toLowerCase().includes('bim')) ? '/uploads/bimmodel.png' : (item.image || DEFAULT_DISCIPLINES[idx]?.image || (item.name && item.name.toLowerCase().includes('cad') ? '/our capacity/cad.png' : null))
+          }));
+        }
       }
     } catch (e) {
       console.warn('Disciplines parsing error', e);
     }
-    return [
-      { name: 'CAD Documentation', icon: 'Building2' },
-      { name: 'BIM Modeling & Coordination', icon: 'Layers' },
-      { name: 'Reality Capture & Laser Scanning', icon: 'Radio' },
-      { name: 'Specialized Engineering support', icon: 'Wrench' },
-      { name: 'Computational fluid dynamics (CFD)', icon: 'Wind' },
-      { name: 'Acoustic & Vibration Analysis', icon: 'Volume2' },
-      { name: 'Advanced Hydraulic Analysis', icon: 'Droplet' },
-      { name: 'Stress Analysis (Piping & Static)', icon: 'Activity' },
-      { name: 'Energy Auditing & Commissioning', icon: 'Zap' },
-      { name: 'Green Building Facilitation', icon: 'Leaf' },
-      { name: 'Technical experts outsourcing', icon: 'Users' }
-    ];
+    return DEFAULT_DISCIPLINES;
   }, [companySettings.aboutUsDisciplinesJson]);
 
   const flowchartSteps = React.useMemo(() => {
@@ -453,7 +470,12 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  if (onNavigate) onNavigate('Our Journey');
+                  const el = document.getElementById('our-journey-section');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else if (onNavigate) {
+                    onNavigate('Our Journey');
+                  }
                 }}
                 style={{
                   padding: '14px 32px',
@@ -505,6 +527,9 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
             </div>
           </div>
         </section>
+
+        {/* ── SECTION: OUR JOURNEY (MILESTONE TIMELINE) ────────────────── */}
+        <OurJourneySection windowWidth={windowWidth} />
 
         {/* ── SECTION 3: VISION & MISSION (REDESIGNED) ──────────────── */}
         <section
@@ -806,6 +831,9 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         {/* ── SECTION 5: OUR CORE STRENGTHS – CAROUSEL ────────────────── */}
         <CoreStrengthsCarousel windowWidth={windowWidth} />
 
+        {/* ── SECTION: OUR TEAM (LEADERSHIP & TECHNICAL SPECIALISTS) ─────── */}
+        <OurTeamSection windowWidth={windowWidth} />
+
         {/* ── SECTION 6: OUR APPROACH (NEW SECTION) ──────────────────── */}
         <section style={{ marginBottom: '90px' }}>
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
@@ -997,9 +1025,35 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      overflow: 'hidden'
                     }}>
-                      {getLucideIcon(item.icon, 26, '#0057B8')}
+                      {(() => {
+                        const nameLower = (item.name || '').toLowerCase();
+                        const imagePath = nameLower.includes('bim') ? (item.image || '/uploads/bimmodel.png' || bimmodelImg) : (
+                          item.image || (
+                            nameLower.includes('cad') ? '/our capacity/cad.png' :
+                            nameLower.includes('reality') ? '/our capacity/reality.png' :
+                            nameLower.includes('special') ? '/our capacity/special.png' :
+                            nameLower.includes('cfd') ? '/our capacity/cfd.png' :
+                            nameLower.includes('vibration') ? '/our capacity/vibration.png' :
+                            nameLower.includes('hydraul') ? '/our capacity/hydralic.png' :
+                            nameLower.includes('stress') ? '/our capacity/stress.png' :
+                            nameLower.includes('energy') ? '/our capacity/energy.png' :
+                            nameLower.includes('green') ? '/our capacity/green.png' :
+                            nameLower.includes('outsourcing') ? '/our capacity/technical.png' : null
+                          )
+                        );
+                        return imagePath ? (
+                          <img
+                            src={imagePath}
+                            alt={item.name}
+                            style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                          />
+                        ) : (
+                          getLucideIcon(item.icon, 26, '#0057B8')
+                        );
+                      })()}
                     </div>
                     <div style={{ width: '22px', height: '2px', background: '#0057B8', margin: '6px 0', opacity: 0.7 }} />
                     <span style={{
@@ -1226,153 +1280,8 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
           );
         })()}
 
-        {/* ── SECTION 12: LATEST NEWS ───────────────────────────────── */}
-        <section className="latest-news-section" style={{ marginTop: '80px', marginBottom: '80px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              LATEST NEWS
-            </h2>
-            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
-          </div>
-
-          <div className="latest-news-grid">
-            {/* LEFT: News items */}
-            <div className="news-items-list">
-              <div className="news-card-horizontal">
-                <div className="news-card-icon-badge">
-                  <Calendar size={22} color="#063B73" />
-                </div>
-                <div className="news-card-body">
-                  <div className="news-card-text">
-                    <strong>ISO 9001 Certified:</strong> We are now an ISO 9001 certified Quality Management System company.
-                  </div>
-                  <button className="news-read-more-btn" onClick={() => { if (onOpenModal) onOpenModal('iso'); }}>
-                    Read More →
-                  </button>
-                </div>
-              </div>
-
-              <div className="news-card-horizontal">
-                <div className="news-card-icon-badge">
-                  <Sparkles size={22} color="#063B73" />
-                </div>
-                <div className="news-card-body">
-                  <div className="news-card-text">
-                    <strong>Energy Quotient Provider:</strong> We are the only authorised energy quotient service provider in Qatar.
-                  </div>
-                  <button className="news-read-more-btn" onClick={() => { if (onNavigate) onNavigate('Services'); }}>
-                    Read More →
-                  </button>
-                </div>
-              </div>
-
-              <div className="news-card-horizontal">
-                <div className="news-card-icon-badge">
-                  <Award size={22} color="#063B73" />
-                </div>
-                <div className="news-card-body">
-                  <div className="news-card-text">
-                    <strong>GORD GSAS Provider:</strong> We are now a GORD certified GSAS service provider.
-                  </div>
-                  <button className="news-read-more-btn" onClick={() => { if (onOpenModal) onOpenModal('gsas'); }}>
-                    Read More →
-                  </button>
-                </div>
-              </div>
-
-              <div className="news-card-horizontal">
-                <div className="news-card-icon-badge">
-                  <Building2 size={22} color="#063B73" />
-                </div>
-                <div className="news-card-body">
-                  <div className="news-card-text">
-                    <strong>KAHRAMAA Project Tarsheed:</strong> Awarded prestigious KAHRAMAA Tarsheed Energy Audit for 22 schools campaign.
-                  </div>
-                  <button className="news-read-more-btn" onClick={() => { if (onOpenModal) onOpenModal('news2'); }}>
-                    Read More →
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT: Large Engineering Image with Parallax Effect */}
-            <div className="news-parallax-image-wrap">
-              <img
-                src={aboutEngineeringImg}
-                alt="Blue Crescent Engineering Excellence"
-                className="news-parallax-img"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ── SECTION 13: TESTIMONIALS ──────────────────────────────── */}
-        <section className="testimonials-section" style={{ marginBottom: '60px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              What Our Clients Say
-            </h2>
-            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
-          </div>
-
-          <div className="testimonials-grid-content">
-            {/* Left Column: Testimonial Card */}
-            <div className="testimonials-list-column">
-              {testimonialsList.length > 0 ? (
-                testimonialsList.map((item) => (
-                  <div className="premium-card testimonial-card" key={item.id} style={{ marginBottom: '16px' }}>
-                    <div className="testimonial-header">
-                      <span className="quote-icon">"</span>
-                    </div>
-                    <p className="testimonial-content" style={{ fontStyle: 'italic', color: '#374151', lineHeight: '1.8' }}>{item.body}</p>
-                    <hr className="testimonial-divider" />
-                    <div className="premium-testimonial-footer">
-                      <div className="testimonial-author-wrapper">
-                        <div className="author-avatar">
-                          <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                          </svg>
-                        </div>
-                        <div className="premium-testimonial-author">
-                          <div className="premium-testimonial-name">{item.author}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="premium-card testimonial-card">
-                  <div className="testimonial-header">
-                    <span className="quote-icon">"</span>
-                  </div>
-                  <p className="testimonial-content" style={{ fontStyle: 'italic', color: '#374151', lineHeight: '1.8' }}>
-                    Blue Crescent has provided us with complete support for MEP drawings, all design Calculations in MEP &amp; Stress Analysis etc in our projects. They are one of the best Engineering company who can be trusted for complete solutions of all Design &amp; Engineering issues. I visited their office &amp; fully satisfied with the Engineering &amp; design team who delivered the works for us on time &amp; also they provided complete support to get approval from various authorities for some woks in very short time. You are Excellent Blue crescent &amp; keep going. Thanks for your works delivered.
-                  </p>
-                  <hr className="testimonial-divider" />
-                  <div className="premium-testimonial-footer">
-                    <div className="testimonial-author-wrapper">
-                      <div className="author-avatar">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                      </div>
-                      <div className="premium-testimonial-author">
-                        <div className="premium-testimonial-name">Gokulraj Chakaravarthy</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column: Large testimonial image */}
-            <div className="testimonials-image-column">
-              <div className="testimonials-large-card-img-wrap">
-                <img src="/testimonial.png" alt="Testimonials" className="testimonials-large-img" />
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ── SECTION 13: TESTIMONIALS (SAME HOME PAGE DESIGN) ───────── */}
+        <TestimonialsSection />
 
         {/* ── SECTION 14: FOOTER SPACING ─────────────────────────────── */}
         <div className="about-footer-spacer"></div>
@@ -2289,6 +2198,683 @@ function GeographicalPresence({ windowWidth, mapImg, countries }) {
       `}</style>
 
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   OUR JOURNEY SECTION (8-CARD STAGGERED WAVE TIMELINE)
+───────────────────────────────────────────────────────────── */
+function OurJourneySection({ windowWidth }) {
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimate(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const MILESTONES = [
+    {
+      year: '2013',
+      title: 'Qatar',
+      desc: 'Company established with CAD drafting and technical resource services.',
+      icon: <Building2 size={18} color="#087CFF" />,
+      row: 'top'
+    },
+    {
+      year: '2015',
+      title: 'UAE & Sustainability',
+      desc: 'Expanded into Dubai and introduced sustainability consultancy.',
+      icon: <Leaf size={18} color="#087CFF" />,
+      row: 'bottom'
+    },
+    {
+      year: '2016',
+      title: 'India',
+      desc: 'Established India operations to strengthen engineering production capacity.',
+      icon: <Layers size={18} color="#087CFF" />,
+      row: 'top'
+    },
+    {
+      year: '2017',
+      title: 'BIM',
+      desc: 'Expanded into Building Information Modeling and digital construction.',
+      icon: <Compass size={18} color="#087CFF" />,
+      row: 'bottom'
+    },
+    {
+      year: '2018',
+      title: 'Laser Scanning',
+      desc: 'Introduced laser scanning, point-cloud processing and Scan-to-BIM.',
+      icon: <Sparkles size={18} color="#087CFF" />,
+      row: 'top'
+    },
+    {
+      year: '2019',
+      title: 'Digital Twin',
+      desc: 'Entered Digital Twin and asset lifecycle management solutions.',
+      icon: <Cpu size={18} color="#087CFF" />,
+      row: 'bottom'
+    },
+    {
+      year: '2024',
+      title: 'Kuwait & Remote Construction',
+      desc: 'Expanded into Kuwait and introduced remote construction technologies.',
+      icon: <Radio size={18} color="#087CFF" />,
+      row: 'top'
+    },
+    {
+      year: '2026',
+      title: 'Saudi Arabia',
+      desc: 'Expanded operations into Saudi Arabia, strengthening GCC presence.',
+      icon: <Globe size={18} color="#087CFF" />,
+      row: 'bottom'
+    }
+  ];
+
+  const isDesktop = windowWidth >= 1200;
+  const isTablet = windowWidth >= 768 && windowWidth < 1200;
+
+  return (
+    <section 
+      id="our-journey-section"
+      style={{ 
+        padding: '60px 0 80px 0', 
+        background: '#F8FBFF', 
+        borderRadius: '24px',
+        border: '1px solid #D8E7F5',
+        position: 'relative',
+        overflow: 'hidden',
+        marginBottom: '80px'
+      }}
+    >
+      {/* Background wave vectors */}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.06, pointerEvents: 'none', zIndex: 0 }}>
+        <svg width="100%" height="100%" viewBox="0 0 1440 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M-100,200 C300,50 600,450 1000,100 C1200,-50 1400,150 1600,50" stroke="#087CFF" strokeWidth="4" />
+          <path d="M-50,250 C350,100 650,500 1050,150 C1250,0 1450,200 1650,100" stroke="#19B5FE" strokeWidth="2" strokeDasharray="5,5" />
+        </svg>
+      </div>
+
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
+        
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '45px' }}>
+          {/* Line 1: Main Big Title */}
+          <h2 
+            style={{ 
+              fontFamily: 'Space Grotesk, sans-serif', 
+              fontSize: isDesktop ? '42px' : isTablet ? '36px' : '28px', 
+              fontWeight: '800', 
+              color: '#062F63', 
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              margin: '0 0 10px 0',
+              lineHeight: 1.2
+            }}
+          >
+            Timeline &amp; Milestones
+          </h2>
+
+          {/* Decorative Divider */}
+          <div style={{ width: '60px', height: '3.5px', background: '#087CFF', borderRadius: '4px', margin: '0 auto 12px auto' }} />
+
+          {/* Line 2: Subtitle */}
+          <h3 
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: isTablet ? '24px' : '20px',
+              fontWeight: '700',
+              color: '#087CFF',
+              margin: '0 0 14px 0'
+            }}
+          >
+            Building Excellence Since 2013
+          </h3>
+
+          {/* Line 3: Description */}
+          <p 
+            style={{ 
+              fontSize: '15px', 
+              color: '#64748B', 
+              lineHeight: 1.6, 
+              margin: '0 auto', 
+              maxWidth: '720px' 
+            }}
+          >
+            Our journey of growth, innovation and expansion across key markets and technologies to deliver value to our clients.
+          </p>
+        </div>
+
+        {/* DESKTOP TIMELINE: Flowing Blue Wave Timeline */}
+        {isDesktop && (
+          <div style={{ position: 'relative', margin: '40px 0', height: '560px' }}>
+            
+            {/* Central SVG Curved Wave Line */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                zIndex: 2,
+                pointerEvents: 'none'
+              }}
+            >
+              <svg width="100%" height="100%" viewBox="0 0 1320 560" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="waveGradJourney" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#087CFF" />
+                    <stop offset="50%" stopColor="#00B8FF" />
+                    <stop offset="100%" stopColor="#087CFF" />
+                  </linearGradient>
+                </defs>
+                {/* Precise connecting dashed line passing directly from card bottom-centers to card top-centers */}
+                <path 
+                  d="M 20,240 Q 50,240 82.5,240 L 247.5,315 L 412.5,240 L 577.5,315 L 742.5,240 L 907.5,315 L 1072.5,240 L 1237.5,315 Q 1270,315 1300,315" 
+                  stroke="url(#waveGradJourney)" 
+                  strokeWidth="3.5" 
+                  strokeLinecap="round"
+                  strokeDasharray="8,8"
+                />
+              </svg>
+            </div>
+
+            {/* 8 Columns Grid */}
+            <div 
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(8, 1fr)',
+                gap: '12px',
+                position: 'relative',
+                height: '560px',
+                zIndex: 3
+              }}
+            >
+              {MILESTONES.map((m, idx) => {
+                const isTop = m.row === 'top';
+                
+                return (
+                  <div 
+                    key={m.year} 
+                    style={{ 
+                      position: 'relative',
+                      height: '560px',
+                      opacity: animate ? 1 : 0,
+                      transform: animate ? 'translateY(0)' : 'translateY(20px)',
+                      transition: `opacity 0.6s ease ${idx * 0.1}s, transform 0.6s ease ${idx * 0.1}s`
+                    }}
+                  >
+                    {/* Milestone Card (Fits 100% inside column width to prevent overflow) */}
+                    <div 
+                      style={{
+                        background: '#FFFFFF',
+                        borderRadius: '16px',
+                        padding: '30px 10px 14px 10px',
+                        border: '1.5px solid #E2EAF3',
+                        boxShadow: '0 10px 30px rgba(6, 59, 115, 0.06)',
+                        position: 'absolute',
+                        left: '50%',
+                        transform: 'translate(-50%, 0)',
+                        width: '158px',
+                        height: '215px',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        top: isTop ? '25px' : '315px',
+                        transition: 'all 0.25s ease',
+                        zIndex: 3
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translate(-50%, -6px)';
+                        e.currentTarget.style.boxShadow = '0 18px 40px rgba(8, 124, 255, 0.15)';
+                        e.currentTarget.style.borderColor = '#087CFF';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translate(-50%, 0)';
+                        e.currentTarget.style.boxShadow = '0 10px 30px rgba(6, 59, 115, 0.06)';
+                        e.currentTarget.style.borderColor = '#E2EAF3';
+                      }}
+                    >
+                      {/* Floating Overlapping Circular Icon */}
+                      <div 
+                        style={{ 
+                          position: 'absolute', 
+                          top: '-22px', 
+                          left: '50%',
+                          transform: 'translate(-50%, 0)',
+                          width: '46px',
+                          height: '46px',
+                          borderRadius: '50%',
+                          background: '#EFF6FF',
+                          border: '2px solid #FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 6px 16px rgba(8, 124, 255, 0.15)',
+                          zIndex: 10
+                        }}
+                      >
+                        {m.icon}
+                      </div>
+
+                      {/* Line 1: Big Bold Title */}
+                      <h4 
+                        style={{ 
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          fontSize: '16.5px', 
+                          fontWeight: '800', 
+                          color: '#062F63', 
+                          margin: '0 0 3px 0', 
+                          lineHeight: 1.25,
+                          textAlign: 'center'
+                        }}
+                      >
+                        {m.title}
+                      </h4>
+
+                      {/* Line 2: Proportional Subtitle Year */}
+                      <div 
+                        style={{
+                          color: '#087CFF',
+                          fontSize: '14px',
+                          fontWeight: '800',
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          marginBottom: '6px',
+                          letterSpacing: '0.5px'
+                        }}
+                      >
+                        {m.year}
+                      </div>
+
+                      {/* Divider Line */}
+                      <div 
+                        style={{ 
+                          width: '32px', 
+                          height: '2.5px', 
+                          background: '#087CFF', 
+                          borderRadius: '2px',
+                          marginBottom: '8px'
+                        }} 
+                      />
+
+                      {/* Line 3: Description */}
+                      <p style={{ fontSize: '11.5px', color: '#475569', margin: 0, lineHeight: 1.4, textAlign: 'center', fontWeight: '500' }}>
+                        {m.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TABLET / MOBILE LAYOUT: Responsive Grid */}
+        {!isDesktop && (
+          <div 
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : '1fr',
+              gap: '36px 20px',
+              position: 'relative',
+              zIndex: 2,
+              paddingTop: '20px'
+            }}
+          >
+            {MILESTONES.map((m, idx) => (
+              <div 
+                key={m.year}
+                style={{
+                  background: '#FFFFFF',
+                  borderRadius: '14px',
+                  padding: '32px 20px 20px 20px',
+                  border: '1px solid #E2EAF3',
+                  boxShadow: '0 10px 30px rgba(6, 59, 115, 0.08)',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  opacity: animate ? 1 : 0,
+                  transform: animate ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `opacity 0.5s ease ${idx * 0.1}s, transform 0.5s ease ${idx * 0.1}s`
+                }}
+              >
+                {/* Floating Overlapping Circular Icon */}
+                <div 
+                  style={{ 
+                    position: 'absolute', 
+                    top: '-22px', 
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: '#EAF4FF',
+                    border: '1.5px solid #BBD9F7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 10px rgba(8, 124, 255, 0.1)',
+                    zIndex: 10
+                  }}
+                >
+                  {m.icon}
+                </div>
+
+                <div 
+                  style={{
+                    color: '#087CFF',
+                    fontSize: '22px',
+                    fontWeight: '800',
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    marginBottom: '4px'
+                  }}
+                >
+                  {m.year}
+                </div>
+
+                <h4 
+                  style={{ 
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: '16px', 
+                    fontWeight: '700', 
+                    color: '#062F63', 
+                    margin: '0 0 6px 0', 
+                    textAlign: 'center' 
+                  }}
+                >
+                  {m.title}
+                </h4>
+
+                <div 
+                  style={{ 
+                    width: '32px', 
+                    height: '2.5px', 
+                    background: '#087CFF', 
+                    borderRadius: '2px',
+                    marginBottom: '10px'
+                  }} 
+                />
+
+                <p style={{ fontSize: '13px', color: '#475569', margin: 0, lineHeight: 1.5, textAlign: 'center' }}>
+                  {m.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   OUR TEAM SECTION CAROUSEL
+───────────────────────────────────────────────────────────── */
+function OurTeamSection({ windowWidth }) {
+  const [team, setTeam] = useState([
+    { id: 1, name: 'Praveen', role: 'Team Member', image: '/uploads/team_1786560739404.jpg' },
+    { id: 2, name: 'Nancy', role: 'Team Member', image: '/uploads/team_1786562045607.jpg' },
+    { id: 3, name: 'Raghul', role: 'Team Member', image: '/uploads/team_1786562084689.jpg' },
+    { id: 4, name: 'Zubariya', role: 'Team Member', image: '/uploads/team_1786562368113.jpg' },
+    { id: 5, name: 'Mohammed', role: 'BIM Specialist', image: '/uploads/team_1786562504613.jpg' },
+    { id: 6, name: 'Ananya', role: 'CAD Engineer', image: '' },
+    { id: 7, name: 'Karthik', role: 'Project Lead', image: '' },
+    { id: 8, name: 'Divya', role: 'Sustainability Specialist', image: '' }
+  ]);
+  const trackRef = React.useRef(null);
+
+  useEffect(() => {
+    // Preload static team images into browser memory cache for instant paint
+    ['/uploads/team_1786560739404.jpg', '/uploads/team_1786562045607.jpg', '/uploads/team_1786562084689.jpg', '/uploads/team_1786562368113.jpg', '/uploads/team_1786562504613.jpg'].forEach(url => {
+      const img = new Image();
+      img.src = url;
+    });
+
+    fetch('/api/team')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setTeam(data);
+          // Preload fetched images
+          data.forEach(item => {
+            if (item.image) {
+              const img = new Image();
+              img.src = item.image;
+            }
+          });
+        }
+      })
+      .catch(err => console.warn('Team fetch warning:', err));
+  }, []);
+
+  const scrollLeft = () => {
+    if (trackRef.current) {
+      trackRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (trackRef.current) {
+      trackRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <section 
+      style={{ 
+        marginBottom: '90px', 
+        position: 'relative',
+        background: '#F8FBFF',
+        borderRadius: '24px',
+        border: '1px solid #D8E7F5',
+        padding: windowWidth >= 768 ? '48px 24px' : '36px 16px',
+        overflow: 'hidden'
+      }}
+    >
+      <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 40px auto' }}>
+        <h2 
+          style={{ 
+            fontFamily: 'Space Grotesk, sans-serif', 
+            fontSize: windowWidth >= 992 ? '36px' : windowWidth >= 768 ? '30px' : '26px', 
+            fontWeight: '800', 
+            color: '#063B73', 
+            margin: '0 0 8px 0', 
+            letterSpacing: '-0.5px' 
+          }}
+        >
+          Our Team. Our Core Strength.
+        </h2>
+        <h3 
+          style={{ 
+            fontFamily: 'Space Grotesk, sans-serif', 
+            fontSize: windowWidth >= 768 ? '22px' : '18px', 
+            fontWeight: '700', 
+            color: '#0F172A', 
+            margin: '0 0 12px 0' 
+          }}
+        >
+          Meet Our Engineering &amp; Technical Leadership.
+        </h3>
+        <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
+        <p style={{ fontSize: '15px', color: '#64748B', margin: '0 auto 20px auto', lineHeight: 1.6, maxWidth: '680px' }}>
+          Our experienced engineering leaders, technical specialists, and dedicated team members driving digital transformation and project delivery across the GCC.
+        </p>
+      </div>
+
+      <div style={{ position: 'relative', padding: windowWidth >= 768 ? '0 56px' : '0 40px' }}>
+        <button
+          onClick={scrollLeft}
+          title="Previous"
+          style={{
+            position: 'absolute',
+            left: windowWidth >= 768 ? '4px' : '0px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            background: '#FFFFFF',
+            color: '#063B73',
+            border: '1.5px solid #CBD5E1',
+            boxShadow: '0 6px 20px rgba(6, 59, 115, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10,
+            transition: 'transform 0.2s ease, background 0.2s ease, border-color 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = '#087CFF';
+            e.currentTarget.style.background = '#087CFF';
+            e.currentTarget.style.color = '#FFFFFF';
+            e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = '#CBD5E1';
+            e.currentTarget.style.background = '#FFFFFF';
+            e.currentTarget.style.color = '#063B73';
+            e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+          }}
+        >
+          <ChevronLeft size={22} />
+        </button>
+
+        <button
+          onClick={scrollRight}
+          title="Next"
+          style={{
+            position: 'absolute',
+            right: windowWidth >= 768 ? '4px' : '0px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            background: '#FFFFFF',
+            color: '#063B73',
+            border: '1.5px solid #CBD5E1',
+            boxShadow: '0 6px 20px rgba(6, 59, 115, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10,
+            transition: 'transform 0.2s ease, background 0.2s ease, border-color 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = '#087CFF';
+            e.currentTarget.style.background = '#087CFF';
+            e.currentTarget.style.color = '#FFFFFF';
+            e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = '#CBD5E1';
+            e.currentTarget.style.background = '#FFFFFF';
+            e.currentTarget.style.color = '#063B73';
+            e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+          }}
+        >
+          <ChevronRight size={22} />
+        </button>
+
+        <div
+          ref={trackRef}
+          className="no-scrollbar"
+          style={{
+            display: 'flex',
+            gap: '24px',
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch',
+            padding: '12px 4px 20px 4px'
+          }}
+        >
+          {team.map((member, idx) => (
+            <div
+              key={member.id || idx}
+              style={{
+                flex: windowWidth >= 1024 ? '0 0 calc(25% - 18px)' : windowWidth >= 640 ? '0 0 calc(50% - 12px)' : '0 0 270px',
+                minWidth: '250px',
+                scrollSnapAlign: 'start',
+                background: '#FFFFFF',
+                borderRadius: '20px',
+                border: '1px solid #E2EAF3',
+                overflow: 'hidden',
+                boxShadow: '0 10px 30px rgba(6, 59, 115, 0.06)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 18px 40px rgba(6, 59, 115, 0.12)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(6, 59, 115, 0.06)';
+              }}
+            >
+              <div style={{ position: 'relative', height: '290px', background: '#F1F5F9', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(135deg, #071C3B 0%, #0057B8 100%)',
+                    color: '#FFFFFF',
+                    fontSize: '54px',
+                    fontWeight: '800',
+                    zIndex: 1
+                  }}
+                >
+                  {member.name ? member.name.charAt(0) : 'T'}
+                </div>
+
+                {member.image ? (
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    loading="eager"
+                    fetchPriority="high"
+                    style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : null}
+              </div>
+
+              <div style={{ padding: '20px 16px', textAlign: 'center', background: '#FFFFFF' }}>
+                <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '19px', fontWeight: '800', color: '#062F63', margin: '0 0 6px 0' }}>
+                  {member.name}
+                </h3>
+                <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#10B981', letterSpacing: '0.2px' }}>
+                  {member.role || 'Team Member'}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </section>
   );
 }
 

@@ -25,45 +25,35 @@ const fallbackData = {
   testimonials: [
     {
       id: 1,
-      title: "Excellent Work",
+      title: "Excellent Engineering & Technical Support",
       content: "Blue Crescent has provided us with complete support for MEP drawings, all design Calculations in MEP & Stress Analysis etc in our projects. They are one of the best Engineering company who can be trusted for complete solutions of all Design & Engineering issues. I visited their office & fully satisfied with the Engineering & design team who delivered the works for us on time & also they provided complete support to get approval from various authorities for some woks in very short time. You are Excellent Blue crescent & keep going. Thanks for your works delivered.",
       author_name: "Gokulraj Chakaravarthy",
       company_name: "Diplomat Group W.L.L",
       status: "approved"
-    }
-  ],
-  news: [
-    {
-      id: 1,
-      title: "ISO 9001 Certified: We are now an ISO 9001 certified Quality Management System company.",
-      content: "Blue Crescent is proud to announce that we are now an ISO 9001:2015 certified company, demonstrating our commitment to quality, efficiency, and continuous improvement.",
-      category: "AWARDS",
-      image: "/project1.png",
-      date: "May 20, 2024"
     },
     {
       id: 2,
-      title: "Energy Quotient Provider: We are the only authorised energy quotient service provider in Qatar.",
-      content: "Blue Crescent has been recognized as the sole authorized energy quotient service provider in Qatar, enabling advanced energy diagnostics and conservation.",
-      category: "SERVICES",
-      image: "/simulation.png",
-      date: "April 15, 2024"
+      title: "Outstanding BIM & Digital Twin Coordination",
+      content: "Working with Blue Crescent Engineering on our complex commercial tower project was a seamless experience. Their 3D BIM modeling, spatial clash detection, and digital twin integration eliminated critical site conflicts before construction, saving our project team significant time and cost.",
+      author_name: "Eng. Ahmed Al-Mansoori",
+      company_name: "Qatar Project Management (QPM)",
+      status: "approved"
     },
     {
       id: 3,
-      title: "GORD GSAS Provider: We are now a GORD certified GSAS service provider.",
-      content: "GORD has officially certified Blue Crescent as a green building GSAS consultancy and service provider for all building typologies.",
-      category: "AWARDS",
-      image: "/sust_workshop.png",
-      date: "March 10, 2024"
+      title: "Reliable Specialized Technical Experts",
+      content: "Blue Crescent's specialized engineering team delivered comprehensive CFD fluid dynamics analysis and acoustic vibration models. Their prompt authority approval support and high attention to detail made them an invaluable long-term engineering partner for our infrastructure projects.",
+      author_name: "Praveen V. Kumar",
+      company_name: "Contracting & Engineering W.L.L",
+      status: "approved"
     },
     {
       id: 4,
-      title: "KAHRAMAA Project Tarsheed: Awarded prestigious KAHRAMAA Tarsheed Energy Audit for 22 schools campaign.",
-      content: "Blue Crescent Sustainability division has been awarded the prestigious Tarsheed 2022 campaign by Kahramaa, auditing energy use across 22 Qatar schools.",
-      category: "PROJECTS",
-      image: "/project1.png",
-      date: "February 28, 2024"
+      title: "Top-Tier Sustainability & GSAS Facilitation",
+      content: "Their sustainability consultancy team guided our facility to achieve GSAS 4-Star environmental certification effortlessly. Outstanding precision in energy auditing, carbon footprint calculation, and clear communication throughout design and audit phases.",
+      author_name: "Hassan Al-Kuwari",
+      company_name: "Sustainable Infrastructure Lead, GCC Energy",
+      status: "approved"
     }
   ],
   service_categories: [
@@ -73,8 +63,8 @@ const fallbackData = {
     { id: 4, name: 'Construction Technology', slug: 'construction-technology', short_description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.', icon: 'Cpu', display_order: 4, status: 'Active', featured: 1 }
   ],
   services: [
-    { id: 1, category: 'Engineering Services', category_id: 1, title: 'CAD', slug: 'cad', description: 'Professional multidisciplinary 2D/3D CAD drafting and engineering documentation support.', bullets: JSON.stringify(['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination']), tools: JSON.stringify([['AutoCAD', 'MicroStation'], ['Civil 3D', 'Revit']]), banner_image: '/servicepage1.png', display_order: 1, status: 'Active' },
-    { id: 2, category: 'Engineering Services', category_id: 1, title: 'BIM', slug: 'bim', description: 'End-to-end Building Information Modeling up to LOD 500 across architectural, structural, and MEP disciplines.', bullets: JSON.stringify(['3D BIM Modeling', 'Clash Detection', '4D Scheduling', '5D Quantity Take-Off']), tools: JSON.stringify([['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']]), banner_image: '/servicepage1.png', display_order: 2, status: 'Active' },
+    { id: 1, category: 'Engineering Services', category_id: 1, title: 'BIM', slug: 'bim', description: 'End-to-end Building Information Modeling up to LOD 500 across architectural, structural, and MEP disciplines.', bullets: JSON.stringify(['3D BIM Modeling', 'Clash Detection', '4D Scheduling', '5D Quantity Take-Off']), tools: JSON.stringify([['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']]), banner_image: '/servicepage1.png', display_order: 1, status: 'Active' },
+    { id: 2, category: 'Engineering Services', category_id: 1, title: 'CAD', slug: 'cad', description: 'Professional multidisciplinary 2D/3D CAD drafting and engineering documentation support.', bullets: JSON.stringify(['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination']), tools: JSON.stringify([['AutoCAD', 'MicroStation'], ['Civil 3D', 'Revit']]), banner_image: '/servicepage1.png', display_order: 2, status: 'Active' },
     { id: 3, category: 'Engineering Services', category_id: 1, title: 'Laser Scanning', slug: 'laser-scanning', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bullets: JSON.stringify(['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Capture']), tools: JSON.stringify([['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']]), banner_image: '/servicepage1.png', display_order: 3, status: 'Active' },
     { id: 4, category: 'Engineering Services', category_id: 1, title: 'Scan to BIM', slug: 'scan-to-bim', description: 'Converting raw point cloud scans into intelligent 3D BIM models for renovation, retrofit, and facility management.', bullets: JSON.stringify(['Point Cloud to BIM Conversion', 'As-Built Model Verification', 'Retrofit Modeling', 'Deviation Analysis']), tools: JSON.stringify([['Autodesk Revit', 'CloudCompare'], ['ClearEdge3D Edgewise']]), banner_image: '/servicepage1.png', display_order: 4, status: 'Active' },
     { id: 5, category: 'Sustainability Services', category_id: 2, title: 'GSAS', slug: 'gsas', description: 'Global Sustainability Assessment System (GSAS) certification management and green building compliance.', bullets: JSON.stringify(['GSAS Design & Build', 'GSAS Construction Management', 'Energy & Water Audits', 'Daylight Simulation']), tools: JSON.stringify([['GSAS Gate Tool', 'IES VE'], ['Sefaira', 'One Click LCA']]), banner_image: '/servicepage1.png', display_order: 1, status: 'Active' },
@@ -132,18 +122,8 @@ async function initDB() {
       );
     `);
 
-    // 3. News Table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS news (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        category VARCHAR(100) DEFAULT 'NEWS',
-        image LONGTEXT,
-        date VARCHAR(100),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+    // Drop News Table (Removed feature)
+    await pool.query(`DROP TABLE IF EXISTS news;`);
 
     // 4. Certificates Table
     await pool.query(`
@@ -344,9 +324,59 @@ async function initDB() {
         aboutUsCountriesJson LONGTEXT,
         aboutUsDisciplinesJson LONGTEXT,
         aboutUsFlowchartJson LONGTEXT,
-        aboutUsCapabilitiesJson LONGTEXT
+        aboutUsCapabilitiesJson LONGTEXT,
+        sustainabilityTitle VARCHAR(255),
+        sustainabilitySubHeading VARCHAR(255),
+        sustainabilityLeadDesc TEXT,
+        sustainabilitySupportingDesc TEXT,
+        sustainabilityImage LONGTEXT,
+        sustainabilityBadgeTitle VARCHAR(255),
+        sustainabilityBadgeSubtitle VARCHAR(255),
+        sustainabilityCapabilitiesJson LONGTEXT,
+        remoteTitle VARCHAR(255),
+        remoteDesc TEXT,
+        remoteImage LONGTEXT,
+        remoteOverlayText VARCHAR(255),
+        remotePillarsJson LONGTEXT
       );
     `);
+
+    // Migrations for company_settings - add missing columns safely
+    const colsToAdd = [
+      ['sustainabilityTitle', 'VARCHAR(255)'],
+      ['sustainabilitySubHeading', 'VARCHAR(255)'],
+      ['sustainabilityLeadDesc', 'TEXT'],
+      ['sustainabilitySupportingDesc', 'TEXT'],
+      ['sustainabilityImage', 'LONGTEXT'],
+      ['sustainabilityBadgeTitle', 'VARCHAR(255)'],
+      ['sustainabilityBadgeSubtitle', 'VARCHAR(255)'],
+      ['sustainabilityCapabilitiesJson', 'LONGTEXT'],
+      ['remoteTitle', 'VARCHAR(255)'],
+      ['remoteDesc', 'TEXT'],
+      ['remoteImage', 'LONGTEXT'],
+      ['remoteOverlayText', 'VARCHAR(255)'],
+      ['remotePillarsJson', 'LONGTEXT'],
+      ['aboutUsCountriesJson', 'LONGTEXT'],
+      ['aboutUsDisciplinesJson', 'LONGTEXT'],
+      ['aboutUsFlowchartJson', 'LONGTEXT'],
+      ['aboutUsCapabilitiesJson', 'LONGTEXT'],
+      ['aboutUsFlowchartBg', "VARCHAR(50) DEFAULT '#F1F7FF'"]
+    ];
+
+    for (const [colName, colType] of colsToAdd) {
+      try {
+        const [chk] = await pool.query(`
+          SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'company_settings' AND COLUMN_NAME = ?
+        `, [colName]);
+        if (chk.length === 0) {
+          await pool.query(`ALTER TABLE company_settings ADD COLUMN \`${colName}\` ${colType}`);
+        }
+      } catch (e) {
+        // Fallback standard alter table
+        try { await pool.query(`ALTER TABLE company_settings ADD COLUMN \`${colName}\` ${colType}`); } catch (err) {}
+      }
+    }
 
     // 13. Contact Settings Table
     await pool.query(`
@@ -404,6 +434,37 @@ async function initDB() {
         ('QAFrame Technologies', 'BIM Partner',            '/partner_qaframe.png',   4),
         ('MERIDIAN MEP',         'MEP Partner',            '/partner_meridian.png',  5),
         ('VISTARA Infrastructure','Infrastructure Partner', '/partner_vistara.png',   6)
+      `);
+    }
+
+    // 16. Team Members Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS team_members (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        role VARCHAR(255) NOT NULL DEFAULT 'Team Member',
+        image LONGTEXT,
+        department VARCHAR(255) DEFAULT '',
+        order_num INT DEFAULT 0,
+        status VARCHAR(50) DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Seed default team members if empty
+    const [teamCountRows] = await pool.query('SELECT COUNT(*) as count FROM team_members');
+    if (teamCountRows[0].count === 0) {
+      console.log('Seeding default team members...');
+      await pool.query(`
+        INSERT INTO team_members (name, role, image, department, order_num) VALUES
+        ('Praveen',   'Team Member',               '/team_praveen.png',   'Engineering', 1),
+        ('Nancy',     'Team Member',               '/team_nancy.png',     'BIM & CAD',   2),
+        ('Raghul',    'Team Member',               '/team_raghul.png',    'Digital Twin', 3),
+        ('Zubariya',  'Team Member',               '/team_zubariya.png',  'Sustainability', 4),
+        ('Mohammed',  'BIM Specialist',            null,                  'BIM & CAD',   5),
+        ('Ananya',    'CAD Engineer',              null,                  'Engineering', 6),
+        ('Karthik',   'Project Lead',              null,                  'Management',  7),
+        ('Divya',     'Sustainability Specialist', null,                  'Sustainability', 8)
       `);
     }
 
@@ -515,54 +576,7 @@ async function initDB() {
       await pool.query("ALTER TABLE testimonials ADD COLUMN status VARCHAR(50) DEFAULT 'pending'");
     }
 
-    try {
-      await pool.query("SELECT category FROM news LIMIT 1");
-    } catch (err) {
-      console.log('Adding category, image, date to news table...');
-      await pool.query("ALTER TABLE news ADD COLUMN category VARCHAR(100) DEFAULT 'NEWS'");
-      await pool.query("ALTER TABLE news ADD COLUMN image LONGTEXT");
-      await pool.query("ALTER TABLE news ADD COLUMN date VARCHAR(100)");
-    }
 
-    // Seed & Sync Admin Users
-    console.log('Syncing admin user credentials...');
-    const [superadminRows] = await pool.query('SELECT id FROM users WHERE username = ?', ['superadmin']);
-    if (superadminRows.length > 0) {
-      await pool.query('UPDATE users SET password = ?, role = ? WHERE username = ?', [hashPassword('super123'), 'super_admin', 'superadmin']);
-    } else {
-      await pool.query('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['superadmin', hashPassword('super123'), 'super_admin']);
-    }
-
-    const [adminRows] = await pool.query('SELECT id FROM users WHERE username = ?', ['admin']);
-    if (adminRows.length > 0) {
-      await pool.query('UPDATE users SET password = ?, role = ? WHERE username = ?', [hashPassword('admin123'), 'admin', 'admin']);
-    } else {
-      await pool.query('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['admin', hashPassword('admin123'), 'admin']);
-    }
-
-    // Seed Testimonials
-    const [tRows] = await pool.query('SELECT COUNT(*) as count FROM testimonials');
-    if (tRows[0].count === 0) {
-      console.log('Seeding testimonials...');
-      for (const t of fallbackData.testimonials) {
-        await pool.query(
-          'INSERT INTO testimonials (title, content, author_name, company_name, status) VALUES (?, ?, ?, ?, ?)',
-          [t.title, t.content, t.author_name, t.company_name, t.status]
-        );
-      }
-    }
-
-    // Seed News
-    const [nRows] = await pool.query('SELECT COUNT(*) as count FROM news');
-    if (nRows[0].count === 0) {
-      console.log('Seeding news...');
-      for (const n of fallbackData.news) {
-        await pool.query(
-          'INSERT INTO news (title, content, category, image, date) VALUES (?, ?, ?, ?, ?)',
-          [n.title, n.content, n.category, n.image, n.date]
-        );
-      }
-    }
 
     // Seed Certificates
     const [cRows] = await pool.query('SELECT COUNT(*) as count FROM certificates');
@@ -587,8 +601,8 @@ async function initDB() {
       const [r6] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Contact Us', 'Contact Us', 6)");
 
       const projectsId = r4.insertId;
-      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('CAD Projects', 'CAD Projects', ?, 1)", [projectsId]);
-      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('BIM Projects', 'BIM Projects', ?, 2)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('BIM Projects', 'BIM Projects', ?, 1)", [projectsId]);
+      await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('CAD Projects', 'CAD Projects', ?, 2)", [projectsId]);
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Laser Scanning Projects', 'Laser Scanning Projects', ?, 3)", [projectsId]);
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Digital Twin Projects', 'Digital Twin Projects', ?, 4)", [projectsId]);
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Sustainability Projects', 'Sustainability Projects', ?, 5)", [projectsId]);
@@ -609,8 +623,8 @@ async function initDB() {
         await pool.query("DELETE FROM menus WHERE parent_id = ? AND name NOT IN ('CAD Projects', 'BIM Projects', 'Laser Scanning Projects', 'Digital Twin Projects', 'Sustainability Projects')", [pId]);
 
         const requiredProjectSubMenus = [
-          { name: 'CAD Projects', url: 'CAD Projects', order_num: 1 },
-          { name: 'BIM Projects', url: 'BIM Projects', order_num: 2 },
+          { name: 'BIM Projects', url: 'BIM Projects', order_num: 1 },
+          { name: 'CAD Projects', url: 'CAD Projects', order_num: 2 },
           { name: 'Laser Scanning Projects', url: 'Laser Scanning Projects', order_num: 3 },
           { name: 'Digital Twin Projects', url: 'Digital Twin Projects', order_num: 4 },
           { name: 'Sustainability Projects', url: 'Sustainability Projects', order_num: 5 }
@@ -926,6 +940,12 @@ async function initDB() {
     await pool.query('UPDATE services SET status = "Inactive" WHERE slug NOT IN (?) AND title NOT IN ("CAD", "BIM", "Laser Scanning", "Scan to BIM", "GSAS", "LEED", "Energy Audit", "Carbon Management", "Asset Twin", "System Integration", "Real-Time Monitoring", "Asset Management", "Remote Construction", "360° Capture", "AR Solutions", "Robotics")', [validSubSlugs]);
     await pool.query('UPDATE services SET status = "Inactive" WHERE category IN ("Telecom Services", "Telecom", "Digital Twin Services") OR category NOT IN ("Engineering Services", "Sustainability Services", "Digital Twin", "Construction Technology")');
     await pool.query('UPDATE service_categories SET status = "Inactive" WHERE name IN ("Telecom Services", "Telecom", "Digital Twin Services") OR name NOT IN ("Engineering Services", "Sustainability Services", "Digital Twin", "Construction Technology")');
+
+    // Ensure BIM is order 1 and CAD is order 2 in MySQL DB
+    await pool.query('UPDATE services SET display_order = 1 WHERE title = "BIM" OR slug = "bim"');
+    await pool.query('UPDATE services SET display_order = 2 WHERE title = "CAD" OR slug = "cad"');
+    await pool.query('UPDATE menus SET order_num = 1 WHERE name = "BIM Projects"');
+    await pool.query('UPDATE menus SET order_num = 2 WHERE name = "CAD Projects"');
 
     // Seed Hero Slides
     const [heroRows] = await pool.query('SELECT COUNT(*) as count FROM hero_slides');

@@ -68,14 +68,14 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
 
   // Fallbacks
   const defaultNavItems = ['Home', 'About Us', 'Services', 'Projects', 'Media', 'Contact Us'];
-  const defaultProjectSubItems = ['CAD Projects', 'BIM Projects', 'Laser Scanning Projects', 'Digital Twin Projects', 'Sustainability Projects'];
+  const defaultProjectSubItems = ['BIM Projects', 'CAD Projects', 'Laser Scanning Projects', 'Digital Twin Projects', 'Sustainability Projects'];
   const defaultServiceCategories = [
     {
       name: 'Engineering Services',
       slug: 'engineering-services',
       items: [
-        { title: 'CAD', slug: 'cad' },
         { title: 'BIM', slug: 'bim' },
+        { title: 'CAD', slug: 'cad' },
         { title: 'Laser Scanning', slug: 'laser-scanning' },
         { title: 'Scan to BIM', slug: 'scan-to-bim' }
       ]
@@ -183,6 +183,18 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
     }
 
     const parsedCats = Object.values(categoriesMap).filter(c => c.items.length > 0);
+    parsedCats.forEach(cat => {
+      cat.items.sort((a, b) => {
+        const titleA = (a.title || a).toString().toUpperCase();
+        const titleB = (b.title || b).toString().toUpperCase();
+        if (titleA === 'BIM') return -1;
+        if (titleB === 'BIM') return 1;
+        if (titleA === 'CAD') return titleB === 'BIM' ? 1 : -1;
+        if (titleB === 'CAD') return titleA === 'BIM' ? -1 : 1;
+        return (a.display_order || 0) - (b.display_order || 0);
+      });
+    });
+
     if (parsedCats.length > 0) {
       serviceCategories = parsedCats;
     }
@@ -250,7 +262,17 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                               className="dropdown-item category-item"
                               onMouseEnter={() => setActiveCategory(cat.name)}
                             >
-                              <div className="category-title">
+                              <div 
+                                className="category-title"
+                                style={{ cursor: 'pointer' }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setServicesDropdownOpen(false);
+                                  setActiveCategory(null);
+                                  if (onNavigate) onNavigate('Services', cat.slug || cat.name);
+                                }}
+                              >
                                 {cat.name} <span className="sub-arrow">▸</span>
                               </div>
 

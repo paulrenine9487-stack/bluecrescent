@@ -14,8 +14,8 @@ const FALLBACK_CATEGORIES = [
     titleColor: '#063B73',
     textColor: '#1E293B',
     iconBg: '#E0F2FE',
-    description: 'Comprehensive engineering services including CAD drafting, BIM modeling, 3D laser scanning, and scan-to-BIM conversions.',
-    subServices: ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM']
+    description: 'Comprehensive engineering services including BIM modeling, CAD drafting, 3D laser scanning, and scan-to-BIM conversions.',
+    subServices: ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM']
   },
   {
     id: 2,
@@ -318,52 +318,56 @@ export default function ServicesList({ onNavigate }) {
                         zIndex: 2
                       }}
                     >
-                      {cat.subServices.map((sub, idx) => (
-                        <li 
-                          key={idx} 
-                          className="sub-service-touch-item"
-                          style={{ 
-                            fontSize: '14px', 
-                            color: cat.textColor, 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '10px', 
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            padding: '4px 8px',
-                            margin: '0 -8px',
-                            borderRadius: '6px',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
-                            if (textSpan) textSpan.style.color = cat.accent;
-                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.03)';
-                          }}
-                          onMouseLeave={(e) => {
-                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
-                            if (textSpan) textSpan.style.color = cat.textColor;
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                          onTouchStart={(e) => {
-                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
-                            if (textSpan) textSpan.style.color = cat.accent;
-                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)';
-                          }}
-                          onTouchEnd={(e) => {
-                            const textSpan = e.currentTarget.querySelector('.sub-text-label');
-                            if (textSpan) textSpan.style.color = cat.textColor;
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleExplore(cat.slug);
-                          }}
-                        >
-                          <span style={{ color: cat.accent, fontWeight: '800', fontSize: '15px', flexShrink: 0 }}>✓</span>
-                          <span className="sub-text-label" style={{ color: cat.textColor, transition: 'color 0.2s ease' }}>{sub}</span>
-                        </li>
-                      ))}
+                      {cat.subServices.map((sub, idx) => {
+                        const subTitle = typeof sub === 'string' ? sub : (sub.title || sub.name);
+                        const subTarget = typeof sub === 'string' ? sub : (sub.slug || sub.title || sub.name);
+                        return (
+                          <li 
+                            key={idx} 
+                            className="sub-service-touch-item"
+                            style={{ 
+                              fontSize: '14px', 
+                              color: cat.textColor, 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '10px', 
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              padding: '4px 8px',
+                              margin: '0 -8px',
+                              borderRadius: '6px',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                              if (textSpan) textSpan.style.color = cat.accent;
+                              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)';
+                            }}
+                            onMouseLeave={(e) => {
+                              const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                              if (textSpan) textSpan.style.color = cat.textColor;
+                              e.currentTarget.style.background = 'transparent';
+                            }}
+                            onTouchStart={(e) => {
+                              const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                              if (textSpan) textSpan.style.color = cat.accent;
+                              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)';
+                            }}
+                            onTouchEnd={(e) => {
+                              const textSpan = e.currentTarget.querySelector('.sub-text-label');
+                              if (textSpan) textSpan.style.color = cat.textColor;
+                              e.currentTarget.style.background = 'transparent';
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExplore(subTarget);
+                            }}
+                          >
+                            <span style={{ color: cat.accent, fontWeight: '800', fontSize: '15px', flexShrink: 0 }}>✓</span>
+                            <span className="sub-text-label" style={{ color: cat.textColor, transition: 'color 0.2s ease' }}>{subTitle}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
 

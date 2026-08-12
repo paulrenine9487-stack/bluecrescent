@@ -100,31 +100,54 @@ export default function HeroSlider({ onNavigate }) {
   // Determine current active slide
   const currentSlide = slides.length > 0 ? slides[activeIdx] : STATIC_HERO;
 
-  // Parse and map title, description, and badge dynamically to match new positioning
-  const rawTitle = currentSlide.title || currentSlide.line1 || '';
-  const displayTitle = (rawTitle.includes('Building Today') || rawTitle.includes('Sustaining Tomorrow') || !rawTitle)
-    ? 'Engineering the Digital Future.'
-    : rawTitle;
+  // Use dynamic content from current slide without overriding custom titles
+  const displayTitle = currentSlide.title || currentSlide.line1 || 'Engineering the Digital Future.';
+  const displayDesc = currentSlide.subtitle || currentSlide.sub || 'Blue Crescent Engineering delivers technology-driven engineering and digital transformation solutions across the complete lifecycle of buildings and infrastructure.';
+  const displayBadge = currentSlide.badge || 'ENGINEERING DIGITAL TRANSFORMATION';
+  const displayBtn1 = currentSlide.btn1_text || currentSlide.btn1 || 'EXPLORE OUR SERVICES';
+  const displayBtn2 = currentSlide.btn2_text || currentSlide.btn2 || 'VIEW OUR PROJECTS';
 
-  const rawDesc = currentSlide.subtitle || currentSlide.sub || '';
-  const displayDesc = (rawDesc.includes('sustainability in every project') || rawDesc.includes('Committed to quality') || !rawDesc)
-    ? 'Blue Crescent Engineering delivers technology-driven engineering and digital transformation solutions across the complete lifecycle of buildings and infrastructure.'
-    : rawDesc;
+  // Dynamic active media selection (default to /hero2.mp4 video background)
+  let activeMedia = '/hero2.mp4';
+  let isVideoMedia = true;
 
-  const rawBadge = currentSlide.badge || '';
-  const displayBadge = (rawBadge === 'A SOLUTION FOR YOUR VISION' || !rawBadge)
-    ? 'ENGINEERING DIGITAL TRANSFORMATION'
-    : rawBadge;
+  if (currentSlide && currentSlide.image && currentSlide.image.trim() !== '') {
+    activeMedia = currentSlide.image;
+    const lower = activeMedia.toLowerCase();
+    if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) {
+      isVideoMedia = false;
+    } else {
+      isVideoMedia = true;
+    }
+  } else if (heroUrl && heroUrl.trim() !== '') {
+    activeMedia = heroUrl;
+    const lower = activeMedia.toLowerCase();
+    if (heroType === 'image' || lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) {
+      isVideoMedia = false;
+    } else {
+      isVideoMedia = true;
+    }
+  } else {
+    activeMedia = '/hero2.mp4';
+    isVideoMedia = true;
+  }
 
-  const rawBtn1 = currentSlide.btn1_text || currentSlide.btn1 || '';
-  const displayBtn1 = (rawBtn1.toUpperCase().includes('SERVICES') || !rawBtn1)
-    ? 'EXPLORE OUR SERVICES'
-    : rawBtn1;
-
-  const rawBtn2 = currentSlide.btn2_text || currentSlide.btn2 || '';
-  const displayBtn2 = (rawBtn2.toUpperCase().includes('PROJECTS') || rawBtn2.toUpperCase().includes('CONSULTATION') || !rawBtn2)
-    ? 'VIEW OUR PROJECTS'
-    : rawBtn2;
+  // Ensure video auto-plays whenever slide or activeMedia changes
+  useEffect(() => {
+    if (!isVideoMedia) return;
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.defaultMuted = true;
+    const playPromise = v.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+          console.warn('Video autoplay notice:', err);
+        }
+      });
+    }
+  }, [activeIdx, slides, heroUrl, heroType, isVideoMedia, activeMedia]);
 
   // Split title to highlight the final word in cyan (matches premium design)
   const parseTitle = (fullTitle) => {
@@ -143,7 +166,7 @@ export default function HeroSlider({ onNavigate }) {
         <>
           Engineering the <span className="hs-cyan">Digital Future.</span>
           <div className="hs-title-supporting" style={{ fontSize: '0.55em', fontWeight: 700, marginTop: '16px', lineHeight: 1.3, color: '#FFFFFF' }}>
-            From CAD to BIM.<br />
+            From BIM to CAD.<br />
             From Reality Capture to <span className="hs-cyan">Digital Twin.</span>
           </div>
         </>
@@ -161,15 +184,14 @@ export default function HeroSlider({ onNavigate }) {
     <section className="hs-section">
 
       {/* ── Slide Background (Dynamic Video or Image Background) ── */}
-      {heroType === 'video' ? (
+      {isVideoMedia ? (
         <video
           ref={videoRef}
-          key={heroUrl || '/hero2.mp4'}
+          key={activeMedia}
           className="hs-video"
-          src={heroUrl || '/hero2.mp4'}
+          src={activeMedia}
           autoPlay
           muted
-          defaultMuted
           loop
           playsInline
         />
@@ -177,7 +199,7 @@ export default function HeroSlider({ onNavigate }) {
         <div
           className="hs-video"
           style={{
-            backgroundImage: `url(${heroUrl || '/aboutus-default-banner.png'})`,
+            backgroundImage: `url(${activeMedia})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             position: 'absolute',

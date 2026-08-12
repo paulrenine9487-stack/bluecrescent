@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight, Briefcase, ArrowRight, Building2, Compass, R
 
 const CATEGORIES = [
   'ALL',
-  'CAD PROJECTS',
   'BIM PROJECTS',
+  'CAD PROJECTS',
   'LASER SCANNING PROJECTS',
   'DIGITAL TWIN PROJECTS',
   'SUSTAINABILITY PROJECTS'

@@ -264,34 +264,33 @@ export default function OurJourneyPage({ onNavigate }) {
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
           
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-            <span 
-              style={{ 
-                fontSize: '12px', 
-                fontWeight: '700', 
-                letterSpacing: '3px', 
-                color: '#111827', 
-                textTransform: 'uppercase',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#087CFF' }} />
-              TIMELINE & MILESTONES
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#087CFF' }} />
-            </span>
+          <div style={{ textAlign: 'center', marginBottom: '50px' }}>
             <h2 
               style={{ 
                 fontFamily: 'Space Grotesk, sans-serif', 
-                fontSize: isDesktop ? '44px' : isTablet ? '38px' : '30px', 
-                fontWeight: '700', 
+                fontSize: isDesktop ? '42px' : isTablet ? '36px' : '28px', 
+                fontWeight: '800', 
                 color: '#062F63', 
-                margin: '12px 0 16px 0' 
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                margin: '0 0 10px 0',
+                lineHeight: 1.2
+              }}
+            >
+              Timeline &amp; Milestones
+            </h2>
+            <div style={{ width: '60px', height: '3.5px', background: '#087CFF', borderRadius: '4px', margin: '0 auto 12px auto' }}></div>
+            <h3 
+              style={{ 
+                fontFamily: 'Space Grotesk, sans-serif', 
+                fontSize: isTablet ? '24px' : '20px', 
+                fontWeight: '700', 
+                color: '#087CFF', 
+                margin: '0 0 14px 0' 
               }}
             >
               Building Excellence Since 2013
-            </h2>
+            </h3>
             <p 
               style={{ 
                 fontSize: '15px', 

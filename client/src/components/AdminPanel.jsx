@@ -49,15 +49,15 @@ export default function AdminPanel({ onNavigate }) {
   const [serviceCategories, setServiceCategories] = useState([]);
   const [projects, setProjects] = useState([]);
   const [certificates, setCertificates] = useState([]);
-  const [news, setNews] = useState([]);
+
   const [testimonials, setTestimonials] = useState([]);
   const [menus, setMenus] = useState([]);
   const [footer, setFooter] = useState(null);
   const [users, setUsers] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [contactInquiries, setContactInquiries] = useState([]);
-  const [partners, setPartners] = useState([]);
   const [mediaItems, setMediaItems] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   // SEO Management State
   const [seoPages, setSeoPages] = useState({
@@ -419,8 +419,8 @@ export default function AdminPanel({ onNavigate }) {
       { id: 'india', name: 'INDIA', desc: 'Technical delivery & design production center.', accentColor: '#8A3FFC' }
     ]),
     aboutUsDisciplinesJson: JSON.stringify([
-      { name: 'CAD Documentation', icon: 'Building2' },
       { name: 'BIM Modeling & Coordination', icon: 'Layers' },
+      { name: 'CAD Documentation', icon: 'Building2' },
       { name: 'Reality Capture & Laser Scanning', icon: 'Radio' },
       { name: 'Specialized Engineering support', icon: 'Wrench' },
       { name: 'Computational fluid dynamics (CFD)', icon: 'Wind' },
@@ -447,6 +447,34 @@ export default function AdminPanel({ onNavigate }) {
       { title: 'Asset Health Analysis', desc: 'Continuous assessment of asset health and risk.', icon: 'Heart' },
       { title: 'Energy Optimization', desc: 'Improve energy efficiency and sustainability.', icon: 'Zap' },
       { title: 'Lifecycle Management', desc: 'Manage the asset lifecycle from design to decommission.', icon: 'RefreshCw' }
+    ]),
+    sustainabilityTitle: 'SUSTAINABILITY CONSULTANCY',
+    sustainabilitySubHeading: 'Building Better, Building Sustainably.',
+    sustainabilityLeadDesc: 'Helping projects achieve better environmental performance, regulatory compliance and internationally recognized sustainability objectives.',
+    sustainabilitySupportingDesc: 'Our sustainability consultancy capabilities support projects across design, construction, operations and maintenance, with a focus on energy performance, environmental responsibility and sustainable building practices.',
+    sustainabilityImage: '/sust_workshop.png',
+    sustainabilityBadgeTitle: 'SUSTAINABLE ENGINEERING',
+    sustainabilityBadgeSubtitle: 'GSAS • LEED • ENERGY • CARBON',
+    sustainabilityCapabilitiesJson: JSON.stringify([
+      { name: 'GSAS', icon: 'Award', slug: 'GSAS', desc: 'GSAS Consultancy & Certification Guidance' },
+      { name: 'LEED', icon: 'ShieldCheck', slug: 'LEED', desc: 'LEED BD+C, ID+C & O+M Consultancy' },
+      { name: 'Energy Audits', icon: 'Zap', slug: 'Energy Audit', desc: 'ASHRAE Level 1, 2 & 3 Diagnostics' },
+      { name: 'Carbon Management', icon: 'BarChart3', slug: 'Carbon Management', desc: 'GHG Footprinting & Decarbonization' },
+      { name: 'Green Building Gap Analysis', icon: 'SearchCheck', slug: 'Sustainability Services', desc: 'Compliance & Performance Assessment' },
+      { name: 'ISO 14064', icon: 'FileCheck2', slug: 'Carbon Management', desc: 'GHG Verification & Reporting Standards' },
+      { name: 'Environmental Consultancy', icon: 'TreePine', slug: 'Sustainability Services', desc: 'Ecological & Environmental Solutions' }
+    ]),
+    remoteTitle: 'Remote Construction Solutions',
+    remoteDesc: 'Connecting project teams, sites and technical specialists through digital technologies for improved collaboration, inspection and decision-making.',
+    remoteImage: '/simulation.png',
+    remoteOverlayText: 'Live Remote Site Inspection Active',
+    remotePillarsJson: JSON.stringify([
+      { id: 'support', title: 'Remote Site Support', desc: 'Connect project teams and technical specialists for faster real-time decision-making.', icon: 'Radio', slug: 'Remote Construction' },
+      { id: 'ar-solutions', title: 'AR Solutions', desc: 'Augmented reality overlays for spatial coordination, design validation and clash detection.', icon: 'Eye', slug: 'AR Solutions' },
+      { id: 'documentation', title: '360° Site Documentation', desc: 'Immersive 360° visual capture for complete site visibility and progress tracking.', icon: 'Camera', slug: '360° Capture' },
+      { id: 'inspection', title: 'Remote Inspection', desc: 'Digital QA/QC inspection workflows reducing travel overhead while ensuring compliance.', icon: 'ShieldCheck', slug: 'Remote Construction' },
+      { id: 'collaboration', title: 'Digital Collaboration', desc: 'Centralized cloud platforms enabling real-time site feeds and seamless coordination.', icon: 'Users', slug: 'Construction Technology' },
+      { id: 'robotics', title: 'Robotic Integration', desc: 'Autonomous site scanning, robotic measurement devices and automated progress analytics.', icon: 'Cpu', slug: 'Robotics' }
     ])
   };
 
@@ -481,13 +509,156 @@ export default function AdminPanel({ onNavigate }) {
     return DEFAULT_COMPANY_SETTINGS;
   });
 
+  const parseJsonArray = (val, fallbackJsonStr = '[]') => {
+    if (!val) {
+      try {
+        const fb = typeof fallbackJsonStr === 'string' ? JSON.parse(fallbackJsonStr) : fallbackJsonStr;
+        return Array.isArray(fb) ? fb : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    try {
+      const parsed = typeof val === 'string' ? JSON.parse(val) : val;
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+    try {
+      const fb = typeof fallbackJsonStr === 'string' ? JSON.parse(fallbackJsonStr) : fallbackJsonStr;
+      return Array.isArray(fb) ? fb : [];
+    } catch (e) {}
+    return [];
+  };
+
+  // Popup Banner Modal state for Company Info 5 CRUD sections
+  const [crudModal, setCrudModal] = useState({
+    isOpen: false,
+    type: '', // 'discipline', 'digitalTwin', 'capabilityChip', 'remotePillar', 'teamMember'
+    editIndex: null, // null = new card, number = editing card index
+    data: { name: '', title: '', desc: '', icon: '', slug: '', role: '', image: '' }
+  });
+
+  const openCrudModal = (type, editIndex = null, initialData = {}) => {
+    setCrudModal({
+      isOpen: true,
+      type,
+      editIndex,
+      data: {
+        name: initialData.name || '',
+        title: initialData.title || '',
+        desc: initialData.desc || '',
+        icon: initialData.icon || (type === 'discipline' ? 'Building2' : type === 'digitalTwin' ? 'Cloud' : type === 'capabilityChip' ? 'Award' : type === 'remotePillar' ? 'Radio' : ''),
+        slug: initialData.slug || '',
+        role: initialData.role || '',
+        image: initialData.image || ''
+      }
+    });
+  };
+
+  const closeCrudModal = () => {
+    setCrudModal({
+      isOpen: false,
+      type: '',
+      editIndex: null,
+      data: { name: '', title: '', desc: '', icon: '', slug: '', role: '', image: '' }
+    });
+  };
+
+  const handleSaveCrudModal = async () => {
+    const { type, editIndex, data } = crudModal;
+
+    if (type === 'discipline') {
+      const list = parseJsonArray(companySettings.aboutUsDisciplinesJson, DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
+      const itemToSave = { name: data.name || 'New Discipline', icon: data.icon || 'Building2' };
+      if (editIndex !== null) {
+        list[editIndex] = itemToSave;
+      } else {
+        list.push(itemToSave);
+      }
+      updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(list));
+    } else if (type === 'digitalTwin') {
+      const list = parseJsonArray(companySettings.aboutUsCapabilitiesJson, DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
+      const itemToSave = { title: data.title || 'New Capability', desc: data.desc || '', icon: data.icon || 'Cloud' };
+      if (editIndex !== null) {
+        list[editIndex] = itemToSave;
+      } else {
+        list.push(itemToSave);
+      }
+      updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(list));
+    } else if (type === 'capabilityChip') {
+      const list = parseJsonArray(companySettings.sustainabilityCapabilitiesJson, DEFAULT_COMPANY_SETTINGS.sustainabilityCapabilitiesJson);
+      const itemToSave = { name: data.name || 'New Capability', icon: data.icon || 'Award', slug: data.slug || 'Sustainability Services', desc: data.desc || '' };
+      if (editIndex !== null) {
+        list[editIndex] = itemToSave;
+      } else {
+        list.push(itemToSave);
+      }
+      updateCompanyField('sustainabilityCapabilitiesJson', JSON.stringify(list));
+    } else if (type === 'remotePillar') {
+      const list = parseJsonArray(companySettings.remotePillarsJson, DEFAULT_COMPANY_SETTINGS.remotePillarsJson);
+      const itemToSave = {
+        id: editIndex !== null ? list[editIndex]?.id : `pillar_${Date.now()}`,
+        title: data.title || 'New Pillar',
+        desc: data.desc || '',
+        icon: data.icon || 'Radio',
+        slug: data.slug || 'Construction Technology'
+      };
+      if (editIndex !== null) {
+        list[editIndex] = itemToSave;
+      } else {
+        list.push(itemToSave);
+      }
+      updateCompanyField('remotePillarsJson', JSON.stringify(list));
+    } else if (type === 'teamMember') {
+      if (editIndex !== null) {
+        const member = (Array.isArray(teamMembers) ? teamMembers : [])[editIndex];
+        if (member) {
+          const updatedMember = { ...member, name: data.name, role: data.role, image: data.image };
+          try {
+            const res = await fetch(`/api/team/${member.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updatedMember)
+            });
+            if (res.ok) {
+              const saved = await res.json();
+              setTeamMembers(prev => (Array.isArray(prev) ? prev : []).map(m => m.id === member.id ? saved : m));
+            }
+          } catch (e) {
+            console.error('Error updating team member:', e);
+          }
+        }
+      } else {
+        try {
+          const res = await fetch('/api/team', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: data.name || 'New Team Member',
+              role: data.role || 'Team Member',
+              image: data.image || null,
+              order_num: (Array.isArray(teamMembers) ? teamMembers.length : 0) + 1
+            })
+          });
+          if (res.ok) {
+            const newMember = await res.json();
+            setTeamMembers(prev => [...(Array.isArray(prev) ? prev : []), newMember]);
+          }
+        } catch (e) {
+          console.error('Error adding team member:', e);
+        }
+      }
+    }
+
+    closeCrudModal();
+  };
+
   // Operation states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
   const [activeEditItem, setActiveEditItem] = useState(null); // holds item being edited
   const [showAddModal, setShowAddModal] = useState(false);
   const serviceSubmenuOptions = {
-    'Engineering Services': ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM'],
+    'Engineering Services': ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM'],
     'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'],
     'Digital Twin': ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'],
     'Construction Technology': ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics']
@@ -575,8 +746,8 @@ export default function AdminPanel({ onNavigate }) {
       const resCert = await fetch('/api/certificates');
       if (resCert.ok) setCertificates(await resCert.json());
       
-      const resNews = await fetch('/api/news');
-      if (resNews.ok) setNews(await resNews.json());
+      const resProj = await fetch('/api/projects');
+      if (resProj.ok) setProjects(await resProj.json());
 
       const resInq = await fetch('/api/contact');
       if (resInq.ok) setContactInquiries(await resInq.json());
@@ -649,6 +820,8 @@ export default function AdminPanel({ onNavigate }) {
         const res = await fetch('/api/media');
         if (res.ok) setMediaItems(await res.json());
       } else if (tab === '/admin/settings/company') {
+        const resTeam = await fetch('/api/team?all=true');
+        if (resTeam.ok) setTeamMembers(await resTeam.json());
         const res = await fetch('/api/settings/company');
         if (res.ok) {
           const data = await res.json();
@@ -1590,15 +1763,7 @@ export default function AdminPanel({ onNavigate }) {
             </div>
             {sectionsExpanded.content && (
               <>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/news' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/news')}
-                >
-                  <div className="admin-nav-item-left">
-                    <Newspaper size={20} /> News
-                  </div>
-                  {activeTab === '/admin/news' && <div className="admin-nav-indicator" />}
-                </button>
+
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/projects' ? 'active' : ''}`}
                   onClick={() => handleNavClick('/admin/projects')}
@@ -1776,7 +1941,7 @@ export default function AdminPanel({ onNavigate }) {
         </aside>
 
         {/* Right Main Pane Wrapper */}
-        <div className="admin-main-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <div className="admin-main-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           {/* Top Main Header */}
           <header className="admin-header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', padding: '0 24px', borderBottom: '1px solid #E2E8F0', background: '#FFFFFF', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -1787,9 +1952,10 @@ export default function AdminPanel({ onNavigate }) {
                 aria-label="Toggle Navigation Menu"
                 title="Toggle Sidebar Menu"
               >
-                <Menu size={22} />
+                <Menu size={20} />
+                <span className="admin-menu-btn-label" style={{ fontSize: '13px', fontWeight: '700' }}>Menu</span>
               </button>
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'capitalize' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {activeTab.split('/').pop().replace(/-/g, ' ')}
               </h2>
             </div>
@@ -1859,7 +2025,7 @@ export default function AdminPanel({ onNavigate }) {
               <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
 
                 {/* Page Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
+                <div className="admin-settings-page-header">
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#64748B', letterSpacing: '1px' }}>WEBSITE SETTINGS</span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>Company Information</h2>
@@ -1889,7 +2055,7 @@ export default function AdminPanel({ onNavigate }) {
                       <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}><Building size={16} /></div>
                       <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Site Identity</h3>
                     </div>
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div className="admin-form-grid-2col" style={{ padding: '24px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Company / Site Name</label>
                         <input type="text" value={companySettings.siteTitle || ''} onChange={e => updateCompanyField('siteTitle', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
@@ -1906,7 +2072,7 @@ export default function AdminPanel({ onNavigate }) {
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Year Established</label>
                         <input type="text" value={companySettings.yearEstablished || ''} onChange={e => updateCompanyField('yearEstablished', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                       </div>
-                      <div style={{ gridColumn: '1 / -1' }}>
+                      <div className="admin-span-2">
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Copyright Text (Footer)</label>
                         <input type="text" value={companySettings.copyrightText || ''} onChange={e => updateCompanyField('copyrightText', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                       </div>
@@ -1925,7 +2091,7 @@ export default function AdminPanel({ onNavigate }) {
                       </div>
                     </div>
                     
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
+                    <div className="admin-hero-media-grid" style={{ padding: '24px' }}>
                       {/* Left Side: Type and Upload */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         
@@ -2078,7 +2244,7 @@ export default function AdminPanel({ onNavigate }) {
                           </span>
                         </div>
 
-                        <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: aboutUsVideoUrl ? '1fr 280px' : '1fr', gap: '20px', alignItems: 'start' }}>
+                        <div className="admin-video-card-grid" style={{ padding: '20px' }}>
 
                           {/* Left: Upload Controls */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -2220,7 +2386,7 @@ export default function AdminPanel({ onNavigate }) {
                         <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Used in the sliding cards carousel on the homepage ("Why Blue Crescent?" section)</p>
                       </div>
                     </div>
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div className="admin-form-grid-2col" style={{ padding: '24px' }}>
                       {[
                         { label: 'Mission Statement', field: 'mission' },
                         { label: 'Vision Statement', field: 'vision' },
@@ -2268,7 +2434,7 @@ export default function AdminPanel({ onNavigate }) {
                         <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Titles and descriptions for the 5 animated fan-deck cards on the About Us page</p>
                       </div>
                     </div>
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div className="admin-form-grid-2col" style={{ padding: '24px' }}>
                       {[
                         { titleField: 'value1Title', descField: 'value1Desc' },
                         { titleField: 'value2Title', descField: 'value2Desc' },
@@ -2302,7 +2468,7 @@ export default function AdminPanel({ onNavigate }) {
                         <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Configure background images and color schemes for About Us page sections</p>
                       </div>
                     </div>
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div className="admin-form-grid-2col" style={{ padding: '24px' }}>
                       
                       {/* Geographical Presence Map Image */}
                       <div>
@@ -2411,7 +2577,7 @@ export default function AdminPanel({ onNavigate }) {
                           list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCountriesJson);
                         }
                         return list.map((item, idx) => (
-                          <div key={item.id || idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 100px', gap: '12px', padding: '14px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
+                          <div key={item.id || idx} className="admin-countries-crud-grid" style={{ padding: '14px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
                             <div>
                               <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '4px' }}>Country Name</label>
                               <input type="text" value={item.name || ''} onChange={e => {
@@ -2460,58 +2626,44 @@ export default function AdminPanel({ onNavigate }) {
                           <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Add, edit, or remove discipline cards displayed under "Our Capacity" section</p>
                         </div>
                       </div>
-                      <button style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }} onClick={() => {
-                        let list = [];
-                        try {
-                          const val = companySettings.aboutUsDisciplinesJson;
-                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
-                          if (!Array.isArray(list) || list.length === 0) {
-                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
-                          }
-                        } catch(e) {
-                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
-                        }
-                        list.push({ name: 'New Discipline', icon: 'Building2' });
-                        updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(list));
-                      }}>+ Add Card</button>
+                      <button 
+                        style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)' }} 
+                        onClick={() => openCrudModal('discipline', null, { name: '', icon: 'Building2' })}
+                      >
+                        <Plus size={15} /> + Add Card
+                      </button>
                     </div>
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
                       {(() => {
-                        let list = [];
-                        try {
-                          const val = companySettings.aboutUsDisciplinesJson;
-                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
-                          if (!Array.isArray(list) || list.length === 0) {
-                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
-                          }
-                        } catch(e) {
-                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
-                        }
+                        const list = parseJsonArray(companySettings.aboutUsDisciplinesJson, DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
                         return list.map((item, idx) => (
-                          <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#F8FAFC', padding: '10px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                            <div style={{ flex: 1 }}>
-                              <input type="text" value={item.name || ''} placeholder="Discipline Name" onChange={e => {
-                                const copy = [...list];
-                                copy[idx].name = e.target.value;
-                                updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
-                              }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
+                          <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#F8FAFC', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ background: '#EFF6FF', color: '#2563EB', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid #BFDBFE' }}>
+                                {item.icon || 'Building2'}
+                              </div>
+                              <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#1E293B' }}>{item.name}</span>
                             </div>
-                            <div style={{ width: '120px' }}>
-                              <select value={item.icon || 'Building2'} onChange={e => {
-                                const copy = [...list];
-                                copy[idx].icon = e.target.value;
-                                updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
-                              }} style={{ width: '100%', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }}>
-                                {['Building2', 'Layers', 'Radio', 'Wrench', 'Wind', 'Volume2', 'Droplet', 'Activity', 'Zap', 'Leaf', 'Users', 'Cpu'].map(i => (
-                                  <option key={i} value={i}>{i}</option>
-                                ))}
-                              </select>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button 
+                                title="Edit Discipline"
+                                style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                onClick={() => openCrudModal('discipline', idx, item)}
+                              >
+                                <Edit size={14} />
+                              </button>
+                              <button 
+                                title="Delete Discipline"
+                                style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                onClick={() => {
+                                  const copy = [...list];
+                                  copy.splice(idx, 1);
+                                  updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
+                                }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
-                            <button style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => {
-                              const copy = [...list];
-                              copy.splice(idx, 1);
-                              updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
-                            }}>✕</button>
                           </div>
                         ));
                       })()}
@@ -2529,18 +2681,9 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {(() => {
-                        let list = [];
-                        try {
-                          const val = companySettings.aboutUsFlowchartJson;
-                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsFlowchartJson);
-                          if (!Array.isArray(list) || list.length === 0) {
-                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsFlowchartJson);
-                          }
-                        } catch(e) {
-                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsFlowchartJson);
-                        }
+                        const list = parseJsonArray(companySettings.aboutUsFlowchartJson, DEFAULT_COMPANY_SETTINGS.aboutUsFlowchartJson);
                         return list.map((item, idx) => (
-                          <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 3fr 150px', gap: '12px', padding: '12px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
+                          <div key={idx} className="admin-flowchart-step-grid" style={{ padding: '12px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
                             <div>
                               <label style={{ display: 'block', fontSize: '9px', fontWeight: '700', color: '#64748B', marginBottom: '3px' }}>STEP</label>
                               <input type="text" value={item.num || ''} onChange={e => {
@@ -2593,69 +2736,336 @@ export default function AdminPanel({ onNavigate }) {
                           <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize the capability cards shown inside the Digital Twin section</p>
                         </div>
                       </div>
-                      <button style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }} onClick={() => {
-                        let list = [];
-                        try {
-                          const val = companySettings.aboutUsCapabilitiesJson;
-                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
-                          if (!Array.isArray(list) || list.length === 0) {
-                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
-                          }
-                        } catch(e) {
-                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
-                        }
-                        list.push({ title: 'New Capability', desc: 'Description of capability', icon: 'Cloud' });
-                        updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(list));
-                      }}>+ Add Card</button>
+                      <button 
+                        style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(234, 88, 12, 0.2)' }} 
+                        onClick={() => openCrudModal('digitalTwin', null, { title: '', desc: '', icon: 'Cloud' })}
+                      >
+                        <Plus size={15} /> + Add Card
+                      </button>
                     </div>
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '14px' }}>
                       {(() => {
-                        let list = [];
-                        try {
-                          const val = companySettings.aboutUsCapabilitiesJson;
-                          list = val ? JSON.parse(val) : JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
-                          if (!Array.isArray(list) || list.length === 0) {
-                            list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
-                          }
-                        } catch(e) {
-                          list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
-                        }
+                        const list = parseJsonArray(companySettings.aboutUsCapabilitiesJson, DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
                         return list.map((item, idx) => (
-                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                              <input type="text" value={item.title || ''} placeholder="Capability Title" onChange={e => {
-                                const copy = [...list];
-                                copy[idx].title = e.target.value;
-                                updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
-                              }} style={{ flex: 1, padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }} />
-                              
-                              <select value={item.icon || 'Cloud'} onChange={e => {
-                                const copy = [...list];
-                                copy[idx].icon = e.target.value;
-                                updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
-                              }} style={{ width: '130px', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '13px' }}>
-                                {['Cloud', 'Monitor', 'Settings', 'TrendingUp', 'Share2', 'ClipboardCheck', 'Heart', 'Zap', 'RefreshCw'].map(i => (
-                                  <option key={i} value={i}>{i}</option>
-                                ))}
-                              </select>
-
-                              <button style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => {
-                                const copy = [...list];
-                                copy.splice(idx, 1);
-                                updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
-                              }}>✕</button>
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ background: '#FFF7ED', color: '#EA580C', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid #FFEDD5' }}>
+                                  {item.icon || 'Cloud'}
+                                </div>
+                                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#1E293B' }}>{item.title}</h4>
+                              </div>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button 
+                                  title="Edit Capability"
+                                  style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                  onClick={() => openCrudModal('digitalTwin', idx, item)}
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <button 
+                                  title="Delete Capability"
+                                  style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                  onClick={() => {
+                                    const copy = [...list];
+                                    copy.splice(idx, 1);
+                                    updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
+                                  }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             </div>
-                            <textarea rows="2" value={item.desc || ''} placeholder="Capability Description" onChange={e => {
-                              const copy = [...list];
-                              copy[idx].desc = e.target.value;
-                              updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(copy));
-                            }} style={{ width: '100%', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '12.5px', resize: 'vertical' }} />
+                            {item.desc && (
+                              <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748B', lineHeight: '1.4' }}>{item.desc}</p>
+                            )}
                           </div>
                         ));
                       })()}
                     </div>
                   </div>
 
+
+                  {/* SECTION 11: Sustainability Consultancy Section Manager (CRUD) */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}><Leaf size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sustainability Consultancy Section (Homepage CRUD)</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize text, descriptions, main section image and core capability chips</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Main Title</label>
+                          <input type="text" value={companySettings.sustainabilityTitle || 'SUSTAINABILITY CONSULTANCY'} onChange={e => updateCompanyField('sustainabilityTitle', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Subheading</label>
+                          <input type="text" value={companySettings.sustainabilitySubHeading || 'Building Better, Building Sustainably.'} onChange={e => updateCompanyField('sustainabilitySubHeading', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Lead Paragraph Description</label>
+                        <textarea rows="2" value={companySettings.sustainabilityLeadDesc || ''} onChange={e => updateCompanyField('sustainabilityLeadDesc', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', resize: 'vertical' }} />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Supporting Paragraph Description</label>
+                        <textarea rows="2" value={companySettings.sustainabilitySupportingDesc || ''} onChange={e => updateCompanyField('sustainabilitySupportingDesc', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', resize: 'vertical' }} />
+                      </div>
+
+                      {/* Main Image Upload */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Sustainability Section Main Image</label>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <input type="file" accept="image/*" onChange={e => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                updateCompanyField('sustainabilityImage', reader.result);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }} style={{ fontSize: '13px' }} />
+                          {companySettings.sustainabilityImage && (
+                            <img src={companySettings.sustainabilityImage} alt="Sustainability preview" style={{ height: '50px', borderRadius: '6px', border: '1px solid #E2E8F0', objectFit: 'cover' }} />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Capabilities Chips Manager */}
+                      <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '16px', border: '1px solid #E2E8F0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                          <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase' }}>Core Capabilities Chips (CRUD)</h4>
+                          <button 
+                            style={{ background: '#10B981', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(16, 185, 129, 0.2)' }} 
+                            onClick={() => openCrudModal('capabilityChip', null, { name: '', icon: 'Award', slug: 'Sustainability Services', desc: '' })}
+                          >
+                            <Plus size={15} /> + Add Capability Chip
+                          </button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
+                          {(() => {
+                            const list = parseJsonArray(companySettings.sustainabilityCapabilitiesJson, DEFAULT_COMPANY_SETTINGS.sustainabilityCapabilitiesJson);
+                            return list.map((item, idx) => (
+                              <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#FFFFFF', padding: '12px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <div style={{ background: '#ECFDF5', color: '#10B981', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid #A7F3D0' }}>
+                                    {item.icon || 'Award'}
+                                  </div>
+                                  <div>
+                                    <strong style={{ fontSize: '13.5px', color: '#1E293B', display: 'block' }}>{item.name}</strong>
+                                    {item.slug && <span style={{ fontSize: '11px', color: '#64748B' }}>Route: {item.slug}</span>}
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <button 
+                                    title="Edit Chip"
+                                    style={{ background: '#10B981', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                    onClick={() => openCrudModal('capabilityChip', idx, item)}
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                  <button 
+                                    title="Delete Chip"
+                                    style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                    onClick={() => {
+                                      const copy = [...list];
+                                      copy.splice(idx, 1);
+                                      updateCompanyField('sustainabilityCapabilitiesJson', JSON.stringify(copy));
+                                    }}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION 12: Remote Construction Solutions Section Manager (CRUD) */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}><Cpu size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Remote Construction Solutions Section (Homepage CRUD)</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize title, description, technology visual image and 6 pillar cards</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Heading</label>
+                          <input type="text" value={companySettings.remoteTitle || 'Remote Construction Solutions'} onChange={e => updateCompanyField('remoteTitle', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Status Overlay Text</label>
+                          <input type="text" value={companySettings.remoteOverlayText || 'Live Remote Site Inspection Active'} onChange={e => updateCompanyField('remoteOverlayText', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                        <textarea rows="2" value={companySettings.remoteDesc || ''} onChange={e => updateCompanyField('remoteDesc', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', resize: 'vertical' }} />
+                      </div>
+
+                      {/* Visual Image Upload */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Technology Visual Image</label>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <input type="file" accept="image/*" onChange={e => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                updateCompanyField('remoteImage', reader.result);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }} style={{ fontSize: '13px' }} />
+                          {companySettings.remoteImage && (
+                            <img src={companySettings.remoteImage} alt="Remote preview" style={{ height: '50px', borderRadius: '6px', border: '1px solid #E2E8F0', objectFit: 'cover' }} />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Pillars Cards Manager */}
+                      <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '16px', border: '1px solid #E2E8F0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                          <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase' }}>Remote Solutions Pillars (CRUD)</h4>
+                          <button 
+                            style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)' }} 
+                            onClick={() => openCrudModal('remotePillar', null, { title: '', desc: '', icon: 'Radio', slug: 'Construction Technology' })}
+                          >
+                            <Plus size={15} /> + Add Solution Pillar Card
+                          </button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
+                          {(() => {
+                            const list = parseJsonArray(companySettings.remotePillarsJson, DEFAULT_COMPANY_SETTINGS.remotePillarsJson);
+                            return list.map((pillar, idx) => (
+                              <div key={pillar.id || idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#FFFFFF', padding: '14px', borderRadius: '8px', border: '1px solid #CBD5E1', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ background: '#EFF6FF', color: '#2563EB', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid #BFDBFE' }}>
+                                      {pillar.icon || 'Radio'}
+                                    </div>
+                                    <div>
+                                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#1E293B' }}>{pillar.title}</h4>
+                                      {pillar.slug && <span style={{ fontSize: '11px', color: '#64748B' }}>Route: {pillar.slug}</span>}
+                                    </div>
+                                  </div>
+
+                                  <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button 
+                                      title="Edit Pillar"
+                                      style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                      onClick={() => openCrudModal('remotePillar', idx, pillar)}
+                                    >
+                                      <Edit size={14} />
+                                    </button>
+                                    <button 
+                                      title="Delete Pillar"
+                                      style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                      onClick={() => {
+                                        const copy = [...list];
+                                        copy.splice(idx, 1);
+                                        updateCompanyField('remotePillarsJson', JSON.stringify(copy));
+                                      }}
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {pillar.desc && (
+                                  <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#64748B', lineHeight: '1.4' }}>{pillar.desc}</p>
+                                )}
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION 13: Our Team Members CRUD Manager */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '24px' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}><Users size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>OUR TEAM MEMBERS (ABOUT US CRUD)</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Manage team member photos, names, roles and order saved live in MySQL database</p>
+                        </div>
+                      </div>
+                      <button 
+                        style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)' }} 
+                        onClick={() => openCrudModal('teamMember', null, { name: '', role: 'Team Member', image: null })}
+                      >
+                        <Plus size={15} /> + Add Team Member
+                      </button>
+                    </div>
+
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                      {(Array.isArray(teamMembers) ? teamMembers : []).map((member, idx) => (
+                        <div key={member.id || idx} style={{ background: '#FFFFFF', borderRadius: '10px', border: '1px solid #CBD5E1', padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <div style={{ width: '56px', height: '56px', borderRadius: '10px', overflow: 'hidden', background: 'linear-gradient(135deg, #071C3B, #00A198)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: '800', fontSize: '18px' }}>
+                              {member.image ? (
+                                <img src={member.image} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                (member.name ? member.name.charAt(0) : 'T')
+                              )}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <h4 style={{ margin: '0 0 2px 0', fontSize: '15px', fontWeight: '700', color: '#1E293B' }}>{member.name}</h4>
+                              <span style={{ fontSize: '12.5px', color: '#00A198', fontWeight: '700', display: 'block' }}>{member.role || 'Team Member'}</span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end', borderTop: '1px solid #F1F5F9', paddingTop: '10px' }}>
+                            <button 
+                              style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }} 
+                              onClick={() => openCrudModal('teamMember', idx, member)}
+                            >
+                              <Edit size={13} /> Edit
+                            </button>
+
+                            <button 
+                              style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }} 
+                              onClick={async () => {
+                                if (!confirm(`Delete ${member.name}?`)) return;
+                                try {
+                                  const res = await fetch(`/api/team/${member.id}`, { method: 'DELETE' });
+                                  if (res.ok) {
+                                    setTeamMembers(prev => (Array.isArray(prev) ? prev : []).filter(m => m.id !== member.id));
+                                  }
+                                } catch(e){}
+                              }}
+                            >
+                              <Trash2 size={13} /> Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* Bottom Save */}
                   <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '12px' }}>
@@ -2675,7 +3085,7 @@ export default function AdminPanel({ onNavigate }) {
             {activeTab === '/admin/settings/contact' && (
               <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
+                <div className="admin-settings-page-header">
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#64748B', letterSpacing: '1px' }}>WEBSITE SETTINGS</span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>Contact Information</h2>
@@ -2711,7 +3121,7 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                <div className="admin-form-grid-2col">
                   {/* LEFT: Address & Identity */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -2961,12 +3371,12 @@ export default function AdminPanel({ onNavigate }) {
             {activeTab === '/admin/seo' && (
               <div className="seo-management-panel" style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
                 {/* Header title */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
+                <div className="admin-settings-page-header">
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#64748B', letterSpacing: '1px' }}>EDIT SECTION</span>
                     <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0', textTransform: 'lowercase' }}>seo management</h2>
                   </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     <button 
                       className="admin-action-btn-secondary" 
                       style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
@@ -3017,13 +3427,13 @@ export default function AdminPanel({ onNavigate }) {
                 </div>
 
                 {/* Select Website Page row */}
-                <div style={{ background: '#FFFFFF', padding: '16px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="admin-settings-page-header" style={{ background: '#FFFFFF', padding: '16px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                     <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Select Website Page</label>
                     <select 
                       value={selectedSeoPage} 
                       onChange={(e) => setSelectedSeoPage(e.target.value)}
-                      style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', color: '#334155', outline: 'none', background: '#F8FAFC', width: '260px' }}
+                      style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', color: '#334155', outline: 'none', background: '#F8FAFC', maxWidth: '100%', minWidth: '200px' }}
                     >
                       {Object.keys(seoPages).map(p => (
                         <option key={p} value={p}>{p === 'Home' ? 'Homepage (Home)' : p}</option>
@@ -3043,11 +3453,11 @@ export default function AdminPanel({ onNavigate }) {
                 </div>
 
                 {/* Main Content Layout Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
+                <div className="admin-hero-media-grid">
                   {/* Left Column: Form Sub-tabs */}
                   <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
                     {/* Tab Navigation Headers */}
-                    <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', padding: '0 8px' }}>
+                    <div className="admin-seo-tabs-bar" style={{ borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', padding: '0 8px' }}>
                       {[
                         { id: 'general', label: 'General Settings' },
                         { id: 'social', label: 'Social Meta Tags' },
@@ -3585,11 +3995,11 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                   </div>
                   <div className="admin-stat-card">
-                    <div className="admin-stat-icon-wrapper orange"><Newspaper size={20} /></div>
+                    <div className="admin-stat-icon-wrapper orange"><Briefcase size={20} /></div>
                     <div className="admin-stat-content">
-                      <div className="value">{String(news.length).padStart(2, '0')}</div>
-                      <h4>NEWS ARTICLES</h4>
-                      <span className="active">Published Articles</span>
+                      <div className="value">{String(projects.length).padStart(2, '0')}</div>
+                      <h4>TOTAL PROJECTS</h4>
+                      <span className="active">Featured Portfolio</span>
                     </div>
                   </div>
                   <div className="admin-stat-card">
@@ -3941,57 +4351,7 @@ export default function AdminPanel({ onNavigate }) {
               </div>
             )}
 
-            {/* NEWS WORKSPACE */}
-            {activeTab === '/admin/news' && (
-              <div>
-                <div className="admin-table-card-header">
-                  <h3>Latest News Feed</h3>
-                  <div className="admin-search-bar">
-                    <input 
-                      type="text" 
-                      className="admin-input" 
-                      placeholder="Search articles..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                </div>
 
-                <div className="admin-table-wrapper">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Thumbnail</th>
-                        <th>Headline Title</th>
-                        <th>Category</th>
-                        <th>Published Date</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filterList(news, ['title', 'category']).map((item, idx) => (
-                        <tr key={item.id}>
-                          <td>{idx + 1}</td>
-                          <td>
-                            <img src={item.image || '/project1.png'} alt="news preview" className="admin-table-preview-img" />
-                          </td>
-                          <td style={{ fontWeight: '600' }}>{item.title}</td>
-                          <td><span className="admin-badge approved" style={{ textTransform: 'uppercase' }}>{item.category}</span></td>
-                          <td>{item.date || 'Today'}</td>
-                          <td>
-                            <div className="admin-actions">
-                              <button className="admin-action-btn" onClick={() => startEdit('news', item)}><Edit size={13} /></button>
-                              <button className="admin-action-btn delete" onClick={() => handleDelete('news', item.id)}><Trash size={13} /></button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
 
             {/* TESTIMONIALS WORKSPACE */}
             {activeTab === '/admin/testimonials' && (
@@ -4434,8 +4794,8 @@ export default function AdminPanel({ onNavigate }) {
                   marginBottom: '28px'
                 }}>
                   {[
-                    { name: 'CAD Projects', label: 'CAD Projects', icon: FileCode, bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
                     { name: 'BIM Projects', label: 'BIM Projects', icon: Layers, bg: '#F0FDFA', color: '#0D9488', border: '#99F6E4' },
+                    { name: 'CAD Projects', label: 'CAD Projects', icon: FileCode, bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
                     { name: 'Laser Scanning Projects', label: 'Laser Scanning', icon: Radio, bg: '#FFF7ED', color: '#EA580C', border: '#FFEDD5' },
                     { name: 'Digital Twin Projects', label: 'Digital Twin', icon: Cpu, bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
                     { name: 'Sustainability Projects', label: 'Sustainability', icon: Leaf, bg: '#ECFDF5', color: '#059669', border: '#A7F3D0' }
@@ -5221,78 +5581,7 @@ export default function AdminPanel({ onNavigate }) {
                 </div>
               )}
 
-              {/* news form */}
-              {activeTab === '/admin/news' && (
-                <div>
-                  <div className="admin-form-group">
-                    <label>News Header Title</label>
-                    <input
-                      type="text"
-                      className="admin-input"
-                      value={newsForm.title}
-                      onChange={(e) => setNewsForm(prev => ({ ...prev, title: e.target.value }))}
-                    />
-                  </div>
 
-                  <div className="admin-form-grid">
-                    <div className="admin-form-group">
-                      <label>News Category Tag</label>
-                      <select
-                        className="admin-input"
-                        value={newsForm.category}
-                        onChange={(e) => setNewsForm(prev => ({ ...prev, category: e.target.value }))}
-                      >
-                        <option value="NEWS">NEWS</option>
-                        <option value="PROJECTS">PROJECTS</option>
-                        <option value="AWARDS">AWARDS</option>
-                        <option value="SERVICES">SERVICES</option>
-                      </select>
-                    </div>
-
-                    <div className="admin-form-group">
-                      <label>Display Date</label>
-                      <input
-                        type="text"
-                        className="admin-input"
-                        placeholder="e.g. May 20, 2024 (or leave empty for current date)"
-                        value={newsForm.date}
-                        onChange={(e) => setNewsForm(prev => ({ ...prev, date: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="admin-form-group">
-                    <label>Detailed Content</label>
-                    <textarea
-                      rows="5"
-                      className="admin-input"
-                      style={{ fontFamily: 'inherit', resize: 'vertical' }}
-                      value={newsForm.content}
-                      onChange={(e) => setNewsForm(prev => ({ ...prev, content: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="admin-form-group">
-                    <label>Thumbnail / News image</label>
-                    <div className="admin-file-upload">
-                      <label className="admin-file-label">
-                        <span>Select news image...</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(e.target.files[0], setNewsForm, 'image')}
-                        />
-                      </label>
-                    </div>
-                    {newsForm.image && (
-                      <div className="admin-upload-preview">
-                        <img src={newsForm.image} alt="News preview" />
-                        <button className="admin-upload-preview-remove" onClick={() => setNewsForm(prev => ({ ...prev, image: '' }))}>✕</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* project form */}
               {activeTab === '/admin/projects' && (
@@ -5329,8 +5618,8 @@ export default function AdminPanel({ onNavigate }) {
                         value={projectForm.division_type}
                         onChange={e => setProjectForm(prev => ({ ...prev, division_type: e.target.value }))}
                       >
-                        <option value="CAD Projects">CAD Projects</option>
                         <option value="BIM Projects">BIM Projects</option>
+                        <option value="CAD Projects">CAD Projects</option>
                         <option value="Laser Scanning Projects">Laser Scanning Projects</option>
                         <option value="Digital Twin Projects">Digital Twin Projects</option>
                         <option value="Sustainability Projects">Sustainability Projects</option>
@@ -6055,6 +6344,246 @@ export default function AdminPanel({ onNavigate }) {
               </button>
               <button type="button" className="admin-btn" style={{ width: 'auto', padding: '10px 24px' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveService(e); }}>
                 {editingServiceId ? 'Save Sub-Service Updates' : 'Create Sub-Service'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* POPUP BANNER MODAL FOR COMPANY INFO CRUD SECTIONS */}
+      {crudModal.isOpen && (
+        <div className="admin-modal-backdrop" onClick={closeCrudModal}>
+          <div className="admin-modal-card" style={{ maxWidth: '540px' }} onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header Banner */}
+            <div style={{
+              background: 'linear-gradient(135deg, #071C3B 0%, #003E8A 100%)',
+              color: '#FFFFFF',
+              padding: '20px 24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0
+            }}>
+              <div>
+                <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', color: '#60A5FA', display: 'block', marginBottom: '2px' }}>
+                  {crudModal.editIndex !== null ? 'EDIT CARD ENTRY' : 'ADD NEW CARD ENTRY'}
+                </span>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#FFFFFF' }}>
+                  {crudModal.type === 'discipline' && (crudModal.editIndex !== null ? 'Edit Capacity Discipline' : 'Add Capacity Discipline')}
+                  {crudModal.type === 'digitalTwin' && (crudModal.editIndex !== null ? 'Edit Digital Twin Capability' : 'Add Digital Twin Capability Card')}
+                  {crudModal.type === 'capabilityChip' && (crudModal.editIndex !== null ? 'Edit Core Capability Chip' : 'Add Core Capability Chip')}
+                  {crudModal.type === 'remotePillar' && (crudModal.editIndex !== null ? 'Edit Remote Solution Pillar' : 'Add Remote Solution Pillar Card')}
+                  {crudModal.type === 'teamMember' && (crudModal.editIndex !== null ? 'Edit Team Member Profile' : 'Add New Team Member')}
+                </h3>
+              </div>
+              <button 
+                onClick={closeCrudModal}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: 'none',
+                  color: '#FFFFFF',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <div className="admin-modal-body" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Name / Title field */}
+              {crudModal.type === 'discipline' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Discipline Name *</label>
+                  <input 
+                    type="text" 
+                    value={crudModal.data.name || ''} 
+                    onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
+                    placeholder="e.g. BIM Modeling & Coordination"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                  />
+                </div>
+              )}
+
+              {(crudModal.type === 'digitalTwin' || crudModal.type === 'remotePillar') && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Card Title *</label>
+                  <input 
+                    type="text" 
+                    value={crudModal.data.title || ''} 
+                    onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, title: e.target.value } }))}
+                    placeholder="e.g. Common Data Environment"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                  />
+                </div>
+              )}
+
+              {crudModal.type === 'capabilityChip' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Capability Chip Name *</label>
+                  <input 
+                    type="text" 
+                    value={crudModal.data.name || ''} 
+                    onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
+                    placeholder="e.g. GSAS or LEED"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                  />
+                </div>
+              )}
+
+              {crudModal.type === 'teamMember' && (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Team Member Name *</label>
+                    <input 
+                      type="text" 
+                      value={crudModal.data.name || ''} 
+                      onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
+                      placeholder="e.g. Praveen Kumar"
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Role / Designation *</label>
+                    <input 
+                      type="text" 
+                      value={crudModal.data.role || ''} 
+                      onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, role: e.target.value } }))}
+                      placeholder="e.g. Technical Director"
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Profile Photo</label>
+                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                      <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', background: 'linear-gradient(135deg, #071C3B, #00A198)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: '800', fontSize: '20px' }}>
+                        {crudModal.data.image ? (
+                          <img src={crudModal.data.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          (crudModal.data.name ? crudModal.data.name.charAt(0) : 'T')
+                        )}
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={e => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: reader.result } }));
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }} 
+                        style={{ fontSize: '13px' }} 
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Icon Dropdown */}
+              {crudModal.type !== 'teamMember' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Card Display Icon</label>
+                  <select 
+                    value={crudModal.data.icon || ''} 
+                    onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, icon: e.target.value } }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', background: '#FFFFFF' }}
+                  >
+                    {[
+                      'Building2', 'Layers', 'Radio', 'Wrench', 'Wind', 'Volume2', 'Droplet', 
+                      'Activity', 'Zap', 'Leaf', 'Users', 'Cpu', 'Award', 'ShieldCheck', 
+                      'BarChart3', 'SearchCheck', 'FileCheck2', 'TreePine', 'Cloud', 'Monitor', 
+                      'Settings', 'TrendingUp', 'Share2', 'ClipboardCheck', 'Heart', 'RefreshCw', 
+                      'Eye', 'Camera', 'Bot'
+                    ].map(i => (
+                      <option key={i} value={i}>{i}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Slug link field */}
+              {(crudModal.type === 'capabilityChip' || crudModal.type === 'remotePillar') && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Service Route / Slug</label>
+                  <input 
+                    type="text" 
+                    value={crudModal.data.slug || ''} 
+                    onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, slug: e.target.value } }))}
+                    placeholder="e.g. Sustainability Services or Construction Technology"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                  />
+                </div>
+              )}
+
+              {/* Description textarea */}
+              {(crudModal.type === 'digitalTwin' || crudModal.type === 'remotePillar' || crudModal.type === 'capabilityChip') && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Card Description</label>
+                  <textarea 
+                    rows={3} 
+                    value={crudModal.data.desc || ''} 
+                    onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, desc: e.target.value } }))}
+                    placeholder="Write a short summary of this card..."
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13.5px', outline: 'none', resize: 'vertical' }} 
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="admin-modal-footer" style={{
+              padding: '16px 24px',
+              background: '#F8FAFC',
+              borderTop: '1px solid #E2E8F0',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '12px'
+            }}>
+              <button
+                onClick={closeCrudModal}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: '#475569',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveCrudModal}
+                style={{
+                  background: 'linear-gradient(135deg, #00A198 0%, #00827B 100%)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  fontSize: '13.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(0, 161, 152, 0.25)'
+                }}
+              >
+                <Check size={16} />
+                {crudModal.editIndex !== null ? 'Save Changes' : 'Add Card Now'}
               </button>
             </div>
           </div>

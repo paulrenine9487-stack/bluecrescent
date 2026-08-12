@@ -14,13 +14,7 @@ CREATE TABLE IF NOT EXISTS testimonials (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. News Table
-CREATE TABLE IF NOT EXISTS news (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+
 
 -- 3. Services Table
 CREATE TABLE IF NOT EXISTS services (

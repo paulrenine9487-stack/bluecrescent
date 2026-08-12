@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TestimonialsSection from './TestimonialsSection';
 import serviceBanner from '../assets/servicepage1.png';
 import aboutBanner from '../assets/about.png';
 import projectBanner from '../assets/project1.png';
@@ -9,7 +10,6 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   const currentServiceTitle = isMainOverview ? 'Services' : activeSubTab;
 
   const [dynamicServices, setDynamicServices] = useState([]);
-  const [news, setNews] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
 
   useEffect(() => {
@@ -21,15 +21,6 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         }
       })
       .catch(err => console.warn('Services fetch warning:', err));
-
-    fetch('/api/news')
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if (data && data.length > 0) {
-          setNews(data.slice(0, 4)); // Show at most 4 news items
-        }
-      })
-      .catch(err => console.warn('News fetch warning:', err));
 
     fetch('/api/testimonials')
       .then(res => res.ok ? res.json() : [])
@@ -86,7 +77,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
 
   // Map 4 core categories
   const coreServiceMap = {
-    'engineering-services': { title: 'Engineering Services', description: 'Comprehensive engineering services including CAD drafting, BIM modeling, 3D laser scanning, and scan-to-BIM conversions.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM'], tools: [['AutoCAD', 'Revit'], ['Leica RTC360', 'CloudCompare']] },
+    'engineering-services': { title: 'Engineering Services', description: 'Comprehensive engineering services including BIM modeling, CAD drafting, 3D laser scanning, and scan-to-BIM conversions.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM'], tools: [['AutoCAD', 'Revit'], ['Leica RTC360', 'CloudCompare']] },
     'sustainability-services': { title: 'Sustainability Services', description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'], tools: [['GSAS Gate Tool', 'IES VE'], ['eQUEST', 'ISO 14064 Guidelines']] },
     'digital-twin': { title: 'Digital Twin', description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'], tools: [['Autodesk Tandem', 'Grafana'], ['Node-RED', 'IBM Maximo']] },
     'construction-technology': { title: 'Construction Technology', description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics'], tools: [['OpenSpace', 'Trimble AR'], ['Insta360', 'Boston Dynamics Spot']] }
@@ -117,13 +108,52 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     if (s.slug) resolvedServiceDetailsMap[s.slug] = itemData;
   });
 
-  const selectedDetails = resolvedServiceDetailsMap[activeSubTab] 
-    || Object.values(resolvedServiceDetailsMap).find(d => (d.slug && d.slug.toLowerCase() === (activeSubTab || '').toLowerCase()) || (d.title && d.title.toLowerCase() === (activeSubTab || '').toLowerCase()))
-    || coreServiceMap[activeSubTab] 
-    || Object.values(coreServiceMap).find(c => c.title.toLowerCase() === (activeSubTab || '').toLowerCase())
+  const normalizeKey = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const findMatchingDetails = () => {
+    if (!activeSubTab || activeSubTab === 'Services' || activeSubTab === 'Main') return null;
+
+    const targetKey = normalizeKey(activeSubTab);
+
+    // 1. Direct key match in resolved db map
+    if (resolvedServiceDetailsMap[activeSubTab]) return resolvedServiceDetailsMap[activeSubTab];
+
+    // 2. Direct key match in static map
+    if (staticServiceDetailsMap[activeSubTab]) return staticServiceDetailsMap[activeSubTab];
+
+    // 3. Direct key match in core category map
+    if (coreServiceMap[activeSubTab]) return coreServiceMap[activeSubTab];
+
+    // 4. Normalized key search in resolved db map
+    const dbMatch = Object.values(resolvedServiceDetailsMap).find(d => 
+      normalizeKey(d.slug) === targetKey || normalizeKey(d.title) === targetKey
+    );
+    if (dbMatch) return dbMatch;
+
+    // 5. Normalized key search in static map
+    const staticMatch = Object.values(staticServiceDetailsMap).find(d => 
+      normalizeKey(d.slug) === targetKey || normalizeKey(d.title) === targetKey
+    );
+    if (staticMatch) return staticMatch;
+
+    // 6. Normalized key search in core map
+    const coreMatch = Object.values(coreServiceMap).find(c => 
+      normalizeKey(c.title) === targetKey || normalizeKey(c.slug) === targetKey
+    );
+    if (coreMatch) return coreMatch;
+
+    // 7. Fuzzy/substring search
+    const fuzzyStatic = Object.values(staticServiceDetailsMap).find(d => 
+      targetKey.includes(normalizeKey(d.title)) || normalizeKey(d.title).includes(targetKey)
+    );
+    if (fuzzyStatic) return fuzzyStatic;
+
+    return null;
+  };
+
+  const selectedDetails = findMatchingDetails() 
     || resolvedServiceDetailsMap[currentServiceTitle] 
-    || staticServiceDetailsMap[currentServiceTitle]
-    || staticServiceDetailsMap['cad'];
+    || staticServiceDetailsMap[currentServiceTitle];
 
   // Resolve banner image dynamically
   const getBannerForService = (title) => {
@@ -141,7 +171,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
 
   // Resolve Categories list dynamically for the main overview
   const categoryGroups = {
-    'Engineering Services': ['CAD', 'BIM', 'Laser Scanning', 'Scan to BIM'],
+    'Engineering Services': ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM'],
     'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'],
     'Digital Twin': ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'],
     'Construction Technology': ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics']
@@ -161,6 +191,19 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
       Object.assign(categoryGroups, dynamicGroups);
     }
   }
+
+  // Ensure BIM comes before CAD across all category groups
+  Object.keys(categoryGroups).forEach(catName => {
+    categoryGroups[catName].sort((a, b) => {
+      const strA = a.toString().toUpperCase();
+      const strB = b.toString().toUpperCase();
+      if (strA === 'BIM') return -1;
+      if (strB === 'BIM') return 1;
+      if (strA === 'CAD') return strB === 'BIM' ? 1 : -1;
+      if (strB === 'CAD') return strA === 'BIM' ? -1 : 1;
+      return 0;
+    });
+  });
 
   const getCategoryIcon = (category) => {
     if (category.toLowerCase().includes('engineering')) {
@@ -204,7 +247,13 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                   {Object.keys(categoryGroups).map((catName) => (
                     <div key={catName} className="premium-card">
                       {getCategoryIcon(catName)}
-                      <h3 className="service-category-title" style={{ fontSize: '18px', color: '#0B3D91', marginBottom: '12px' }}>{catName}</h3>
+                      <h3 
+                        className="service-category-title" 
+                        style={{ fontSize: '18px', color: '#0B3D91', marginBottom: '12px', cursor: 'pointer' }}
+                        onClick={() => onNavigate('Services', catName)}
+                      >
+                        {catName}
+                      </h3>
                       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         {categoryGroups[catName].map((item) => (
                           <li key={item}>
@@ -225,7 +274,6 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                 </div>
 
 
-                {/* Business Areas Section (Matches Screenshot 3) */}
                 {/* Business Areas Section */}
                 <div className="premium-business-card">
                   <div className="what-we-do-title-wrap" style={{ marginBottom: '32px' }}>
@@ -253,7 +301,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                   /* Custom Dedicated Page View for Sub-Services */
                   <div style={{ marginTop: '20px' }}>
                     {/* Digital Twin sub-service badge */}
-                    {['Life Cycle Twin Asset Management', 'Remote Work Automation', 'System Integration and Analysis'].includes(currentServiceTitle) && (
+                    {(selectedDetails.category === 'Digital Twin' || ['Life Cycle Twin Asset Management', 'Remote Work Automation', 'System Integration and Analysis', 'Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'].includes(currentServiceTitle)) && (
                       <div style={{
                         display: 'inline-flex', alignItems: 'center', gap: '10px',
                         background: 'linear-gradient(90deg, #0B3D91, #0066FF)',
@@ -281,7 +329,28 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                       ))}
                     </ul>
 
-
+                    {selectedDetails.tools && Array.isArray(selectedDetails.tools) && (
+                      <div style={{ marginTop: '28px', padding: '20px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 14px 0', fontSize: '15px', color: '#0F172A', fontWeight: 700 }}>
+                          Key Tools & Software Technology Stack
+                        </h4>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {selectedDetails.tools.flat().map((tool, idx) => (
+                            <span key={idx} style={{
+                              background: '#EFF6FF',
+                              color: '#1D4ED8',
+                              border: '1px solid #BFDBFE',
+                              padding: '6px 14px',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                              fontWeight: 600
+                            }}>
+                              {tool}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div style={{ padding: '24px', background: '#f8fafc', borderLeft: '4px solid var(--primary-gold)', borderRadius: '4px', marginTop: '30px' }}>
                       <h4 style={{ margin: 0, color: '#334155', fontSize: '16px' }}>Need assistance with {currentServiceTitle}?</h4>
@@ -316,194 +385,9 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         </div>
       </div>
 
-      {/* ─── LATEST NEWS (full-width, matching About Us layout) ─── */}
-      <div className="container" style={{ marginTop: '80px' }}>
-        <section className="latest-news-section">
-          <h2 className="bce-heading-primary">LATEST NEWS</h2>
-          <div className="bce-underline-gradient"></div>
-
-          <div className="latest-news-grid">
-            {/* LEFT: News items */}
-            <div className="news-items-list">
-              {news.length > 0 ? (
-                news.map((item) => (
-                  <div key={item.id} className="news-card-horizontal">
-                    <div className="news-card-icon-badge">
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                      </svg>
-                    </div>
-                    <div className="news-card-body">
-                      <div className="news-card-text">
-                        <strong>{item.category}:</strong> {item.title}
-                      </div>
-                      <button className="news-read-more-btn" onClick={() => { if (onOpenModal) onOpenModal('news'); }}>
-                        Read More →
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <>
-                  {/* News 1 */}
-                  <div className="news-card-horizontal">
-                    <div className="news-card-icon-badge">
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                      </svg>
-                    </div>
-                    <div className="news-card-body">
-                      <div className="news-card-text">
-                        <strong>ISO 9001 Certified:</strong> We are now an ISO 9001 certified Quality Management System company.
-                      </div>
-                      <button className="news-read-more-btn" onClick={() => { if (onOpenModal) onOpenModal('iso'); }}>
-                        Read More →
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* News 2 */}
-                  <div className="news-card-horizontal">
-                    <div className="news-card-icon-badge">
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                      </svg>
-                    </div>
-                    <div className="news-card-body">
-                      <div className="news-card-text">
-                        <strong>Energy Quotient Provider:</strong> We are the only authorised energy quotient service provider in Qatar.
-                      </div>
-                      <button className="news-read-more-btn" onClick={() => { if (onNavigate) onNavigate('Services'); }}>
-                        Read More →
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* News 3 */}
-                  <div className="news-card-horizontal">
-                    <div className="news-card-icon-badge">
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="7"></circle>
-                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
-                      </svg>
-                    </div>
-                    <div className="news-card-body">
-                      <div className="news-card-text">
-                        <strong>GORD GSAS Provider:</strong> We are now a GORD certified GSAS service provider.
-                      </div>
-                      <button className="news-read-more-btn" onClick={() => { if (onOpenModal) onOpenModal('gsas'); }}>
-                        Read More →
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* News 4 */}
-                  <div className="news-card-horizontal">
-                    <div className="news-card-icon-badge">
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                      </svg>
-                    </div>
-                    <div className="news-card-body">
-                      <div className="news-card-text">
-                        <strong>KAHRAMAA Project Tarsheed:</strong> Awarded prestigious KAHRAMAA Tarsheed Energy Audit for 22 schools campaign.
-                      </div>
-                      <button className="news-read-more-btn" onClick={() => { if (onOpenModal) onOpenModal('news2'); }}>
-                        Read More →
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* RIGHT: Large image */}
-            <div className="news-parallax-image-wrap">
-              <img
-                src="/why.png"
-                alt="Blue Crescent Engineering Excellence"
-                className="news-parallax-img"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ─── WHAT OUR CLIENTS SAY (matching About Us layout) ─── */}
-        <section className="testimonials-section" style={{ marginTop: '80px' }}>
-          <div className="testimonials-header-row" style={{ marginBottom: '32px' }}>
-            <h2 className="bce-heading-primary">What Our Clients Say</h2>
-            <div className="bce-underline-gradient" style={{ margin: '16px 0 0 0' }}></div>
-          </div>
-
-          <div className="testimonials-grid-content">
-            {/* Left: Testimonial cards */}
-            <div className="testimonials-list-column">
-              {testimonials.length > 0 ? (
-                testimonials.map((t) => (
-                  <div className="premium-card testimonial-card" key={t.id} style={{ marginBottom: '16px' }}>
-                    <div className="testimonial-header">
-                      <span className="quote-icon">"</span>
-                      <h4 className="testimonial-title" style={{ color: '#0066FF' }}>{t.title}</h4>
-                    </div>
-                    <p className="testimonial-content" style={{ fontStyle: 'italic', color: '#374151', lineHeight: '1.8' }}>
-                      {t.content}
-                    </p>
-                    <hr className="testimonial-divider" />
-                    <div className="premium-testimonial-footer">
-                      <div className="testimonial-author-wrapper">
-                        <div className="author-avatar">
-                          <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                          </svg>
-                        </div>
-                        <div className="premium-testimonial-author">
-                          <div className="premium-testimonial-name">{t.author_name}</div>
-                          <div className="premium-testimonial-company">{t.company_name}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="premium-card testimonial-card">
-                  <div className="testimonial-header">
-                    <span className="quote-icon">"</span>
-                    <h4 className="testimonial-title" style={{ color: '#0066FF' }}>Excellent Work</h4>
-                  </div>
-                  <p className="testimonial-content" style={{ fontStyle: 'italic', color: '#374151', lineHeight: '1.8' }}>
-                    Blue Crescent has provided us with complete support for MEP drawings, all design Calculations in MEP &amp; Stress Analysis etc in our projects. They are one of the best Engineering company who can be trusted for complete solutions of all Design &amp; Engineering issues. I visited their office &amp; fully satisfied with the Engineering &amp; design team who delivered the works for us on time &amp; also they provided complete support to get approval from various authorities for some woks in very short time. You are Excellent Blue crescent &amp; keep going. Thanks for your works delivered.
-                  </p>
-                  <hr className="testimonial-divider" />
-                  <div className="premium-testimonial-footer">
-                    <div className="testimonial-author-wrapper">
-                      <div className="author-avatar">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                      </div>
-                      <div className="premium-testimonial-author">
-                        <div className="premium-testimonial-name">Gokulraj Chakaravarthy</div>
-                        <div className="premium-testimonial-company">Diplomat Group W.L.L</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right: testimonial image */}
-            <div className="testimonials-image-column">
-              <div className="testimonials-large-card-img-wrap">
-                <img src="/testimonial.png" alt="Testimonials" className="testimonials-large-img" />
-              </div>
-            </div>
-          </div>
-
-
-        </section>
+      {/* ─── WHAT OUR CLIENTS SAY (matching Home & About Us layout) ─── */}
+      <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+        <TestimonialsSection />
       </div>
     </div>
   );

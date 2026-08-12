@@ -98,13 +98,13 @@ export default function Footer({ onNavigate }) {
           <h4 className="bce-footer-v2-heading">OUR SERVICES</h4>
           <ul className="bce-footer-v2-list services-list">
             <li>
-              <a href="#services-cad" onClick={(e) => { e.preventDefault(); handleNav('Services', 'cad'); }}>
-                <Building2 size={16} className="bce-service-icon" /> CAD
+              <a href="#services-bim" onClick={(e) => { e.preventDefault(); handleNav('Services', 'bim'); }}>
+                <Compass size={16} className="bce-service-icon" /> BIM
               </a>
             </li>
             <li>
-              <a href="#services-bim" onClick={(e) => { e.preventDefault(); handleNav('Services', 'bim'); }}>
-                <Compass size={16} className="bce-service-icon" /> BIM
+              <a href="#services-cad" onClick={(e) => { e.preventDefault(); handleNav('Services', 'cad'); }}>
+                <Building2 size={16} className="bce-service-icon" /> CAD
               </a>
             </li>
             <li>

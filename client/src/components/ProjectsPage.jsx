@@ -3,18 +3,18 @@ import projectBanner from '../assets/project1.png';
 
 const TABS = [
   { 
-    label: 'CAD Projects',   
-    key: 'CAD Projects',   
-    icon: '📐', 
-    description: 'Multidisciplinary 2D/3D CAD drafting, shop drawings, and engineering documentation support for complex building and infrastructure developments.',
-    tags: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'] 
-  },
-  { 
     label: 'BIM Projects',   
     key: 'BIM Projects',   
     icon: '⚙', 
     description: 'Advanced Building Information Modeling up to LOD 500, clash detection, 4D scheduling, and 5D quantity take-offs across disciplines.',
     tags: ['3D BIM Modeling', 'Clash Detection', '4D Scheduling', '5D Take-Off', 'LOD 500'] 
+  },
+  { 
+    label: 'CAD Projects',   
+    key: 'CAD Projects',   
+    icon: '📐', 
+    description: 'Multidisciplinary 2D/3D CAD drafting, shop drawings, and engineering documentation support for complex building and infrastructure developments.',
+    tags: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'] 
   },
   { 
     label: 'Laser Scanning Projects',      
@@ -40,8 +40,8 @@ const TABS = [
 ];
 
 const FALLBACK_DIVISIONS = [
-  { division_type: 'CAD Projects',              name: 'Multidisciplinary CAD Drafting & Shop Drawings', project_count: 24, description: 'Multidisciplinary 2D/3D CAD drafting, shop drawings, and engineering documentation support.' },
   { division_type: 'BIM Projects',              name: 'Advanced BIM Coordination & LOD 500 Modeling',  project_count: 28, description: 'Building Information Modeling up to LOD 500, clash detection, and 4D/5D simulations.' },
+  { division_type: 'CAD Projects',              name: 'Multidisciplinary CAD Drafting & Shop Drawings', project_count: 24, description: 'Multidisciplinary 2D/3D CAD drafting, shop drawings, and engineering documentation support.' },
   { division_type: 'Laser Scanning Projects',   name: '3D Laser Scanning & Scan-to-BIM Conversion',     project_count: 18, description: 'High-precision 3D laser scanning and point-cloud to BIM workflows.' },
   { division_type: 'Digital Twin Projects',     name: 'Integrated Life Cycle Digital Twin Platform',    project_count: 15, description: 'Connecting physical assets with digital information for IoT monitoring and lifecycle asset management.' },
   { division_type: 'Sustainability Projects',   name: 'GSAS & LEED Green Building Certification',      project_count: 12, description: 'Green building consulting, GSAS/LEED certification, and energy diagnostic audits.' }
@@ -58,7 +58,7 @@ const resolveTabKey = (subTab) => {
   return match ? match.key : TABS[0].key;
 };
 
-export default function ProjectsPage({ activeSubTab = 'CAD Projects', onNavigate }) {
+export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate }) {
   const [projectDivisions, setProjectDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(resolveTabKey(activeSubTab));

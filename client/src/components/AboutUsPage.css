@@ -36,7 +36,8 @@
   overflow: hidden;
   border-bottom: 2px solid rgba(0, 184, 255, 0.35);
   box-shadow: 0 8px 32px rgba(11, 61, 145, 0.12);
-  margin-bottom: 80px; /* 80px top spacing below banner to Section 2 */
+  margin-bottom: 80px;
+  /* 80px top spacing below banner to Section 2 */
 }
 
 .about-hero-banner-img {
@@ -139,7 +140,7 @@
 
   /* Engineering Blueprint Grid Pattern Background (5% Opacity) */
   background-color: var(--bce-bg);
-  background-image: 
+  background-image:
     radial-gradient(rgba(11, 61, 145, 0.08) 1.5px, transparent 1.5px),
     linear-gradient(to right, rgba(11, 61, 145, 0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(11, 61, 145, 0.04) 1px, transparent 1px);
@@ -168,7 +169,8 @@
   pointer-events: none;
   z-index: 1;
   opacity: 0;
-  transition: opacity 1.2s ease 2.4s; /* Fades in smoothly after slow fan animation completes */
+  transition: opacity 1.2s ease 2.4s;
+  /* Fades in smoothly after slow fan animation completes */
 }
 
 .cards-fan-wrapper.animated .connecting-lines-svg {
@@ -213,10 +215,10 @@
   overflow: hidden;
 
   /* Slow-Motion Cinematic Spread Animation (2.2s Duration) */
-  transition: transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), 
-              opacity 2.2s ease-in-out, 
-              box-shadow 0.4s ease, 
-              border-color 0.4s ease;
+  transition: transform 2.2s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 2.2s ease-in-out,
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
 }
 
 /* Top Accent Gradient Bar */
@@ -237,14 +239,39 @@
   transition-delay: 0s !important;
 }
 
-.cards-fan-wrapper:not(.animated) .card-1 { z-index: 5; opacity: 1; transform: translate(-10px, -10px) scale(0.88) rotate(-4deg); }
-.cards-fan-wrapper:not(.animated) .card-2 { z-index: 4; opacity: 0.85; transform: translate(-5px, -5px) scale(0.87) rotate(-2deg); }
-.cards-fan-wrapper:not(.animated) .card-3 { z-index: 3; opacity: 0.7; transform: translate(0, 0) scale(0.86) rotate(0deg); }
-.cards-fan-wrapper:not(.animated) .card-4 { z-index: 2; opacity: 0.55; transform: translate(5px, 5px) scale(0.85) rotate(2deg); }
-.cards-fan-wrapper:not(.animated) .card-5 { z-index: 1; opacity: 0.4; transform: translate(10px, 10px) scale(0.84) rotate(4deg); }
+.cards-fan-wrapper:not(.animated) .card-1 {
+  z-index: 5;
+  opacity: 1;
+  transform: translate(-10px, -10px) scale(0.88) rotate(-4deg);
+}
+
+.cards-fan-wrapper:not(.animated) .card-2 {
+  z-index: 4;
+  opacity: 0.85;
+  transform: translate(-5px, -5px) scale(0.87) rotate(-2deg);
+}
+
+.cards-fan-wrapper:not(.animated) .card-3 {
+  z-index: 3;
+  opacity: 0.7;
+  transform: translate(0, 0) scale(0.86) rotate(0deg);
+}
+
+.cards-fan-wrapper:not(.animated) .card-4 {
+  z-index: 2;
+  opacity: 0.55;
+  transform: translate(5px, 5px) scale(0.85) rotate(2deg);
+}
+
+.cards-fan-wrapper:not(.animated) .card-5 {
+  z-index: 1;
+  opacity: 0.4;
+  transform: translate(10px, 10px) scale(0.84) rotate(4deg);
+}
 
 /* ANIMATED FAN DESKTOP POSITIONS & STAGGERED DELAYS (1024px+) */
 @media (min-width: 1024px) {
+
   /* Card 1: Top Left (Rotate -15°) */
   .cards-fan-wrapper.animated .card-1 {
     z-index: 10;
@@ -296,11 +323,30 @@
 }
 
 /* Card Positions for Hover Translation variables */
-.cards-fan-wrapper.animated .card-1 { --hover-tx: -300px; --hover-ty: -130px; }
-.cards-fan-wrapper.animated .card-2 { --hover-tx: 300px; --hover-ty: -130px; }
-.cards-fan-wrapper.animated .card-3 { --hover-tx: 0px; --hover-ty: 20px; }
-.cards-fan-wrapper.animated .card-4 { --hover-tx: -260px; --hover-ty: 180px; }
-.cards-fan-wrapper.animated .card-5 { --hover-tx: 260px; --hover-ty: 180px; }
+.cards-fan-wrapper.animated .card-1 {
+  --hover-tx: -300px;
+  --hover-ty: -130px;
+}
+
+.cards-fan-wrapper.animated .card-2 {
+  --hover-tx: 300px;
+  --hover-ty: -130px;
+}
+
+.cards-fan-wrapper.animated .card-3 {
+  --hover-tx: 0px;
+  --hover-ty: 20px;
+}
+
+.cards-fan-wrapper.animated .card-4 {
+  --hover-tx: -260px;
+  --hover-ty: 180px;
+}
+
+.cards-fan-wrapper.animated .card-5 {
+  --hover-tx: 260px;
+  --hover-ty: 180px;
+}
 
 /* CLICK ACTIVE EXPANDED EFFECT */
 .fan-card.active-expanded {
@@ -389,7 +435,8 @@
 
 .latest-news-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Full-width split */
+  grid-template-columns: 1fr 1fr;
+  /* Full-width split */
   gap: 48px;
   align-items: center;
 }
@@ -657,8 +704,13 @@
 }
 
 @keyframes fadeInModal {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .testimonial-modal-card {
@@ -673,8 +725,15 @@
 }
 
 @keyframes slideUpModal {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .testimonial-modal-header {
@@ -956,7 +1015,7 @@
   justify-content: center;
   cursor: pointer;
   transition: background 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   padding: 0;
 }
 

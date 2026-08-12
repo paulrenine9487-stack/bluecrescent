@@ -20,6 +20,11 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// Fallback legacy API for /api/news
+app.get('/api/news', (req, res) => {
+  res.json([]);
+});
+
 // ==========================================
 // SETTINGS PERSISTENCE APIs (MySQL)
 // ==========================================
@@ -30,7 +35,15 @@ app.get('/api/settings/company', async (req, res) => {
     if (getIsConnected() && pool) {
       const [rows] = await pool.query('SELECT * FROM company_settings LIMIT 1');
       if (rows.length > 0) {
-        return res.json(rows[0]);
+        const raw = rows[0];
+        const cleaned = {};
+        for (const [key, val] of Object.entries(raw)) {
+          if (val === null || val === undefined) continue;
+          const str = String(val).trim();
+          if (str === '' || str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined') continue;
+          cleaned[key] = val;
+        }
+        return res.json(cleaned);
       }
     }
   } catch (err) {
@@ -104,22 +117,49 @@ app.post('/api/settings/company', async (req, res) => {
     if (settings.aboutUsDigitalImg && settings.aboutUsDigitalImg.startsWith('data:')) {
       settings.aboutUsDigitalImg = saveBase64File(settings.aboutUsDigitalImg, 'about_digital');
     }
+    if (settings.sustainabilityImage && settings.sustainabilityImage.startsWith('data:')) {
+      settings.sustainabilityImage = saveBase64File(settings.sustainabilityImage, 'sustainability_img');
+    }
+    if (settings.remoteImage && settings.remoteImage.startsWith('data:')) {
+      settings.remoteImage = saveBase64File(settings.remoteImage, 'remote_img');
+    }
 
     const pool = getPool();
     if (getIsConnected() && pool) {
+      // Ensure all keys in req.body exist as columns in company_settings
+      try {
+        const [existingCols] = await pool.query(`
+          SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'company_settings'
+        `);
+        const existingColNames = new Set(existingCols.map(c => c.COLUMN_NAME));
+
+        for (const k of Object.keys(settings)) {
+          if (k !== 'id' && !existingColNames.has(k)) {
+            try {
+              await pool.query(`ALTER TABLE company_settings ADD COLUMN \`${k}\` LONGTEXT`);
+            } catch (e) {
+              console.warn(`Could not auto-add column ${k}:`, e.message);
+            }
+          }
+        }
+      } catch (colErr) {
+        console.warn('Column check warning:', colErr.message);
+      }
+
       const [rows] = await pool.query('SELECT id FROM company_settings LIMIT 1');
       if (rows.length > 0) {
         const id = rows[0].id;
         const keys = Object.keys(settings).filter(k => k !== 'id');
         const setQuery = keys.map(k => `${k} = ?`).join(', ');
-        const values = keys.map(k => settings[k]);
+        const values = keys.map(k => typeof settings[k] === 'object' ? JSON.stringify(settings[k]) : settings[k]);
         await pool.query(`UPDATE company_settings SET ${setQuery} WHERE id = ?`, [...values, id]);
         return res.json({ success: true, message: 'Settings updated.', data: settings });
       } else {
-        const keys = Object.keys(settings);
+        const keys = Object.keys(settings).filter(k => k !== 'id');
         const colNames = keys.join(', ');
         const placeholders = keys.map(() => '?').join(', ');
-        const values = keys.map(k => settings[k]);
+        const values = keys.map(k => typeof settings[k] === 'object' ? JSON.stringify(settings[k]) : settings[k]);
         await pool.query(`INSERT INTO company_settings (${colNames}) VALUES (${placeholders})`, values);
         return res.json({ success: true, message: 'Settings inserted.', data: settings });
       }
@@ -343,70 +383,7 @@ app.delete('/api/certificates/:id', async (req, res) => {
   }
 });
 
-// ==========================================
-// 3. NEWS API
-// ==========================================
-app.get('/api/news', async (req, res) => {
-  try {
-    const pool = getPool();
-    if (getIsConnected() && pool) {
-      const [rows] = await pool.query('SELECT * FROM news ORDER BY id DESC');
-      return res.json(rows);
-    }
-  } catch (err) {
-    console.error('Error fetching news:', err);
-  }
-  return res.json(fallbackData.news);
-});
 
-app.post('/api/news', async (req, res) => {
-  const { title, content, category, image, date } = req.body;
-  try {
-    const pool = getPool();
-    if (getIsConnected() && pool) {
-      const [result] = await pool.query(
-        'INSERT INTO news (title, content, category, image, date) VALUES (?, ?, ?, ?, ?)',
-        [title, content, category || 'NEWS', image || null, date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })]
-      );
-      return res.status(201).json({ id: result.insertId, title, content, category, image, date });
-    }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
-  }
-});
-
-app.put('/api/news/:id', async (req, res) => {
-  const { id } = req.params;
-  const { title, content, category, image, date } = req.body;
-  try {
-    const pool = getPool();
-    if (getIsConnected() && pool) {
-      await pool.query(
-        'UPDATE news SET title = ?, content = ?, category = ?, image = ?, date = ? WHERE id = ?',
-        [title, content, category, image, date, id]
-      );
-      return res.json({ id, title, content, category, image, date });
-    }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/news/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const pool = getPool();
-    if (getIsConnected() && pool) {
-      await pool.query('DELETE FROM news WHERE id = ?', [id]);
-      return res.json({ success: true });
-    }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message });
-  }
-});
 
 // ==========================================
 // 4. TESTIMONIALS API
@@ -868,7 +845,10 @@ app.get('/api/hero_slides', async (req, res) => {
 });
 
 app.post('/api/hero_slides', async (req, res) => {
-  const { title, subtitle, btn1_text, btn2_text, image, status, order_num } = req.body;
+  let { title, subtitle, btn1_text, btn2_text, image, status, order_num } = req.body;
+  if (image && image.startsWith('data:')) {
+    image = saveBase64File(image, 'hero_slide');
+  }
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
@@ -886,7 +866,10 @@ app.post('/api/hero_slides', async (req, res) => {
 
 app.put('/api/hero_slides/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, subtitle, btn1_text, btn2_text, image, status, order_num } = req.body;
+  let { title, subtitle, btn1_text, btn2_text, image, status, order_num } = req.body;
+  if (image && image.startsWith('data:')) {
+    image = saveBase64File(image, 'hero_slide');
+  }
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
@@ -1496,6 +1479,122 @@ app.delete('/api/media/:id', async (req, res) => {
     }
   } catch (err) {
     console.error('Error deleting media item:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// ==========================================
+// 11. OUR TEAM API ENDPOINTS
+// ==========================================
+
+// GET all team members (Optimized for instant response)
+app.get('/api/team', async (req, res) => {
+  const { all } = req.query;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      let query = "SELECT id, name, role, image, department, order_num, status FROM team_members";
+      if (!all || all === 'false') {
+        query += " WHERE status != 'Inactive'";
+      }
+      query += " ORDER BY order_num ASC, id ASC";
+      const [rows] = await pool.query(query);
+      
+      // Return response immediately for fast UI paint
+      res.json(rows);
+
+      // Asynchronously optimize base64 images in background if any exist
+      setImmediate(async () => {
+        for (const row of rows) {
+          if (row.image && row.image.startsWith('data:')) {
+            const fastPath = saveBase64File(row.image, 'team');
+            if (fastPath) {
+              try {
+                await pool.query('UPDATE team_members SET image = ? WHERE id = ?', [fastPath, row.id]);
+              } catch (e) {
+                // background update catch
+              }
+            }
+          }
+        }
+      });
+      return;
+    }
+  } catch (err) {
+    console.error('Error fetching team members:', err);
+  }
+  return res.json([
+    { id: 1, name: 'Praveen', role: 'Team Member', image: '/uploads/team_1786560739404.jpg', department: 'Engineering', order_num: 1, status: 'Active' },
+    { id: 2, name: 'Nancy', role: 'Team Member', image: '/uploads/team_1786562045607.jpg', department: 'BIM & CAD', order_num: 2, status: 'Active' },
+    { id: 3, name: 'Raghul', role: 'Team Member', image: '/uploads/team_1786562084689.jpg', department: 'Digital Twin', order_num: 3, status: 'Active' },
+    { id: 4, name: 'Zubariya', role: 'Team Member', image: '/uploads/team_1786562368113.jpg', department: 'Sustainability', order_num: 4, status: 'Active' },
+    { id: 5, name: 'Mohammed', role: 'BIM Specialist', image: '/uploads/team_1786562504613.jpg', department: 'BIM & CAD', order_num: 5, status: 'Active' },
+    { id: 6, name: 'Ananya', role: 'CAD Engineer', image: null, department: 'Engineering', order_num: 6, status: 'Active' },
+    { id: 7, name: 'Karthik', role: 'Project Lead', image: null, department: 'Management', order_num: 7, status: 'Active' },
+    { id: 8, name: 'Divya', role: 'Sustainability Specialist', image: null, department: 'Sustainability', order_num: 8, status: 'Active' }
+  ]);
+});
+
+// POST add team member
+app.post('/api/team', async (req, res) => {
+  let { name, role, image, department, order_num, status } = req.body;
+  if (!name) return res.status(400).json({ error: 'Team member name is required.' });
+  if (image && image.startsWith('data:')) {
+    image = saveBase64File(image, 'team');
+  }
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [result] = await pool.query(
+        'INSERT INTO team_members (name, role, image, department, order_num, status) VALUES (?, ?, ?, ?, ?, ?)',
+        [name, role || 'Team Member', image || null, department || '', order_num || 0, status || 'Active']
+      );
+      const [rows] = await pool.query('SELECT * FROM team_members WHERE id = ?', [result.insertId]);
+      return res.status(201).json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error adding team member:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// PUT update team member
+app.put('/api/team/:id', async (req, res) => {
+  const { id } = req.params;
+  let { name, role, image, department, order_num, status } = req.body;
+  if (image && image.startsWith('data:')) {
+    image = saveBase64File(image, 'team');
+  }
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query(
+        'UPDATE team_members SET name=?, role=?, image=?, department=?, order_num=?, status=? WHERE id=?',
+        [name, role, image, department, order_num || 0, status || 'Active', id]
+      );
+      const [rows] = await pool.query('SELECT * FROM team_members WHERE id = ?', [id]);
+      return res.json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error updating team member:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// DELETE team member
+app.delete('/api/team/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query('DELETE FROM team_members WHERE id = ?', [id]);
+      return res.json({ success: true });
+    }
+  } catch (err) {
+    console.error('Error deleting team member:', err);
     return res.status(500).json({ error: err.message });
   }
   return res.status(503).json({ error: 'Database not connected.' });

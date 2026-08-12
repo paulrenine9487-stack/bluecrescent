@@ -7,7 +7,7 @@ export default function WhoWeAreSection({ onNavigate }) {
       whoWeArePara1: "Blue Crescent Engineering is based upon pillars of engineering excellence, a proven system of quality assurance and a dedication in meeting the client's needs and schedules. The company is incorporated by the core values of teamwork, Respect and Integrity.",
       whoWeArePara2: "Our client-centered culture and teamwork based approach integrate the knowledge and skills of our network with local awareness, technical leadership and innovative approaches to solve our client's challenges.",
       whoWeArePara3: "Across our spectrum of expertise, We make the connection for each client that best serves their immediate objectives while fulfilling our shared purpose.",
-      whoWeArePara4: "We offer multidisciplinary engineering solutions across our 4 core service verticals: Engineering Services (CAD, BIM, Laser Scanning, Scan to BIM), Sustainability Services (GSAS, LEED, Energy Audit, Carbon Management), Digital Twin, and Construction Technology."
+      whoWeArePara4: "We offer multidisciplinary engineering solutions across our 4 core service verticals: Engineering Services (BIM, CAD, Laser Scanning, Scan to BIM), Sustainability Services (GSAS, LEED, Energy Audit, Carbon Management), Digital Twin, and Construction Technology."
     };
     try {
       const saved = localStorage.getItem('companySettings');
@@ -36,18 +36,18 @@ export default function WhoWeAreSection({ onNavigate }) {
   const stages = [
     {
       step: '01',
-      code: 'CAD',
-      title: 'Engineering Documentation',
-      desc: '2D Drafting, Shop Drawings & As-Built Documentation',
-      icon: <Building2 size={24} color="#087CFF" />,
+      code: 'BIM',
+      title: 'Digital Construction',
+      desc: '3D BIM Modeling, 4D/5D Simulation & Clash Coordination',
+      icon: <Compass size={24} color="#087CFF" />,
       color: '#087CFF'
     },
     {
       step: '02',
-      code: 'BIM',
-      title: 'Digital Construction',
-      desc: '3D BIM Modeling, 4D/5D Simulation & Clash Coordination',
-      icon: <Compass size={24} color="#00B8FF" />,
+      code: 'CAD',
+      title: 'Engineering Documentation',
+      desc: '2D Drafting, Shop Drawings & As-Built Documentation',
+      icon: <Building2 size={24} color="#00B8FF" />,
       color: '#00B8FF'
     },
     {
@@ -131,7 +131,7 @@ export default function WhoWeAreSection({ onNavigate }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (onNavigate) onNavigate('Our Journey');
+                if (onNavigate) onNavigate('About Us', 'our-journey-section');
               }}
               style={{
                 padding: '14px 28px',
