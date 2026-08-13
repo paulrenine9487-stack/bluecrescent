@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import heroPoster from '../assets/credentials_cityscape_bg.png';
 
 /* ── Static Fallback Content ──────────────────────────────────────── */
 const STATIC_HERO = {
@@ -194,6 +195,7 @@ export default function HeroSlider({ onNavigate }) {
           muted
           loop
           playsInline
+          preload="auto"
         />
       ) : (
         <div

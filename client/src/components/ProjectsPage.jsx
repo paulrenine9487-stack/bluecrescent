@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import projectBanner from '../assets/project1.png';
 
 const TABS = [
@@ -69,12 +70,27 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
     }
   }, [activeSubTab]);
 
-  const [companySettings, setCompanySettings] = useState(null);
+  const [companySettings, setCompanySettings] = useState(() => getCachedCompanySettings());
 
   useEffect(() => {
+    const handleSettingsUpdated = (e) => {
+      if (e?.detail) {
+        setCompanySettings(prev => ({ ...prev, ...e.detail }));
+      } else {
+        setCompanySettings(getCachedCompanySettings());
+      }
+    };
+
+    window.addEventListener('companySettingsUpdated', handleSettingsUpdated);
+
     fetch('/api/settings/company')
       .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data) setCompanySettings(data); })
+      .then(data => {
+        if (data) {
+          updateCachedCompanySettings(data);
+          setCompanySettings(prev => ({ ...prev, ...data }));
+        }
+      })
       .catch(err => console.warn('Company settings fetch warning:', err));
 
     fetch('/api/projects')
@@ -91,6 +107,10 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
         setProjectDivisions(FALLBACK_DIVISIONS);
         setLoading(false);
       });
+
+    return () => {
+      window.removeEventListener('companySettingsUpdated', handleSettingsUpdated);
+    };
   }, []);
 
   const activeTabObj = TABS.find(t => t.key === activeTab) || TABS[0];

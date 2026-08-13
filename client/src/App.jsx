@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchAndCacheCompanySettings } from './utils/bannerCache';
 import Header from './components/Header';
 import HeroSlider from './components/HeroSlider';
 import CredentialsSection from './components/CredentialsSection';
@@ -30,6 +31,7 @@ export default function App() {
 
   // Sync state with URL pathname on mount and handle back/forward navigation
   useEffect(() => {
+    fetchAndCacheCompanySettings();
     const syncRouteWithURL = () => {
       const path = window.location.pathname;
       if (path === '/manager' || path === '/admin' || path.startsWith('/admin/')) {

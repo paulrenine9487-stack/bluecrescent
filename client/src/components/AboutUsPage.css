@@ -58,9 +58,19 @@
   .about-hero-banner-img,
   .page-banner-img,
   .about-full-banner-wrap img {
-    object-fit: contain !important;
+    height: 320px !important;
+    object-fit: cover !important;
     object-position: center center !important;
-    background-color: #061E3D !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-hero-banner-img,
+  .page-banner-img,
+  .about-full-banner-wrap img {
+    height: 260px !important;
+    object-fit: cover !important;
+    object-position: center center !important;
   }
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import { 
   Lock, User, Plus, Trash, Edit, Check, LogOut, Settings, 
   Globe, Award, FileText, Menu, Layers, Shield, Eye, Trash2,
@@ -278,6 +279,14 @@ export default function AdminPanel({ onNavigate }) {
   const handleBannerUpload = async (pageKey, file) => {
     if (!file) return;
     setBannerUploadingKey(pageKey);
+    const keyMap = {
+      'home': 'homeBannerUrl',
+      'aboutus': 'aboutUsPageBannerUrl',
+      'services': 'servicesPageBannerUrl',
+      'projects': 'projectsPageBannerUrl',
+      'media': 'mediaPageBannerUrl',
+      'contactus': 'contactUsPageBannerUrl'
+    };
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
@@ -293,6 +302,9 @@ export default function AdminPanel({ onNavigate }) {
             ...prev,
             [pageKey]: result.bannerUrl
           }));
+          if (keyMap[pageKey]) {
+            updateCachedCompanySettings({ [keyMap[pageKey]]: result.bannerUrl });
+          }
           alert(`Success! ${pageKey.toUpperCase()} banner updated successfully.`);
         } else {
           alert('Failed to upload banner. Please try again.');
@@ -309,6 +321,14 @@ export default function AdminPanel({ onNavigate }) {
 
   const handleBannerDelete = async (pageKey, title) => {
     if (!confirm(`Are you sure you want to delete the custom banner for ${title} and revert to the default system banner?`)) return;
+    const keyMap = {
+      'home': 'homeBannerUrl',
+      'aboutus': 'aboutUsPageBannerUrl',
+      'services': 'servicesPageBannerUrl',
+      'projects': 'projectsPageBannerUrl',
+      'media': 'mediaPageBannerUrl',
+      'contactus': 'contactUsPageBannerUrl'
+    };
     try {
       const res = await fetch(`/api/settings/banners/${pageKey}`, { method: 'DELETE' });
       if (res.ok) {
@@ -316,6 +336,9 @@ export default function AdminPanel({ onNavigate }) {
           ...prev,
           [pageKey]: ''
         }));
+        if (keyMap[pageKey]) {
+          updateCachedCompanySettings({ [keyMap[pageKey]]: '' });
+        }
         alert(`Custom banner for ${title} deleted. Reverted to default system banner.`);
       }
     } catch (err) {

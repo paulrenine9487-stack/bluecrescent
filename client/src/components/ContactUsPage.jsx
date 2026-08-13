@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import contactBanner from '../assets/contact1_copy.png';
 
 export default function ContactUsPage({ onNavigate }) {
@@ -30,12 +31,27 @@ export default function ContactUsPage({ onNavigate }) {
     };
   });
 
-  const [companySettings, setCompanySettings] = useState(null);
+  const [companySettings, setCompanySettings] = useState(() => getCachedCompanySettings());
 
   useEffect(() => {
+    const handleSettingsUpdated = (e) => {
+      if (e?.detail) {
+        setCompanySettings(prev => ({ ...prev, ...e.detail }));
+      } else {
+        setCompanySettings(getCachedCompanySettings());
+      }
+    };
+
+    window.addEventListener('companySettingsUpdated', handleSettingsUpdated);
+
     fetch('/api/settings/company')
       .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data) setCompanySettings(data); })
+      .then(data => {
+        if (data) {
+          updateCachedCompanySettings(data);
+          setCompanySettings(prev => ({ ...prev, ...data }));
+        }
+      })
       .catch(err => console.warn('Company settings fetch warning:', err));
 
     fetch('/api/settings/contact')
@@ -46,6 +62,10 @@ export default function ContactUsPage({ onNavigate }) {
         }
       })
       .catch(err => console.warn('Contact settings DB fetch warning:', err));
+
+    return () => {
+      window.removeEventListener('companySettingsUpdated', handleSettingsUpdated);
+    };
   }, []);
 
   const countries = [

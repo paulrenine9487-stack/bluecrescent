@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import './MediaPage.css';
 
 export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
@@ -42,13 +43,32 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
     return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
   };
 
-  const [companySettings, setCompanySettings] = useState(null);
+  const [companySettings, setCompanySettings] = useState(() => getCachedCompanySettings());
 
   useEffect(() => {
+    const handleSettingsUpdated = (e) => {
+      if (e?.detail) {
+        setCompanySettings(prev => ({ ...prev, ...e.detail }));
+      } else {
+        setCompanySettings(getCachedCompanySettings());
+      }
+    };
+
+    window.addEventListener('companySettingsUpdated', handleSettingsUpdated);
+
     fetch('/api/settings/company')
       .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data) setCompanySettings(data); })
+      .then(data => {
+        if (data) {
+          updateCachedCompanySettings(data);
+          setCompanySettings(prev => ({ ...prev, ...data }));
+        }
+      })
       .catch(err => console.warn('Company settings fetch warning:', err));
+
+    return () => {
+      window.removeEventListener('companySettingsUpdated', handleSettingsUpdated);
+    };
   }, []);
 
   return (

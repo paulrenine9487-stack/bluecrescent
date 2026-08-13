@@ -402,13 +402,17 @@
 /* Responsive adjust */
 @media (max-width: 1024px) {
   .media-hero-section {
-    background-size: contain !important;
+    height: 320px !important;
+    background-size: cover !important;
     background-position: center center !important;
     background-color: #0B1F3A !important;
   }
 }
 
 @media (max-width: 768px) {
+  .media-hero-section {
+    height: 260px !important;
+  }
   .media-hero-title {
     font-size: 36px;
   }

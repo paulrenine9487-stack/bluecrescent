@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import TestimonialsSection from './TestimonialsSection';
 import serviceBanner from '../assets/servicepage1.png';
 import aboutBanner from '../assets/about.png';
@@ -11,12 +12,27 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
 
   const [dynamicServices, setDynamicServices] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
-  const [companySettings, setCompanySettings] = useState(null);
+  const [companySettings, setCompanySettings] = useState(() => getCachedCompanySettings());
 
   useEffect(() => {
+    const handleSettingsUpdated = (e) => {
+      if (e?.detail) {
+        setCompanySettings(prev => ({ ...prev, ...e.detail }));
+      } else {
+        setCompanySettings(getCachedCompanySettings());
+      }
+    };
+
+    window.addEventListener('companySettingsUpdated', handleSettingsUpdated);
+
     fetch('/api/settings/company')
       .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data) setCompanySettings(data); })
+      .then(data => {
+        if (data) {
+          updateCachedCompanySettings(data);
+          setCompanySettings(prev => ({ ...prev, ...data }));
+        }
+      })
       .catch(err => console.warn('Company settings fetch warning:', err));
 
     fetch('/api/services')
@@ -36,6 +52,10 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         }
       })
       .catch(err => console.warn('Testimonials fetch warning:', err));
+
+    return () => {
+      window.removeEventListener('companySettingsUpdated', handleSettingsUpdated);
+    };
   }, []);
 
   // Static fallback data map for all 16 sub-services

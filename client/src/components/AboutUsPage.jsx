@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import TestimonialsSection from './TestimonialsSection';
 import {
   Building2,
@@ -241,18 +242,8 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       value5Title: 'Innovation',
       value5Desc: 'Pioneering green technology and sustainable design.',
     };
-    try {
-      const saved = localStorage.getItem('companySettings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          return { ...DEFAULT_COMPANY, ...parsed };
-        }
-      }
-    } catch (e) {
-      console.warn('Error reading companySettings in AboutUsPage', e);
-    }
-    return DEFAULT_COMPANY;
+    const cached = getCachedCompanySettings();
+    return { ...DEFAULT_COMPANY, ...cached };
   });
 
   const [aboutUsVideoUrl, setAboutUsVideoUrl] = useState(() => {
@@ -290,10 +281,22 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
 
   useEffect(() => {
     fetchTestimonials();
+
+    const handleSettingsUpdated = (e) => {
+      if (e?.detail) {
+        setCompanySettings(prev => ({ ...prev, ...e.detail }));
+      } else {
+        setCompanySettings(prev => ({ ...prev, ...getCachedCompanySettings() }));
+      }
+    };
+
+    window.addEventListener('companySettingsUpdated', handleSettingsUpdated);
+
     fetch('/api/settings/company')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+          updateCachedCompanySettings(data);
           setCompanySettings(prev => ({ ...prev, ...data }));
           if (data.aboutUsVideoUrl) setAboutUsVideoUrl(data.aboutUsVideoUrl);
           if (data.aboutUsHeroType) setAboutUsHeroType(data.aboutUsHeroType);
@@ -308,6 +311,10 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         if (data && data.length > 0) setPartners(data);
       })
       .catch(err => console.warn('Partners fetch warning:', err));
+
+    return () => {
+      window.removeEventListener('companySettingsUpdated', handleSettingsUpdated);
+    };
   }, []);
 
   const countries = React.useMemo(() => {
@@ -426,9 +433,12 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       {/* ── SECTION 1: ABOUT US HERO ────────────────────────────────── */}
       <section className="about-hero-banner-wrap">
         <img
-          src={companySettings?.aboutUsPageBannerUrl || aboutBanner}
+          src={companySettings?.aboutUsPageBannerUrl || companySettings?.aboutUsHeroUrl || aboutUsHeroUrl || localStorage.getItem('aboutUsPageBannerUrl') || localStorage.getItem('aboutUsHeroUrl') || aboutBanner}
           alt="About Us Banner - Blue Crescent Engineering"
           className="about-hero-banner-img"
+          fetchPriority="high"
+          loading="eager"
+          decoding="async"
         />
       </section>
 
