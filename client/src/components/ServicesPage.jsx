@@ -11,8 +11,14 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
 
   const [dynamicServices, setDynamicServices] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [companySettings, setCompanySettings] = useState(null);
 
   useEffect(() => {
+    fetch('/api/settings/company')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setCompanySettings(data); })
+      .catch(err => console.warn('Company settings fetch warning:', err));
+
     fetch('/api/services')
       .then(res => res.ok ? res.json() : [])
       .then(data => {
@@ -165,9 +171,10 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     return serviceBanner;
   };
 
-  const bannerToDisplay = (selectedDetails && selectedDetails.banner_image) 
-    ? selectedDetails.banner_image 
-    : getBannerForService(currentServiceTitle);
+  const bannerToDisplay = companySettings?.servicesPageBannerUrl
+    || ((selectedDetails && selectedDetails.banner_image) 
+      ? selectedDetails.banner_image 
+      : getBannerForService(currentServiceTitle));
 
   // Resolve Categories list dynamically for the main overview
   const categoryGroups = {
@@ -224,7 +231,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
         <img
           src={bannerToDisplay}
           alt="Services Banner"
-          style={{ width: '100%', height: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
+          className="about-hero-banner-img page-banner-img"
         />
       </section>
 

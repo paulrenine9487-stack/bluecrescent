@@ -24,6 +24,28 @@
   --bg-white: #FFFFFF;
 }
 
+/* Page Banners Grid Styling */
+.admin-banners-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  padding: 24px;
+}
+
+.admin-banner-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.admin-banner-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E1;
+}
+
 /* Admin Scoped Box-Sizing & Reset Rules */
 .admin-panel-root,
 .admin-panel-root *,
@@ -984,14 +1006,6 @@
   .admin-span-2 {
     grid-column: span 1;
   }
-  .admin-dashboard {
-    flex-direction: column;
-  }
-  .admin-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  }
 }
 
 /* ==========================================================================
@@ -1844,7 +1858,7 @@
   display: none;
   background: none;
   border: none;
-  color: #FFFFFF;
+  color: #071C3B !important;
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
@@ -1852,7 +1866,7 @@
 }
 
 .admin-sidebar-mobile-close:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(7, 28, 59, 0.08) !important;
 }
 
 .admin-sidebar-backdrop {

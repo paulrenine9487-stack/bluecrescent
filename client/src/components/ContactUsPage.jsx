@@ -30,7 +30,14 @@ export default function ContactUsPage({ onNavigate }) {
     };
   });
 
+  const [companySettings, setCompanySettings] = useState(null);
+
   useEffect(() => {
+    fetch('/api/settings/company')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setCompanySettings(data); })
+      .catch(err => console.warn('Company settings fetch warning:', err));
+
     fetch('/api/settings/contact')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
@@ -270,9 +277,9 @@ export default function ContactUsPage({ onNavigate }) {
       {/* 1. Full-Width Contact Us Banner Image */}
       <section className="about-full-banner-wrap" style={{ width: '100%', overflow: 'hidden' }}>
         <img
-          src={contactBanner}
+          src={companySettings?.contactUsPageBannerUrl || contactBanner}
           alt="Contact Us Banner"
-          style={{ width: '100%', height: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
+          className="about-hero-banner-img page-banner-img"
         />
       </section>
 

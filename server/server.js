@@ -124,6 +124,25 @@ app.post('/api/settings/company', async (req, res) => {
       settings.remoteImage = saveBase64File(settings.remoteImage, 'remote_img');
     }
 
+    if (settings.aboutUsPageBannerUrl && settings.aboutUsPageBannerUrl.startsWith('data:')) {
+      settings.aboutUsPageBannerUrl = saveBase64File(settings.aboutUsPageBannerUrl, 'banner_aboutus');
+    }
+    if (settings.servicesPageBannerUrl && settings.servicesPageBannerUrl.startsWith('data:')) {
+      settings.servicesPageBannerUrl = saveBase64File(settings.servicesPageBannerUrl, 'banner_services');
+    }
+    if (settings.projectsPageBannerUrl && settings.projectsPageBannerUrl.startsWith('data:')) {
+      settings.projectsPageBannerUrl = saveBase64File(settings.projectsPageBannerUrl, 'banner_projects');
+    }
+    if (settings.mediaPageBannerUrl && settings.mediaPageBannerUrl.startsWith('data:')) {
+      settings.mediaPageBannerUrl = saveBase64File(settings.mediaPageBannerUrl, 'banner_media');
+    }
+    if (settings.contactUsPageBannerUrl && settings.contactUsPageBannerUrl.startsWith('data:')) {
+      settings.contactUsPageBannerUrl = saveBase64File(settings.contactUsPageBannerUrl, 'banner_contactus');
+    }
+    if (settings.homeBannerUrl && settings.homeBannerUrl.startsWith('data:')) {
+      settings.homeBannerUrl = saveBase64File(settings.homeBannerUrl, 'banner_home');
+    }
+
     const pool = getPool();
     if (getIsConnected() && pool) {
       // Ensure all keys in req.body exist as columns in company_settings
@@ -154,6 +173,7 @@ app.post('/api/settings/company', async (req, res) => {
         const setQuery = keys.map(k => `${k} = ?`).join(', ');
         const values = keys.map(k => typeof settings[k] === 'object' ? JSON.stringify(settings[k]) : settings[k]);
         await pool.query(`UPDATE company_settings SET ${setQuery} WHERE id = ?`, [...values, id]);
+        fallbackData.company_settings = { ...fallbackData.company_settings, ...settings };
         return res.json({ success: true, message: 'Settings updated.', data: settings });
       } else {
         const keys = Object.keys(settings).filter(k => k !== 'id');
@@ -161,6 +181,7 @@ app.post('/api/settings/company', async (req, res) => {
         const placeholders = keys.map(() => '?').join(', ');
         const values = keys.map(k => typeof settings[k] === 'object' ? JSON.stringify(settings[k]) : settings[k]);
         await pool.query(`INSERT INTO company_settings (${colNames}) VALUES (${placeholders})`, values);
+        fallbackData.company_settings = { ...fallbackData.company_settings, ...settings };
         return res.json({ success: true, message: 'Settings inserted.', data: settings });
       }
     }
@@ -168,7 +189,139 @@ app.post('/api/settings/company', async (req, res) => {
     console.error('Error saving company settings:', err);
     return res.status(500).json({ error: err.message });
   }
-  return res.status(503).json({ error: 'Database disconnected.' });
+
+  // Fallback in-memory storage if DB is not connected
+  fallbackData.company_settings = { ...fallbackData.company_settings, ...settings };
+  return res.json({ success: true, message: 'Settings saved (fallback mode).', data: settings });
+});
+
+// Dedicated Page Banners Endpoints
+app.get('/api/settings/banners', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM company_settings LIMIT 1');
+      if (rows.length > 0) {
+        const s = rows[0];
+        return res.json({
+          homeBannerUrl: s.homeBannerUrl || s.aboutUsHeroUrl || '',
+          aboutUsPageBannerUrl: s.aboutUsPageBannerUrl || '',
+          servicesPageBannerUrl: s.servicesPageBannerUrl || '',
+          projectsPageBannerUrl: s.projectsPageBannerUrl || '',
+          mediaPageBannerUrl: s.mediaPageBannerUrl || '',
+          contactUsPageBannerUrl: s.contactUsPageBannerUrl || ''
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching page banners:', err);
+  }
+  const s = fallbackData.company_settings || {};
+  return res.json({
+    homeBannerUrl: s.homeBannerUrl || s.aboutUsHeroUrl || '',
+    aboutUsPageBannerUrl: s.aboutUsPageBannerUrl || '',
+    servicesPageBannerUrl: s.servicesPageBannerUrl || '',
+    projectsPageBannerUrl: s.projectsPageBannerUrl || '',
+    mediaPageBannerUrl: s.mediaPageBannerUrl || '',
+    contactUsPageBannerUrl: s.contactUsPageBannerUrl || ''
+  });
+});
+
+app.post('/api/settings/banners', async (req, res) => {
+  try {
+    const { pageKey, bannerUrl } = req.body;
+    if (!pageKey) return res.status(400).json({ error: 'pageKey is required.' });
+
+    const keyMap = {
+      'home': 'homeBannerUrl',
+      'aboutus': 'aboutUsPageBannerUrl',
+      'services': 'servicesPageBannerUrl',
+      'projects': 'projectsPageBannerUrl',
+      'media': 'mediaPageBannerUrl',
+      'contactus': 'contactUsPageBannerUrl'
+    };
+
+    const targetCol = keyMap[pageKey] || pageKey;
+    let savedUrl = bannerUrl || '';
+    if (savedUrl.startsWith('data:')) {
+      savedUrl = saveBase64File(savedUrl, `banner_${pageKey}`);
+    }
+
+    const payload = { [targetCol]: savedUrl };
+    const pool = getPool();
+
+    if (getIsConnected() && pool) {
+      try {
+        const [existingCols] = await pool.query(`
+          SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'company_settings'
+        `);
+        const existingColNames = new Set(existingCols.map(c => c.COLUMN_NAME));
+        if (!existingColNames.has(targetCol)) {
+          await pool.query(`ALTER TABLE company_settings ADD COLUMN \`${targetCol}\` LONGTEXT`);
+        }
+      } catch (e) {
+        console.warn('Banner column add check error:', e);
+      }
+
+      const [rows] = await pool.query('SELECT id FROM company_settings LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`UPDATE company_settings SET \`${targetCol}\` = ? WHERE id = ?`, [savedUrl, rows[0].id]);
+      } else {
+        await pool.query(`INSERT INTO company_settings (\`${targetCol}\`) VALUES (?)`, [savedUrl]);
+      }
+    }
+
+    if (!fallbackData.company_settings) fallbackData.company_settings = {};
+    fallbackData.company_settings[targetCol] = savedUrl;
+
+    return res.json({
+      success: true,
+      message: `Banner for ${pageKey} updated successfully.`,
+      pageKey,
+      bannerUrl: savedUrl,
+      banners: fallbackData.company_settings
+    });
+  } catch (err) {
+    console.error('Error saving banner:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/settings/banners/:pageKey', async (req, res) => {
+  try {
+    const { pageKey } = req.params;
+    const keyMap = {
+      'home': 'homeBannerUrl',
+      'aboutus': 'aboutUsPageBannerUrl',
+      'services': 'servicesPageBannerUrl',
+      'projects': 'projectsPageBannerUrl',
+      'media': 'mediaPageBannerUrl',
+      'contactus': 'contactUsPageBannerUrl'
+    };
+    const targetCol = keyMap[pageKey] || pageKey;
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM company_settings LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`UPDATE company_settings SET \`${targetCol}\` = '' WHERE id = ?`, [rows[0].id]);
+      }
+    }
+
+    if (!fallbackData.company_settings) fallbackData.company_settings = {};
+    fallbackData.company_settings[targetCol] = '';
+
+    return res.json({
+      success: true,
+      message: `Custom banner for ${pageKey} deleted/reset to default.`,
+      pageKey,
+      bannerUrl: ''
+    });
+  } catch (err) {
+    console.error('Error deleting banner:', err);
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/settings/contact', async (req, res) => {

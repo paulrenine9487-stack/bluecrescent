@@ -42,10 +42,22 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
     return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
   };
 
+  const [companySettings, setCompanySettings] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/settings/company')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setCompanySettings(data); })
+      .catch(err => console.warn('Company settings fetch warning:', err));
+  }, []);
+
   return (
     <div className="media-page-wrapper">
       {/* Banner */}
-      <section className="media-hero-section">
+      <section
+        className="media-hero-section"
+        style={companySettings?.mediaPageBannerUrl ? { backgroundImage: `url("${companySettings.mediaPageBannerUrl}")` } : {}}
+      >
         <div className="media-hero-overlay"></div>
         <div className="media-hero-container">
           <h1 className="media-hero-title">Media Center</h1>

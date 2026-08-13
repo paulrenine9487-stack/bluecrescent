@@ -69,11 +69,18 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
     }
   }, [activeSubTab]);
 
+  const [companySettings, setCompanySettings] = useState(null);
+
   useEffect(() => {
+    fetch('/api/settings/company')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setCompanySettings(data); })
+      .catch(err => console.warn('Company settings fetch warning:', err));
+
     fetch('/api/projects')
       .then(res => res.ok ? res.json() : [])
       .then(data => {
-        if (data && data.length > 0) {
+        if (Array.isArray(data) && data.length > 0) {
           setProjectDivisions(data.filter(p => p.status !== 'Inactive'));
         } else {
           setProjectDivisions(FALLBACK_DIVISIONS);
@@ -99,9 +106,9 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
       {/* Full-Width Projects Banner */}
       <section className="about-full-banner-wrap" style={{ width: '100%', overflow: 'hidden' }}>
         <img
-          src={projectBanner}
+          src={companySettings?.projectsPageBannerUrl || projectBanner}
           alt="Projects Banner"
-          style={{ width: '100%', height: '420px', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
+          className="about-hero-banner-img page-banner-img"
         />
       </section>
 

@@ -3795,19 +3795,7 @@ a[class*='read-more'] {
     padding-right: 16px !important;
   }
 
-  .admin-dashboard-container {
-    flex-direction: column !important;
-  }
-
-  .admin-sidebar {
-    width: 100% !important;
-    min-width: 100% !important;
-    position: relative !important;
-  }
-
-  .admin-content-area {
-    padding: 16px !important;
-  }
+  /* Admin layout styling is cleanly managed by AdminPanel.css */
 
   .admin-stats-grid {
     grid-template-columns: 1fr !important;

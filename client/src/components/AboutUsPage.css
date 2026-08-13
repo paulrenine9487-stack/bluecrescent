@@ -30,22 +30,38 @@
   padding: 0 24px;
 }
 
-/* SECTION 1: ABOUT US HERO BANNER */
-.about-hero-banner-wrap {
+/* SECTION 1: ABOUT US & INNER PAGES HERO BANNER */
+.about-hero-banner-wrap,
+.about-full-banner-wrap {
   width: 100%;
   overflow: hidden;
   border-bottom: 2px solid rgba(0, 184, 255, 0.35);
   box-shadow: 0 8px 32px rgba(11, 61, 145, 0.12);
   margin-bottom: 80px;
-  /* 80px top spacing below banner to Section 2 */
+  background-color: #061E3D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.about-hero-banner-img {
+.about-hero-banner-img,
+.page-banner-img,
+.about-full-banner-wrap img {
   width: 100%;
   height: 420px;
   object-fit: cover;
   object-position: center center;
   display: block;
+}
+
+@media (max-width: 1024px) {
+  .about-hero-banner-img,
+  .page-banner-img,
+  .about-full-banner-wrap img {
+    object-fit: contain !important;
+    object-position: center center !important;
+    background-color: #061E3D !important;
+  }
 }
 
 /* Section Headings & Accents */

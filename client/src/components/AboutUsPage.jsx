@@ -426,7 +426,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       {/* ── SECTION 1: ABOUT US HERO ────────────────────────────────── */}
       <section className="about-hero-banner-wrap">
         <img
-          src={aboutBanner}
+          src={companySettings?.aboutUsPageBannerUrl || aboutBanner}
           alt="About Us Banner - Blue Crescent Engineering"
           className="about-hero-banner-img"
         />

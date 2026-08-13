@@ -58,6 +58,7 @@ export default function AdminPanel({ onNavigate }) {
   const [contactInquiries, setContactInquiries] = useState([]);
   const [mediaItems, setMediaItems] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [partners, setPartners] = useState([]);
 
   // SEO Management State
   const [seoPages, setSeoPages] = useState({
@@ -243,6 +244,85 @@ export default function AdminPanel({ onNavigate }) {
   });
   const [aboutUsHeroFile, setAboutUsHeroFile] = useState(null);
   const [aboutUsHeroUploading, setAboutUsHeroUploading] = useState(false);
+
+  // All Page Banners State (Home, About Us, Services, Projects, Media, Contact Us)
+  const [pageBanners, setPageBanners] = useState({
+    home: '',
+    aboutus: '',
+    services: '',
+    projects: '',
+    media: '',
+    contactus: ''
+  });
+  const [bannerUploadingKey, setBannerUploadingKey] = useState(null);
+
+  const fetchPageBanners = async () => {
+    try {
+      const res = await fetch('/api/settings/banners');
+      if (res.ok) {
+        const data = await res.json();
+        setPageBanners({
+          home: data.homeBannerUrl || '',
+          aboutus: data.aboutUsPageBannerUrl || '',
+          services: data.servicesPageBannerUrl || '',
+          projects: data.projectsPageBannerUrl || '',
+          media: data.mediaPageBannerUrl || '',
+          contactus: data.contactUsPageBannerUrl || ''
+        });
+      }
+    } catch (err) {
+      console.warn('Error fetching page banners:', err);
+    }
+  };
+
+  const handleBannerUpload = async (pageKey, file) => {
+    if (!file) return;
+    setBannerUploadingKey(pageKey);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Url = reader.result;
+        const res = await fetch('/api/settings/banners', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pageKey, bannerUrl: base64Url })
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setPageBanners(prev => ({
+            ...prev,
+            [pageKey]: result.bannerUrl
+          }));
+          alert(`Success! ${pageKey.toUpperCase()} banner updated successfully.`);
+        } else {
+          alert('Failed to upload banner. Please try again.');
+        }
+        setBannerUploadingKey(null);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Error uploading file.');
+      setBannerUploadingKey(null);
+    }
+  };
+
+  const handleBannerDelete = async (pageKey, title) => {
+    if (!confirm(`Are you sure you want to delete the custom banner for ${title} and revert to the default system banner?`)) return;
+    try {
+      const res = await fetch(`/api/settings/banners/${pageKey}`, { method: 'DELETE' });
+      if (res.ok) {
+        setPageBanners(prev => ({
+          ...prev,
+          [pageKey]: ''
+        }));
+        alert(`Custom banner for ${title} deleted. Reverted to default system banner.`);
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Error deleting banner.');
+    }
+  };
 
   const updateSeoField = (field, val) => {
     setSeoPages(prev => ({
@@ -820,6 +900,7 @@ export default function AdminPanel({ onNavigate }) {
         const res = await fetch('/api/media');
         if (res.ok) setMediaItems(await res.json());
       } else if (tab === '/admin/settings/company') {
+        fetchPageBanners();
         const resTeam = await fetch('/api/team?all=true');
         if (resTeam.ok) setTeamMembers(await resTeam.json());
         const res = await fetch('/api/settings/company');
@@ -830,6 +911,15 @@ export default function AdminPanel({ onNavigate }) {
             if (data.aboutUsVideoUrl) setAboutUsVideoUrl(data.aboutUsVideoUrl);
             if (data.aboutUsHeroType) setAboutUsHeroType(data.aboutUsHeroType);
             if (data.aboutUsHeroUrl) setAboutUsHeroUrl(data.aboutUsHeroUrl);
+            setPageBanners(prev => ({
+              ...prev,
+              home: data.homeBannerUrl || data.aboutUsHeroUrl || '',
+              aboutus: data.aboutUsPageBannerUrl || '',
+              services: data.servicesPageBannerUrl || '',
+              projects: data.projectsPageBannerUrl || '',
+              media: data.mediaPageBannerUrl || '',
+              contactus: data.contactUsPageBannerUrl || ''
+            }));
           }
         }
       } else if (tab === '/admin/settings/contact') {
@@ -1956,7 +2046,7 @@ export default function AdminPanel({ onNavigate }) {
                 <span className="admin-menu-btn-label" style={{ fontSize: '13px', fontWeight: '700' }}>Menu</span>
               </button>
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {activeTab.split('/').pop().replace(/-/g, ' ')}
+                {(activeTab || '/admin/dashboard').split('/').pop().replace(/-/g, ' ')}
               </h2>
             </div>
 
@@ -1965,7 +2055,7 @@ export default function AdminPanel({ onNavigate }) {
 
               <div className="admin-header-profile" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                 <div className="admin-profile-avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00A198', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px' }}>
-                  {currentUser?.username.substring(0, 2).toUpperCase()}
+                  {(currentUser?.username || 'Admin').substring(0, 2).toUpperCase()}
                 </div>
                 <div className="admin-profile-meta" style={{ display: 'flex', flexDirection: 'column' }}>
                   <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: 'var(--text-dark)', textTransform: 'capitalize' }}>{currentUser?.username || 'Super Admin'}</h4>
@@ -2076,6 +2166,128 @@ export default function AdminPanel({ onNavigate }) {
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Copyright Text (Footer)</label>
                         <input type="text" value={companySettings.copyrightText || ''} onChange={e => updateCompanyField('copyrightText', e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* ALL WEBSITE PAGE BANNERS MANAGEMENT SECTION */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7' }}>
+                          <ImageIcon size={20} />
+                        </div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Website Page Banners Management
+                          </h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748B' }}>
+                            Upload, view, replace, or delete custom top banner images for each page. Click "Reset Default" to restore the system default banner.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="admin-banners-grid">
+                      {[
+                        { key: 'aboutus', title: 'About Us Banner', route: '/about-us', defaultBanner: '/about.png', description: 'Top banner image displayed on the About Us page.' },
+                        { key: 'services', title: 'Services Banner', route: '/services', defaultBanner: '/servicepage1.png', description: 'Top banner image displayed across all Services pages.' },
+                        { key: 'projects', title: 'Projects Banner', route: '/projects', defaultBanner: '/project1.png', description: 'Top banner image displayed on the Projects portfolio page.' },
+                        { key: 'media', title: 'Media Center Banner', route: '/media', defaultBanner: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=80', description: 'Top hero section background on the Media & News page.' },
+                        { key: 'contactus', title: 'Contact Us Banner', route: '/contact-us', defaultBanner: '/contact1.png', description: 'Top banner image displayed on the Contact Us page.' }
+                      ].map((item) => {
+                        const currentUrl = pageBanners[item.key] || '';
+                        const isCustom = Boolean(currentUrl);
+                        const displayImg = currentUrl || item.defaultBanner;
+
+                        return (
+                          <div key={item.key} className="admin-banner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                            <div style={{ padding: '16px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#0F172A' }}>{item.title}</h4>
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: '700',
+                                  padding: '4px 8px',
+                                  borderRadius: '20px',
+                                  background: isCustom ? '#DCFCE7' : '#F1F5F9',
+                                  color: isCustom ? '#15803D' : '#64748B'
+                                }}>
+                                  {isCustom ? 'Custom Uploaded' : 'Default System'}
+                                </span>
+                              </div>
+                              <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#64748B', lineHeight: '1.4' }}>{item.description}</p>
+                              
+                              {/* Preview Box */}
+                              <div style={{
+                                width: '100%',
+                                height: '120px',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                background: '#061E3D',
+                                border: '1px solid #CBD5E1',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                position: 'relative'
+                              }}>
+                                <img
+                                  src={displayImg}
+                                  alt={`${item.title} Preview`}
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                  onError={e => { e.currentTarget.src = item.defaultBanner; }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Card Action Controls */}
+                            <div style={{ padding: '12px 16px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <label style={{
+                                flex: 1,
+                                padding: '8px 12px',
+                                borderRadius: '6px',
+                                background: '#003E8A',
+                                color: '#FFFFFF',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                display: 'inline-block'
+                              }}>
+                                {bannerUploadingKey === item.key ? 'Uploading...' : '📤 Upload New Banner'}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  style={{ display: 'none' }}
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleBannerUpload(item.key, e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                              </label>
+
+                              {isCustom && (
+                                <button
+                                  type="button"
+                                  style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    background: '#FEF2F2',
+                                    color: '#DC2626',
+                                    border: '1px solid #FCA5A5',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer'
+                                  }}
+                                  onClick={() => handleBannerDelete(item.key, item.title)}
+                                >
+                                  🗑 Reset Default
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
