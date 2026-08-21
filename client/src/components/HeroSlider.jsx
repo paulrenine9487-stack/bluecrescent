@@ -57,8 +57,7 @@ export default function HeroSlider({ onNavigate }) {
   const [heroType, setHeroType] = useState('video');
   const [heroUrl, setHeroUrl] = useState('');
 
-  // Fetch dynamic hero slides & banner settings
-  useEffect(() => {
+  const fetchAllHeroData = () => {
     fetch('/api/hero_slides')
       .then(res => res.ok ? res.json() : [])
       .then(data => {
@@ -78,6 +77,16 @@ export default function HeroSlider({ onNavigate }) {
         }
       })
       .catch(err => console.warn('Hero settings fetch warning:', err));
+  };
+
+  useEffect(() => {
+    fetchAllHeroData();
+    window.addEventListener('dataUpdated', fetchAllHeroData);
+    window.addEventListener('menuUpdated', fetchAllHeroData);
+    return () => {
+      window.removeEventListener('dataUpdated', fetchAllHeroData);
+      window.removeEventListener('menuUpdated', fetchAllHeroData);
+    };
   }, []);
 
   // Slide cycle interval

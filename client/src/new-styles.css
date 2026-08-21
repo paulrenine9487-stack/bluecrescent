@@ -711,32 +711,73 @@ body,
 .dropdown-menu,
 .secondary-dropdown-menu {
   background: #FFFFFF !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(6, 59, 115, 0.12) !important;
-  box-shadow: 0 16px 40px rgba(6, 59, 115, 0.14) !important;
-  border-radius: 12px !important;
-  padding: 8px 0 !important;
-  list-style: none;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(6, 59, 115, 0.14) !important;
+  box-shadow: 0 20px 48px rgba(6, 59, 115, 0.16), 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  border-radius: 14px !important;
+  padding: 8px 4px !important;
+  list-style: none !important;
+  width: max-content !important;
+  min-width: 290px !important;
+  max-width: 420px !important;
+  z-index: 1200 !important;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.main-services-dropdown {
+  min-width: 310px !important;
+}
+
+.secondary-dropdown-menu {
+  position: absolute !important;
+  top: -8px !important;
+  left: calc(100% + 6px) !important;
+  min-width: 280px !important;
+}
+
+.secondary-dropdown-menu::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -10px !important;
+  bottom: -10px !important;
+  left: -16px !important;
+  width: 20px !important;
+  background: transparent !important;
 }
 
 /* Category item wrapper */
 .category-item {
-  position: relative;
-  list-style: none;
+  position: relative !important;
+  list-style: none !important;
 }
 
 /* Category title row (e.g. Engineering Services) */
 .category-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
   color: #063B73 !important;
-  font-size: 14px !important;
+  font-size: 14.5px !important;
   font-weight: 600 !important;
-  padding: 12px 24px !important;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  letter-spacing: -0.01em !important;
+  padding: 12px 18px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease-in-out !important;
+  border-radius: 8px !important;
+  margin: 2px 4px !important;
 }
 
 .category-item:hover .category-title {
@@ -746,34 +787,42 @@ body,
 
 /* Sub-arrow indicator */
 .sub-arrow {
-  color: rgba(6, 59, 115, 0.5) !important;
-  font-size: 11px;
-  transition: transform 0.2s ease, color 0.2s ease;
-  margin-left: 10px;
+  color: rgba(6, 59, 115, 0.45) !important;
+  font-size: 13px !important;
+  margin-left: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.2s ease, color 0.2s ease !important;
 }
 
 .category-item:hover .sub-arrow {
-  transform: translateX(4px);
+  transform: translateX(4px) !important;
   color: #087CFF !important;
 }
 
 /* Dropdown list links */
 .dropdown-item-link {
-  display: block;
+  display: flex !important;
+  align-items: center !important;
   color: #334155 !important;
-  font-size: 13px !important;
+  font-size: 13.5px !important;
   font-weight: 500 !important;
-  padding: 10px 24px !important;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border-radius: 0 !important;
+  padding: 10px 18px !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  transition: all 0.18s ease-in-out !important;
+  cursor: pointer !important;
+  border-radius: 8px !important;
+  margin: 2px 4px !important;
 }
 
 .dropdown-item-link:hover,
 .dropdown-item-link.active-sub {
   background: rgba(8, 124, 255, 0.08) !important;
   color: #087CFF !important;
+  font-weight: 600 !important;
 }
 
 
@@ -883,10 +932,9 @@ body,
 
 /* Two Cards Grid - Slim Horizontal Card Internal Layout */
 .bce-cert-cards-row {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
+  display: flex !important;
   gap: 22px !important;
-  align-items: center !important;
+  align-items: stretch !important;
   width: 100% !important;
 }
 
@@ -894,36 +942,36 @@ body,
 .bce-cert-card {
   background: #FFFFFF !important;
   border: 1px solid rgba(8, 124, 255, 0.14) !important;
-  border-radius: 14px !important;
-  padding: 16px 20px !important;
-  box-shadow: 0 4px 16px rgba(6, 59, 115, 0.04) !important;
+  border-radius: 16px !important;
+  padding: 18px 22px !important;
+  box-shadow: 0 4px 18px rgba(6, 59, 115, 0.05) !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 18px !important;
+  gap: 20px !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   cursor: pointer !important;
-  min-height: 135px !important;
+  min-height: 175px !important;
 }
 
 .bce-cert-card:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: 0 14px 30px rgba(6, 59, 115, 0.1) !important;
+  transform: translateY(-5px) !important;
+  box-shadow: 0 16px 36px rgba(6, 59, 115, 0.12) !important;
   border-color: #087CFF !important;
 }
 
-/* Compact Portrait Image Frame (Fits document snugly without massive empty space) */
+/* Portrait Image Frame (Increased height for clearer document display) */
 .bce-cert-image-area {
-  width: 95px !important;
-  height: 125px !important;
+  width: 130px !important;
+  height: 165px !important;
   flex-shrink: 0 !important;
   background: #F8FAFC !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   border: 1px solid #E2E8F0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 4px !important;
+  padding: 6px !important;
   margin-bottom: 0 !important;
   position: relative !important;
   overflow: hidden !important;
@@ -1014,17 +1062,18 @@ body,
   }
 
   .bce-cert-card {
-    padding: 14px 16px !important;
-    gap: 14px !important;
+    padding: 16px 18px !important;
+    gap: 16px !important;
+    min-height: 145px !important;
   }
 
   .bce-cert-image-area {
-    width: 80px !important;
-    height: 105px !important;
+    width: 105px !important;
+    height: 135px !important;
   }
 
   .bce-cert-card-title {
-    font-size: 14.5px !important;
+    font-size: 15px !important;
   }
 }
 
@@ -2554,18 +2603,27 @@ body,
 /* === TOP SECTION: 4 COLUMNS === */
 .bce-footer-v2-top {
   display: grid;
-  grid-template-columns: 2.5fr 1fr 1.5fr 2fr;
-  gap: 40px;
-  padding: 60px 60px 40px 60px;
+  grid-template-columns: 2.2fr 1fr 1.4fr 2fr;
+  gap: 32px;
+  padding: 36px 40px 24px 40px;
   max-width: 1440px;
   margin: 0 auto;
+  align-items: start;
+}
+
+.bce-footer-v2-col {
+  display: flex;
+  flex-direction: column;
 }
 
 .bce-footer-v2-heading {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #0055FF;
-  margin-bottom: 24px;
+  margin-top: 0;
+  margin-bottom: 18px;
+  padding-top: 2px;
+  line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2576,31 +2634,35 @@ body,
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .bce-footer-v2-list a {
   color: #333333;
   text-decoration: none;
-  font-size: 14.5px;
+  font-size: 13.5px;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   transition: color 0.2s ease;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .bce-footer-v2-col span {
   color: #333333;
-  font-size: 14.5px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  line-height: 1.4;
   display: block;
 }
 
 .contact-list li {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
+}
+
+.bce-footer-v2-col.contact-col .contact-list {
+  gap: 16px !important;
 }
 
 .bce-footer-v2-col a:hover {
@@ -2608,17 +2670,25 @@ body,
 }
 
 /* Column 1: Brand */
+.bce-footer-v2-logo {
+  display: inline-block;
+  margin-top: 0;
+  line-height: 1;
+}
+
 .bce-footer-v2-logo-img {
-  height: 64px;
+  height: 44px;
   width: auto;
-  margin-bottom: 24px;
+  margin-top: 0;
+  margin-bottom: 14px;
+  display: block;
 }
 
 .bce-footer-v2-desc {
-  font-size: 14.5px;
-  line-height: 1.7;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: #555555;
-  margin-bottom: 30px;
+  margin-bottom: 18px;
 }
 
 .bce-footer-v2-socials {
@@ -2665,6 +2735,15 @@ body,
   fill: #FFFFFF !important;
   color: #FFFFFF !important;
   stroke: #FFFFFF !important;
+}
+
+.bce-social-circle.youtube-social-circle:hover,
+.bce-social-circle.youtube-social-circle:focus,
+.bce-social-circle.youtube-social-circle:active {
+  background: #FF0000 !important;
+  color: #FFFFFF !important;
+  border-color: #FF0000 !important;
+  box-shadow: 0 6px 16px rgba(255, 0, 0, 0.4) !important;
 }
 
 /* Icons */
@@ -2788,12 +2867,12 @@ body,
 .bce-footer-v2-bottom {
   background: #0055FF;
   text-align: center;
-  padding: 18px 24px;
+  padding: 12px 24px;
 }
 
 .bce-footer-v2-bottom p {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 12.5px;
   color: #FFFFFF !important;
 }
 

@@ -368,6 +368,186 @@ app.post('/api/settings/contact', async (req, res) => {
   return res.status(503).json({ error: 'Database disconnected.' });
 });
 
+// ==========================================
+// DYNAMIC MAINTENANCE MODE & AUDIT LOG APIs
+// ==========================================
+
+// 1. Public Maintenance Status Endpoint (Exposes ONLY public non-sensitive info)
+app.get('/api/settings/maintenance-status', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT maintenance_mode, maintenance_title, maintenance_message FROM system_settings LIMIT 1');
+      if (rows.length > 0) {
+        return res.json({
+          maintenanceMode: Boolean(rows[0].maintenance_mode),
+          maintenanceTitle: rows[0].maintenance_title || 'WEBSITE UNDER MAINTENANCE',
+          maintenanceMessage: rows[0].maintenance_message || 'We are currently performing scheduled maintenance to improve our website and digital services.'
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching maintenance status:', err);
+  }
+  
+  // Safe Fallback: Default to false (Website Live) if DB error or missing
+  const fb = fallbackData.system_settings || {};
+  return res.json({
+    maintenanceMode: Boolean(fb.maintenanceMode),
+    maintenanceTitle: fb.maintenanceTitle || 'WEBSITE UNDER MAINTENANCE',
+    maintenanceMessage: fb.maintenanceMessage || 'We are currently performing scheduled maintenance to improve our website and digital services.'
+  });
+});
+
+// 2. Super Admin GET Maintenance Details
+app.get('/api/admin/settings/maintenance', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM system_settings LIMIT 1');
+      if (rows.length > 0) {
+        const s = rows[0];
+        return res.json({
+          maintenanceMode: Boolean(s.maintenance_mode),
+          maintenanceTitle: s.maintenance_title || 'WEBSITE UNDER MAINTENANCE',
+          maintenanceMessage: s.maintenance_message || 'We are currently performing scheduled maintenance to improve our website and digital services.',
+          updatedBy: s.updated_by || 'Super Admin',
+          updatedAt: s.updated_at,
+          maintenanceStartedAt: s.maintenance_started_at,
+          maintenanceEndedAt: s.maintenance_ended_at
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching admin maintenance settings:', err);
+  }
+  const fb = fallbackData.system_settings || {};
+  return res.json({
+    maintenanceMode: Boolean(fb.maintenanceMode),
+    maintenanceTitle: fb.maintenanceTitle || 'WEBSITE UNDER MAINTENANCE',
+    maintenanceMessage: fb.maintenanceMessage || 'We are currently performing scheduled maintenance to improve our website and digital services.',
+    updatedBy: fb.updatedBy || 'Super Admin',
+    updatedAt: fb.updatedAt || new Date().toISOString(),
+    maintenanceStartedAt: fb.maintenanceStartedAt || null,
+    maintenanceEndedAt: fb.maintenanceEndedAt || null
+  });
+});
+
+// 3. Super Admin UPDATE Maintenance Mode Endpoint
+const updateMaintenanceHandler = async (req, res) => {
+  // Validate Super Admin Authorization
+  const userRole = req.headers['x-user-role'] || req.body.userRole || req.body.role;
+  if (userRole && userRole !== 'super_admin') {
+    return res.status(403).json({ error: 'Access denied. Only Super Admin can modify Maintenance Mode.' });
+  }
+
+  const { maintenanceMode, maintenanceTitle, maintenanceMessage, updatedBy } = req.body;
+  const isEnabled = Boolean(maintenanceMode);
+  const adminName = updatedBy || 'Super Admin';
+  const now = new Date();
+
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM system_settings LIMIT 1');
+
+      if (rows.length > 0) {
+        const id = rows[0].id;
+        let updateQuery = 'UPDATE system_settings SET maintenance_mode = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP';
+        const queryParams = [isEnabled ? 1 : 0, adminName];
+
+        if (maintenanceTitle !== undefined) {
+          updateQuery += ', maintenance_title = ?';
+          queryParams.push(maintenanceTitle);
+        }
+        if (maintenanceMessage !== undefined) {
+          updateQuery += ', maintenance_message = ?';
+          queryParams.push(maintenanceMessage);
+        }
+        if (isEnabled) {
+          updateQuery += ', maintenance_started_at = CURRENT_TIMESTAMP';
+        } else {
+          updateQuery += ', maintenance_ended_at = CURRENT_TIMESTAMP';
+        }
+
+        updateQuery += ' WHERE id = ?';
+        queryParams.push(id);
+
+        await pool.query(updateQuery, queryParams);
+      } else {
+        await pool.query(
+          `INSERT INTO system_settings (maintenance_mode, maintenance_title, maintenance_message, updated_by, maintenance_started_at, maintenance_ended_at)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            isEnabled ? 1 : 0,
+            maintenanceTitle || 'WEBSITE UNDER MAINTENANCE',
+            maintenanceMessage || 'We are currently performing scheduled maintenance to improve our website and digital services.',
+            adminName,
+            isEnabled ? now : null,
+            isEnabled ? null : now
+          ]
+        );
+      }
+
+      // Record Activity / Audit Log in MySQL
+      const logAction = isEnabled ? 'Maintenance Mode ENABLED' : 'Maintenance Mode DISABLED';
+      const logDetails = `Maintenance Mode set to ${isEnabled ? 'ON' : 'OFF'} by ${adminName}`;
+      await pool.query(
+        'INSERT INTO activity_logs (action, user_name, details) VALUES (?, ?, ?)',
+        [logAction, adminName, logDetails]
+      );
+    }
+  } catch (err) {
+    console.error('Error updating maintenance mode in DB:', err);
+  }
+
+  // Update Fallback Data
+  if (!fallbackData.system_settings) fallbackData.system_settings = {};
+  fallbackData.system_settings = {
+    ...fallbackData.system_settings,
+    maintenanceMode: isEnabled,
+    maintenanceTitle: maintenanceTitle || fallbackData.system_settings.maintenanceTitle || 'WEBSITE UNDER MAINTENANCE',
+    maintenanceMessage: maintenanceMessage || fallbackData.system_settings.maintenanceMessage || 'We are currently performing scheduled maintenance to improve our website and digital services.',
+    updatedBy: adminName,
+    updatedAt: now.toISOString(),
+    maintenanceStartedAt: isEnabled ? now.toISOString() : (fallbackData.system_settings.maintenanceStartedAt || null),
+    maintenanceEndedAt: !isEnabled ? now.toISOString() : (fallbackData.system_settings.maintenanceEndedAt || null)
+  };
+
+  if (!fallbackData.activity_logs) fallbackData.activity_logs = [];
+  fallbackData.activity_logs.unshift({
+    id: Date.now(),
+    action: isEnabled ? 'Maintenance Mode ENABLED' : 'Maintenance Mode DISABLED',
+    user_name: adminName,
+    details: `Maintenance Mode set to ${isEnabled ? 'ON' : 'OFF'} by ${adminName}`,
+    created_at: now.toISOString()
+  });
+
+  return res.json({
+    success: true,
+    maintenanceMode: isEnabled,
+    message: isEnabled ? 'Maintenance Mode enabled successfully.' : 'Maintenance Mode disabled successfully.',
+    data: fallbackData.system_settings
+  });
+};
+
+app.put('/api/admin/settings/maintenance', updateMaintenanceHandler);
+app.patch('/api/admin/settings/maintenance', updateMaintenanceHandler);
+
+// 4. Activity Logs Endpoint
+app.get('/api/activity-logs', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM activity_logs ORDER BY id DESC LIMIT 50');
+      return res.json(rows);
+    }
+  } catch (err) {
+    console.error('Error fetching activity logs:', err);
+  }
+  return res.json(fallbackData.activity_logs || []);
+});
+
 
 // ==========================================
 // 1. AUTHENTICATION & ACCESS CONTROL
@@ -394,7 +574,7 @@ app.post('/api/auth/login', async (req, res) => {
     console.error('Error logging in:', err);
   }
   // Fallback for offline DB
-  if (username === 'superadmin' && password === 'superpassword') {
+  if (username === 'superadmin' && password === 'bluecrescentmccmrfip') {
     return res.json({ success: true, user: { id: 1, username: 'superadmin', role: 'super_admin' } });
   } else if (username === 'admin' && password === 'adminpassword') {
     return res.json({ success: true, user: { id: 2, username: 'admin', role: 'admin' } });
@@ -828,9 +1008,21 @@ app.delete('/api/service-categories/:id', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
+      const [catRows] = await pool.query('SELECT name FROM service_categories WHERE id = ?', [id]);
+      const catName = catRows.length > 0 ? catRows[0].name : null;
+
       await pool.query('DELETE FROM service_categories WHERE id = ?', [id]);
+      if (catName) {
+        await pool.query('DELETE FROM services WHERE category_id = ? OR category = ?', [id, catName]);
+      } else {
+        await pool.query('DELETE FROM services WHERE category_id = ?', [id]);
+      }
       return res.json({ success: true, id });
     } else {
+      const cat = fallbackData.service_categories.find(c => c.id === parseInt(id));
+      if (cat) {
+        fallbackData.services = fallbackData.services.filter(s => s.category !== cat.name && s.category_id !== cat.id);
+      }
       fallbackData.service_categories = fallbackData.service_categories.filter(c => c.id !== parseInt(id));
       return res.json({ success: true, id });
     }
@@ -952,6 +1144,1036 @@ app.delete('/api/services/:id', async (req, res) => {
     }
   } catch (err) {
     console.error(err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 7c. GSAS SERVICE DETAIL CONTENT API
+// ==========================================
+app.get('/api/gsas', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM gsas_content LIMIT 1');
+      if (rows.length > 0) {
+        const row = rows[0];
+        return res.json({
+          page_title: row.page_title || 'GSAS',
+          introduction: row.introduction || '',
+          design_title: row.design_title || 'DESIGN',
+          design_description: row.design_description || '',
+          design_images: typeof row.design_images === 'string' ? JSON.parse(row.design_images) : (row.design_images || []),
+          build_title: row.build_title || 'BUILD / CONSTRUCTION',
+          build_description: row.build_description || '',
+          build_images: typeof row.build_images === 'string' ? JSON.parse(row.build_images) : (row.build_images || []),
+          operation_title: row.operation_title || 'OPERATION',
+          operation_description: row.operation_description || '',
+          operation_images: typeof row.operation_images === 'string' ? JSON.parse(row.operation_images) : (row.operation_images || [])
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching GSAS content:', err);
+  }
+  return res.json(fallbackData.gsas_content || {});
+});
+
+app.put('/api/gsas', async (req, res) => {
+  try {
+    const data = req.body;
+
+    // Helper to process images array and save base64 files
+    const processImages = (imgs, prefix) => {
+      if (!Array.isArray(imgs)) return [];
+      return imgs.map((imgObj, idx) => {
+        const rawUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+        const altText = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : `GSAS ${prefix} Image ${idx + 1}`;
+        const displayOrder = typeof imgObj === 'object' && imgObj.display_order ? imgObj.display_order : (idx + 1);
+
+        let finalUrl = rawUrl;
+        if (rawUrl && rawUrl.startsWith('data:')) {
+          finalUrl = saveBase64File(rawUrl, `gsas_${prefix.toLowerCase()}_${idx + 1}`);
+        }
+        return {
+          url: finalUrl,
+          alt: altText,
+          display_order: displayOrder
+        };
+      });
+    };
+
+    const designImages = processImages(data.design_images, 'Design');
+    const buildImages = processImages(data.build_images, 'Build');
+    const operationImages = processImages(data.operation_images, 'Operation');
+
+    const payload = {
+      page_title: data.page_title || 'GSAS',
+      introduction: data.introduction || '',
+      design_title: data.design_title || 'DESIGN',
+      design_description: data.design_description || '',
+      design_images: designImages,
+      build_title: data.build_title || 'BUILD / CONSTRUCTION',
+      build_description: data.build_description || '',
+      build_images: buildImages,
+      operation_title: data.operation_title || 'OPERATION',
+      operation_description: data.operation_description || '',
+      operation_images: operationImages
+    };
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM gsas_content LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`
+          UPDATE gsas_content SET
+            page_title = ?, introduction = ?,
+            design_title = ?, design_description = ?, design_images = ?,
+            build_title = ?, build_description = ?, build_images = ?,
+            operation_title = ?, operation_description = ?, operation_images = ?
+          WHERE id = ?
+        `, [
+          payload.page_title, payload.introduction,
+          payload.design_title, payload.design_description, JSON.stringify(payload.design_images),
+          payload.build_title, payload.build_description, JSON.stringify(payload.build_images),
+          payload.operation_title, payload.operation_description, JSON.stringify(payload.operation_images),
+          rows[0].id
+        ]);
+      } else {
+        await pool.query(`
+          INSERT INTO gsas_content (
+            page_title, introduction,
+            design_title, design_description, design_images,
+            build_title, build_description, build_images,
+            operation_title, operation_description, operation_images
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          payload.page_title, payload.introduction,
+          payload.design_title, payload.design_description, JSON.stringify(payload.design_images),
+          payload.build_title, payload.build_description, JSON.stringify(payload.build_images),
+          payload.operation_title, payload.operation_description, JSON.stringify(payload.operation_images)
+        ]);
+      }
+    }
+
+    fallbackData.gsas_content = payload;
+    return res.json({ success: true, message: 'GSAS content updated successfully.', data: payload });
+  } catch (err) {
+    console.error('Error updating GSAS content:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 7d. LEED SERVICE DETAIL CONTENT API
+// ==========================================
+app.get('/api/leed', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM leed_content LIMIT 1');
+      if (rows.length > 0) {
+        const row = rows[0];
+        return res.json({
+          page_title: row.page_title || 'LEED',
+          introduction: row.introduction || '',
+          design_title: row.design_title || 'DESIGN',
+          design_description: row.design_description || '',
+          design_images: typeof row.design_images === 'string' ? JSON.parse(row.design_images) : (row.design_images || []),
+          build_title: row.build_title || 'BUILD / CONSTRUCTION',
+          build_description: row.build_description || '',
+          build_images: typeof row.build_images === 'string' ? JSON.parse(row.build_images) : (row.build_images || []),
+          operation_title: row.operation_title || 'OPERATION',
+          operation_description: row.operation_description || '',
+          operation_images: typeof row.operation_images === 'string' ? JSON.parse(row.operation_images) : (row.operation_images || [])
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching LEED content:', err);
+  }
+  return res.json(fallbackData.leed_content || {});
+});
+
+app.put('/api/leed', async (req, res) => {
+  try {
+    const data = req.body;
+
+    const processImages = (imgs, prefix) => {
+      if (!Array.isArray(imgs)) return [];
+      return imgs.map((imgObj, idx) => {
+        const rawUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+        const altText = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : `LEED ${prefix} Image ${idx + 1}`;
+        const displayOrder = typeof imgObj === 'object' && imgObj.display_order ? imgObj.display_order : (idx + 1);
+
+        let finalUrl = rawUrl;
+        if (rawUrl && rawUrl.startsWith('data:')) {
+          finalUrl = saveBase64File(rawUrl, `leed_${prefix.toLowerCase()}_${idx + 1}`);
+        }
+        return {
+          url: finalUrl,
+          alt: altText,
+          display_order: displayOrder
+        };
+      });
+    };
+
+    const designImages = processImages(data.design_images, 'Design');
+    const buildImages = processImages(data.build_images, 'Build');
+    const operationImages = processImages(data.operation_images, 'Operation');
+
+    const payload = {
+      page_title: data.page_title || 'LEED',
+      introduction: data.introduction || '',
+      design_title: data.design_title || 'DESIGN',
+      design_description: data.design_description || '',
+      design_images: designImages,
+      build_title: data.build_title || 'BUILD / CONSTRUCTION',
+      build_description: data.build_description || '',
+      build_images: buildImages,
+      operation_title: data.operation_title || 'OPERATION',
+      operation_description: data.operation_description || '',
+      operation_images: operationImages
+    };
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM leed_content LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`
+          UPDATE leed_content SET
+            page_title = ?, introduction = ?,
+            design_title = ?, design_description = ?, design_images = ?,
+            build_title = ?, build_description = ?, build_images = ?,
+            operation_title = ?, operation_description = ?, operation_images = ?
+          WHERE id = ?
+        `, [
+          payload.page_title, payload.introduction,
+          payload.design_title, payload.design_description, JSON.stringify(payload.design_images),
+          payload.build_title, payload.build_description, JSON.stringify(payload.build_images),
+          payload.operation_title, payload.operation_description, JSON.stringify(payload.operation_images),
+          rows[0].id
+        ]);
+      } else {
+        await pool.query(`
+          INSERT INTO leed_content (
+            page_title, introduction,
+            design_title, design_description, design_images,
+            build_title, build_description, build_images,
+            operation_title, operation_description, operation_images
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          payload.page_title, payload.introduction,
+          payload.design_title, payload.design_description, JSON.stringify(payload.design_images),
+          payload.build_title, payload.build_description, JSON.stringify(payload.build_images),
+          payload.operation_title, payload.operation_description, JSON.stringify(payload.operation_images)
+        ]);
+      }
+    }
+
+    fallbackData.leed_content = payload;
+    return res.json({ success: true, message: 'LEED content updated successfully.', data: payload });
+  } catch (err) {
+    console.error('Error updating LEED content:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 7e. ENERGY AUDIT SERVICE DETAIL CONTENT API
+// ==========================================
+app.get('/api/energy-audit', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM energy_audit_content LIMIT 1');
+      if (rows.length > 0) {
+        const row = rows[0];
+        return res.json({
+          page_title: row.page_title || 'Energy Audit',
+          introduction: row.introduction || '',
+          residential_title: row.residential_title || 'RESIDENTIAL BUILDING',
+          residential_description: row.residential_description || '',
+          residential_images: typeof row.residential_images === 'string' ? JSON.parse(row.residential_images) : (row.residential_images || []),
+          commercial_title: row.commercial_title || 'COMMERCIAL BUILDING',
+          commercial_description: row.commercial_description || '',
+          commercial_images: typeof row.commercial_images === 'string' ? JSON.parse(row.commercial_images) : (row.commercial_images || [])
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching Energy Audit content:', err);
+  }
+  return res.json(fallbackData.energy_audit_content || {});
+});
+
+app.put('/api/energy-audit', async (req, res) => {
+  try {
+    const data = req.body;
+
+    const processImages = (imgs, prefix) => {
+      if (!Array.isArray(imgs)) return [];
+      return imgs.map((imgObj, idx) => {
+        const rawUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+        const altText = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : `Energy Audit ${prefix} Image ${idx + 1}`;
+        const displayOrder = typeof imgObj === 'object' && imgObj.display_order ? imgObj.display_order : (idx + 1);
+
+        let finalUrl = rawUrl;
+        if (rawUrl && rawUrl.startsWith('data:')) {
+          finalUrl = saveBase64File(rawUrl, `energy_audit_${prefix.toLowerCase()}_${idx + 1}`);
+        }
+        return {
+          url: finalUrl,
+          alt: altText,
+          display_order: displayOrder
+        };
+      });
+    };
+
+    const residentialImages = processImages(data.residential_images, 'Residential');
+    const commercialImages = processImages(data.commercial_images, 'Commercial');
+
+    const payload = {
+      page_title: data.page_title || 'Energy Audit',
+      introduction: data.introduction || '',
+      residential_title: data.residential_title || 'RESIDENTIAL BUILDING',
+      residential_description: data.residential_description || '',
+      residential_images: residentialImages,
+      commercial_title: data.commercial_title || 'COMMERCIAL BUILDING',
+      commercial_description: data.commercial_description || '',
+      commercial_images: commercialImages
+    };
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM energy_audit_content LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`
+          UPDATE energy_audit_content SET
+            page_title = ?, introduction = ?,
+            residential_title = ?, residential_description = ?, residential_images = ?,
+            commercial_title = ?, commercial_description = ?, commercial_images = ?
+          WHERE id = ?
+        `, [
+          payload.page_title, payload.introduction,
+          payload.residential_title, payload.residential_description, JSON.stringify(payload.residential_images),
+          payload.commercial_title, payload.commercial_description, JSON.stringify(payload.commercial_images),
+          rows[0].id
+        ]);
+      } else {
+        await pool.query(`
+          INSERT INTO energy_audit_content (
+            page_title, introduction,
+            residential_title, residential_description, residential_images,
+            commercial_title, commercial_description, commercial_images
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          payload.page_title, payload.introduction,
+          payload.residential_title, payload.residential_description, JSON.stringify(payload.residential_images),
+          payload.commercial_title, payload.commercial_description, JSON.stringify(payload.commercial_images)
+        ]);
+      }
+    }
+
+    fallbackData.energy_audit_content = payload;
+    return res.json({ success: true, message: 'Energy Audit content updated successfully.', data: payload });
+  } catch (err) {
+    console.error('Error updating Energy Audit content:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 7f. ENVIRONMENTAL SERVICE DETAIL CONTENT API
+// ==========================================
+app.get('/api/environmental', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM environmental_content LIMIT 1');
+      if (rows.length > 0) {
+        const row = rows[0];
+        return res.json({
+          page_title: row.page_title || 'ENVIRONMENTAL',
+          introduction: row.introduction || '',
+          noise_title: row.noise_title || 'NOISE MONITORING',
+          noise_description: row.noise_description || '',
+          noise_images: typeof row.noise_images === 'string' ? JSON.parse(row.noise_images) : (row.noise_images || []),
+          carbon_title: row.carbon_title || 'CARBON MANAGEMENT',
+          carbon_description: row.carbon_description || '',
+          carbon_images: typeof row.carbon_images === 'string' ? JSON.parse(row.carbon_images) : (row.carbon_images || [])
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching Environmental content:', err);
+  }
+  return res.json(fallbackData.environmental_content || {});
+});
+
+app.put('/api/environmental', async (req, res) => {
+  try {
+    const data = req.body;
+
+    const processImages = (imgs, prefix) => {
+      if (!Array.isArray(imgs)) return [];
+      return imgs.map((imgObj, idx) => {
+        const rawUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+        const altText = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : `Environmental ${prefix} Image ${idx + 1}`;
+        const displayOrder = typeof imgObj === 'object' && imgObj.display_order ? imgObj.display_order : (idx + 1);
+
+        let finalUrl = rawUrl;
+        if (rawUrl && rawUrl.startsWith('data:')) {
+          finalUrl = saveBase64File(rawUrl, `environmental_${prefix.toLowerCase()}_${idx + 1}`);
+        }
+        return {
+          url: finalUrl,
+          alt: altText,
+          display_order: displayOrder
+        };
+      });
+    };
+
+    const noiseImages = processImages(data.noise_images, 'Noise');
+    const carbonImages = processImages(data.carbon_images, 'Carbon');
+
+    const payload = {
+      page_title: data.page_title || 'ENVIRONMENTAL',
+      introduction: data.introduction || '',
+      noise_title: data.noise_title || 'NOISE MONITORING',
+      noise_description: data.noise_description || '',
+      noise_images: noiseImages,
+      carbon_title: data.carbon_title || 'CARBON MANAGEMENT',
+      carbon_description: data.carbon_description || '',
+      carbon_images: carbonImages
+    };
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM environmental_content LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`
+          UPDATE environmental_content SET
+            page_title = ?, introduction = ?,
+            noise_title = ?, noise_description = ?, noise_images = ?,
+            carbon_title = ?, carbon_description = ?, carbon_images = ?
+          WHERE id = ?
+        `, [
+          payload.page_title, payload.introduction,
+          payload.noise_title, payload.noise_description, JSON.stringify(payload.noise_images),
+          payload.carbon_title, payload.carbon_description, JSON.stringify(payload.carbon_images),
+          rows[0].id
+        ]);
+      } else {
+        await pool.query(`
+          INSERT INTO environmental_content (
+            page_title, introduction,
+            noise_title, noise_description, noise_images,
+            carbon_title, carbon_description, carbon_images
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          payload.page_title, payload.introduction,
+          payload.noise_title, payload.noise_description, JSON.stringify(payload.noise_images),
+          payload.carbon_title, payload.carbon_description, JSON.stringify(payload.carbon_images)
+        ]);
+      }
+    }
+
+    fallbackData.environmental_content = payload;
+    return res.json({ success: true, message: 'Environmental content updated successfully.', data: payload });
+  } catch (err) {
+    console.error('Error updating Environmental content:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 7g. LASER SCANNING SERVICE DETAIL CONTENT API
+// ==========================================
+app.get('/api/laser-scanning', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM laser_scanning_content LIMIT 1');
+      if (rows.length > 0) {
+        const row = rows[0];
+        return res.json({
+          page_title: row.page_title || 'LASER SCANNING SERVICES',
+          introduction: row.introduction || '',
+          building_title: row.building_title || 'BUILDING',
+          building_description: row.building_description || '',
+          building_images: typeof row.building_images === 'string' ? JSON.parse(row.building_images) : (row.building_images || []),
+          infrastructure_title: row.infrastructure_title || 'INFRASTRUCTURE',
+          infrastructure_description: row.infrastructure_description || '',
+          infrastructure_images: typeof row.infrastructure_images === 'string' ? JSON.parse(row.infrastructure_images) : (row.infrastructure_images || []),
+          recap_title: row.recap_title || 'RECAP WORK',
+          recap_description: row.recap_description || '',
+          recap_images: typeof row.recap_images === 'string' ? JSON.parse(row.recap_images) : (row.recap_images || []),
+          scan_to_bim_title: row.scan_to_bim_title || 'SCAN TO BIM',
+          scan_to_bim_description: row.scan_to_bim_description || '',
+          scan_to_bim_images: typeof row.scan_to_bim_images === 'string' ? JSON.parse(row.scan_to_bim_images) : (row.scan_to_bim_images || [])
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching Laser Scanning content:', err);
+  }
+  return res.json(fallbackData.laser_scanning_content || {});
+});
+
+app.put('/api/laser-scanning', async (req, res) => {
+  try {
+    const data = req.body;
+
+    const processImages = (imgs, prefix) => {
+      if (!Array.isArray(imgs)) return [];
+      return imgs.map((imgObj, idx) => {
+        const rawUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+        const altText = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : `Laser Scanning ${prefix} Image ${idx + 1}`;
+        const displayOrder = typeof imgObj === 'object' && imgObj.display_order ? imgObj.display_order : (idx + 1);
+
+        let finalUrl = rawUrl;
+        if (rawUrl && rawUrl.startsWith('data:')) {
+          finalUrl = saveBase64File(rawUrl, `laser_scanning_${prefix.toLowerCase()}_${idx + 1}`);
+        }
+        return {
+          url: finalUrl,
+          alt: altText,
+          display_order: displayOrder
+        };
+      });
+    };
+
+    const buildingImages = processImages(data.building_images, 'Building');
+    const infrastructureImages = processImages(data.infrastructure_images, 'Infrastructure');
+    const recapImages = processImages(data.recap_images, 'Recap');
+    const scanToBimImages = processImages(data.scan_to_bim_images, 'ScanToBim');
+
+    const payload = {
+      page_title: data.page_title || 'LASER SCANNING SERVICES',
+      introduction: data.introduction || '',
+      building_title: data.building_title || 'BUILDING',
+      building_description: data.building_description || '',
+      building_images: buildingImages,
+      infrastructure_title: data.infrastructure_title || 'INFRASTRUCTURE',
+      infrastructure_description: data.infrastructure_description || '',
+      infrastructure_images: infrastructureImages,
+      recap_title: data.recap_title || 'RECAP WORK',
+      recap_description: data.recap_description || '',
+      recap_images: recapImages,
+      scan_to_bim_title: data.scan_to_bim_title || 'SCAN TO BIM',
+      scan_to_bim_description: data.scan_to_bim_description || '',
+      scan_to_bim_images: scanToBimImages
+    };
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM laser_scanning_content LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`
+          UPDATE laser_scanning_content SET
+            page_title = ?, introduction = ?,
+            building_title = ?, building_description = ?, building_images = ?,
+            infrastructure_title = ?, infrastructure_description = ?, infrastructure_images = ?,
+            recap_title = ?, recap_description = ?, recap_images = ?,
+            scan_to_bim_title = ?, scan_to_bim_description = ?, scan_to_bim_images = ?
+          WHERE id = ?
+        `, [
+          payload.page_title, payload.introduction,
+          payload.building_title, payload.building_description, JSON.stringify(payload.building_images),
+          payload.infrastructure_title, payload.infrastructure_description, JSON.stringify(payload.infrastructure_images),
+          payload.recap_title, payload.recap_description, JSON.stringify(payload.recap_images),
+          payload.scan_to_bim_title, payload.scan_to_bim_description, JSON.stringify(payload.scan_to_bim_images),
+          rows[0].id
+        ]);
+      } else {
+        await pool.query(`
+          INSERT INTO laser_scanning_content (
+            page_title, introduction,
+            building_title, building_description, building_images,
+            infrastructure_title, infrastructure_description, infrastructure_images,
+            recap_title, recap_description, recap_images,
+            scan_to_bim_title, scan_to_bim_description, scan_to_bim_images
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          payload.page_title, payload.introduction,
+          payload.building_title, payload.building_description, JSON.stringify(payload.building_images),
+          payload.infrastructure_title, payload.infrastructure_description, JSON.stringify(payload.infrastructure_images),
+          payload.recap_title, payload.recap_description, JSON.stringify(payload.recap_images),
+          payload.scan_to_bim_title, payload.scan_to_bim_description, JSON.stringify(payload.scan_to_bim_images)
+        ]);
+      }
+    }
+
+    fallbackData.laser_scanning_content = payload;
+    return res.json({ success: true, message: 'Laser Scanning content updated successfully.', data: payload });
+  } catch (err) {
+    console.error('Error updating Laser Scanning content:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 7h. CAD SERVICE DETAIL CONTENT API
+// ==========================================
+app.get('/api/cad', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM cad_content LIMIT 1');
+      if (rows.length > 0) {
+        const row = rows[0];
+        return res.json({
+          page_title: row.page_title || 'CAD',
+          introduction: row.introduction || '',
+          arch_title: row.arch_title || 'ARCHITECTURE',
+          arch_description: row.arch_description || '',
+          arch_images: typeof row.arch_images === 'string' ? JSON.parse(row.arch_images) : (row.arch_images || []),
+          struct_title: row.struct_title || 'STRUCTURE',
+          struct_description: row.struct_description || '',
+          struct_images: typeof row.struct_images === 'string' ? JSON.parse(row.struct_images) : (row.struct_images || []),
+          interior_title: row.interior_title || 'INTERIOR',
+          interior_description: row.interior_description || '',
+          interior_images: typeof row.interior_images === 'string' ? JSON.parse(row.interior_images) : (row.interior_images || []),
+          mech_title: row.mech_title || 'MECHANICAL',
+          mech_description: row.mech_description || '',
+          mech_images: typeof row.mech_images === 'string' ? JSON.parse(row.mech_images) : (row.mech_images || []),
+          elec_title: row.elec_title || 'ELECTRICAL',
+          elec_description: row.elec_description || '',
+          elec_images: typeof row.elec_images === 'string' ? JSON.parse(row.elec_images) : (row.elec_images || []),
+          landscape_title: row.landscape_title || 'LANDSCAPING',
+          landscape_description: row.landscape_description || '',
+          landscape_images: typeof row.landscape_images === 'string' ? JSON.parse(row.landscape_images) : (row.landscape_images || []),
+          road_title: row.road_title || 'ROAD',
+          road_description: row.road_description || '',
+          road_images: typeof row.road_images === 'string' ? JSON.parse(row.road_images) : (row.road_images || []),
+          street_light_title: row.street_light_title || 'STREET LIGHT',
+          street_light_description: row.street_light_description || '',
+          street_light_images: typeof row.street_light_images === 'string' ? JSON.parse(row.street_light_images) : (row.street_light_images || []),
+          util_title: row.util_title || 'UNDERGROUND UTILITIES',
+          util_description: row.util_description || '',
+          util_images: typeof row.util_images === 'string' ? JSON.parse(row.util_images) : (row.util_images || [])
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching CAD content:', err);
+  }
+  return res.json(fallbackData.cad_content || {});
+});
+
+app.put('/api/cad', async (req, res) => {
+  try {
+    const data = req.body;
+
+    const processImages = (imgs, prefix) => {
+      if (!Array.isArray(imgs)) return [];
+      return imgs.map((imgObj, idx) => {
+        const rawUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+        const altText = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : `CAD ${prefix} Image ${idx + 1}`;
+        const displayOrder = typeof imgObj === 'object' && imgObj.display_order ? imgObj.display_order : (idx + 1);
+
+        let finalUrl = rawUrl;
+        if (rawUrl && rawUrl.startsWith('data:')) {
+          finalUrl = saveBase64File(rawUrl, `cad_${prefix.toLowerCase()}_${idx + 1}`);
+        }
+        return {
+          url: finalUrl,
+          alt: altText,
+          display_order: displayOrder
+        };
+      });
+    };
+
+    const archImages = processImages(data.arch_images, 'Architecture');
+    const structImages = processImages(data.struct_images, 'Structure');
+    const interiorImages = processImages(data.interior_images, 'Interior');
+    const mechImages = processImages(data.mech_images, 'Mechanical');
+    const elecImages = processImages(data.elec_images, 'Electrical');
+    const landscapeImages = processImages(data.landscape_images, 'Landscaping');
+    const roadImages = processImages(data.road_images, 'Road');
+    const streetLightImages = processImages(data.street_light_images, 'StreetLight');
+    const utilImages = processImages(data.util_images, 'UndergroundUtilities');
+
+    const payload = {
+      page_title: data.page_title || 'CAD',
+      introduction: data.introduction || '',
+      arch_title: data.arch_title || 'ARCHITECTURE',
+      arch_description: data.arch_description || '',
+      arch_images: archImages,
+      struct_title: data.struct_title || 'STRUCTURE',
+      struct_description: data.struct_description || '',
+      struct_images: structImages,
+      interior_title: data.interior_title || 'INTERIOR',
+      interior_description: data.interior_description || '',
+      interior_images: interiorImages,
+      mech_title: data.mech_title || 'MECHANICAL',
+      mech_description: data.mech_description || '',
+      mech_images: mechImages,
+      elec_title: data.elec_title || 'ELECTRICAL',
+      elec_description: data.elec_description || '',
+      elec_images: elecImages,
+      landscape_title: data.landscape_title || 'LANDSCAPING',
+      landscape_description: data.landscape_description || '',
+      landscape_images: landscapeImages,
+      road_title: data.road_title || 'ROAD',
+      road_description: data.road_description || '',
+      road_images: roadImages,
+      street_light_title: data.street_light_title || 'STREET LIGHT',
+      street_light_description: data.street_light_description || '',
+      street_light_images: streetLightImages,
+      util_title: data.util_title || 'UNDERGROUND UTILITIES',
+      util_description: data.util_description || '',
+      util_images: utilImages
+    };
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM cad_content LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`
+          UPDATE cad_content SET
+            page_title = ?, introduction = ?,
+            arch_title = ?, arch_description = ?, arch_images = ?,
+            struct_title = ?, struct_description = ?, struct_images = ?,
+            interior_title = ?, interior_description = ?, interior_images = ?,
+            mech_title = ?, mech_description = ?, mech_images = ?,
+            elec_title = ?, elec_description = ?, elec_images = ?,
+            landscape_title = ?, landscape_description = ?, landscape_images = ?,
+            road_title = ?, road_description = ?, road_images = ?,
+            street_light_title = ?, street_light_description = ?, street_light_images = ?,
+            util_title = ?, util_description = ?, util_images = ?
+          WHERE id = ?
+        `, [
+          payload.page_title, payload.introduction,
+          payload.arch_title, payload.arch_description, JSON.stringify(payload.arch_images),
+          payload.struct_title, payload.struct_description, JSON.stringify(payload.struct_images),
+          payload.interior_title, payload.interior_description, JSON.stringify(payload.interior_images),
+          payload.mech_title, payload.mech_description, JSON.stringify(payload.mech_images),
+          payload.elec_title, payload.elec_description, JSON.stringify(payload.elec_images),
+          payload.landscape_title, payload.landscape_description, JSON.stringify(payload.landscape_images),
+          payload.road_title, payload.road_description, JSON.stringify(payload.road_images),
+          payload.street_light_title, payload.street_light_description, JSON.stringify(payload.street_light_images),
+          payload.util_title, payload.util_description, JSON.stringify(payload.util_images),
+          rows[0].id
+        ]);
+      } else {
+        await pool.query(`
+          INSERT INTO cad_content (
+            page_title, introduction,
+            arch_title, arch_description, arch_images,
+            struct_title, struct_description, struct_images,
+            interior_title, interior_description, interior_images,
+            mech_title, mech_description, mech_images,
+            elec_title, elec_description, elec_images,
+            landscape_title, landscape_description, landscape_images,
+            road_title, road_description, road_images,
+            street_light_title, street_light_description, street_light_images,
+            util_title, util_description, util_images
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          payload.page_title, payload.introduction,
+          payload.arch_title, payload.arch_description, JSON.stringify(payload.arch_images),
+          payload.struct_title, payload.struct_description, JSON.stringify(payload.struct_images),
+          payload.interior_title, payload.interior_description, JSON.stringify(payload.interior_images),
+          payload.mech_title, payload.mech_description, JSON.stringify(payload.mech_images),
+          payload.elec_title, payload.elec_description, JSON.stringify(payload.elec_images),
+          payload.landscape_title, payload.landscape_description, JSON.stringify(payload.landscape_images),
+          payload.road_title, payload.road_description, JSON.stringify(payload.road_images),
+          payload.street_light_title, payload.street_light_description, JSON.stringify(payload.street_light_images),
+          payload.util_title, payload.util_description, JSON.stringify(payload.util_images)
+        ]);
+      }
+    }
+
+    fallbackData.cad_content = payload;
+    return res.json({ success: true, message: 'CAD content updated successfully.', data: payload });
+  } catch (err) {
+    console.error('Error updating CAD content:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 7i. BIM SERVICE DETAIL CONTENT API
+// ==========================================
+app.get('/api/bim', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM bim_content LIMIT 1');
+      if (rows.length > 0) {
+        const row = rows[0];
+        return res.json({
+          page_title: row.page_title || 'BIM',
+          introduction: row.introduction || '',
+          building_main_title: row.building_main_title || 'BUILDING',
+          building_main_desc: row.building_main_desc || '',
+          b_arch_title: row.b_arch_title || 'ARCHITECTURE',
+          b_arch_desc: row.b_arch_desc || '',
+          b_arch_images: typeof row.b_arch_images === 'string' ? JSON.parse(row.b_arch_images) : (row.b_arch_images || []),
+          b_struct_title: row.b_struct_title || 'STRUCTURE',
+          b_struct_desc: row.b_struct_desc || '',
+          b_struct_images: typeof row.b_struct_images === 'string' ? JSON.parse(row.b_struct_images) : (row.b_struct_images || []),
+          b_interior_title: row.b_interior_title || 'INTERIOR',
+          b_interior_desc: row.b_interior_desc || '',
+          b_interior_images: typeof row.b_interior_images === 'string' ? JSON.parse(row.b_interior_images) : (row.b_interior_images || []),
+          b_mep_title: row.b_mep_title || 'MECHANICAL ELECTRICAL',
+          b_mep_desc: row.b_mep_desc || '',
+          b_mep_images: typeof row.b_mep_images === 'string' ? JSON.parse(row.b_mep_images) : (row.b_mep_images || []),
+          infra_main_title: row.infra_main_title || 'INFRASTRUCTURE',
+          infra_main_desc: row.infra_main_desc || '',
+          i_landscape_title: row.i_landscape_title || 'LANDSCAPING',
+          i_landscape_desc: row.i_landscape_desc || '',
+          i_landscape_images: typeof row.i_landscape_images === 'string' ? JSON.parse(row.i_landscape_images) : (row.i_landscape_images || []),
+          i_road_title: row.i_road_title || 'ROAD',
+          i_road_desc: row.i_road_desc || '',
+          i_road_images: typeof row.i_road_images === 'string' ? JSON.parse(row.i_road_images) : (row.i_road_images || []),
+          i_street_light_title: row.i_street_light_title || 'STREET LIGHT',
+          i_street_light_desc: row.i_street_light_desc || '',
+          i_street_light_images: typeof row.i_street_light_images === 'string' ? JSON.parse(row.i_street_light_images) : (row.i_street_light_images || []),
+          i_util_title: row.i_util_title || 'UNDERGROUND UTILITIES',
+          i_util_desc: row.i_util_desc || '',
+          i_util_images: typeof row.i_util_images === 'string' ? JSON.parse(row.i_util_images) : (row.i_util_images || []),
+          fourd_main_title: row.fourd_main_title || '4D',
+          fourd_main_desc: row.fourd_main_desc || '',
+          fourd_b_title: row.fourd_b_title || 'BUILDING',
+          fourd_b_desc: row.fourd_b_desc || '',
+          fourd_b_images: typeof row.fourd_b_images === 'string' ? JSON.parse(row.fourd_b_images) : (row.fourd_b_images || []),
+          fourd_i_title: row.fourd_i_title || 'INFRASTRUCTURE',
+          fourd_i_desc: row.fourd_i_desc || '',
+          fourd_i_images: typeof row.fourd_i_images === 'string' ? JSON.parse(row.fourd_i_images) : (row.fourd_i_images || []),
+          fived_main_title: row.fived_main_title || '5D',
+          fived_main_desc: row.fived_main_desc || '',
+          fived_b_title: row.fived_b_title || 'BUILDING',
+          fived_b_desc: row.fived_b_desc || '',
+          fived_b_images: typeof row.fived_b_images === 'string' ? JSON.parse(row.fived_b_images) : (row.fived_b_images || []),
+          fived_i_title: row.fived_i_title || 'INFRASTRUCTURE',
+          fived_i_desc: row.fived_i_desc || '',
+          fived_i_images: typeof row.fived_i_images === 'string' ? JSON.parse(row.fived_i_images) : (row.fived_i_images || []),
+          render_main_title: row.render_main_title || 'RENDERING',
+          render_main_desc: row.render_main_desc || '',
+          r_walkthrough_title: row.r_walkthrough_title || 'WALK THROUGH',
+          r_walkthrough_desc: row.r_walkthrough_desc || '',
+          r_walkthrough_images: typeof row.r_walkthrough_images === 'string' ? JSON.parse(row.r_walkthrough_images) : (row.r_walkthrough_images || []),
+          report_main_title: row.report_main_title || 'REPORTING',
+          report_main_desc: row.report_main_desc || '',
+          rep_periodic_title: row.rep_periodic_title || 'PERIODICALLY',
+          rep_periodic_desc: row.rep_periodic_desc || '',
+          rep_periodic_images: typeof row.rep_periodic_images === 'string' ? JSON.parse(row.rep_periodic_images) : (row.rep_periodic_images || [])
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching BIM content:', err);
+  }
+  return res.json(fallbackData.bim_content || {});
+});
+
+app.put('/api/bim', async (req, res) => {
+  try {
+    const data = req.body;
+
+    const processImages = (imgs, prefix) => {
+      if (!Array.isArray(imgs)) return [];
+      return imgs.map((imgObj, idx) => {
+        const rawUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+        const altText = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : `BIM ${prefix} Image ${idx + 1}`;
+        const displayOrder = typeof imgObj === 'object' && imgObj.display_order ? imgObj.display_order : (idx + 1);
+
+        let finalUrl = rawUrl;
+        if (rawUrl && rawUrl.startsWith('data:')) {
+          finalUrl = saveBase64File(rawUrl, `bim_${prefix.toLowerCase()}_${idx + 1}`);
+        }
+        return {
+          url: finalUrl,
+          alt: altText,
+          display_order: displayOrder
+        };
+      });
+    };
+
+    const bArchImages = processImages(data.b_arch_images, 'BuildingArch');
+    const bStructImages = processImages(data.b_struct_images, 'BuildingStruct');
+    const bInteriorImages = processImages(data.b_interior_images, 'BuildingInterior');
+    const bMepImages = processImages(data.b_mep_images, 'BuildingMep');
+    const iLandscapeImages = processImages(data.i_landscape_images, 'InfraLandscape');
+    const iRoadImages = processImages(data.i_road_images, 'InfraRoad');
+    const iStreetLightImages = processImages(data.i_street_light_images, 'InfraStreetLight');
+    const iUtilImages = processImages(data.i_util_images, 'InfraUtilities');
+    const fourdBImages = processImages(data.fourd_b_images, '4DBuilding');
+    const fourdIImages = processImages(data.fourd_i_images, '4DInfra');
+    const fivedBImages = processImages(data.fived_b_images, '5DBuilding');
+    const fivedIImages = processImages(data.fived_i_images, '5DInfra');
+    const rWalkthroughImages = processImages(data.r_walkthrough_images, 'RenderWalkthrough');
+    const repPeriodicImages = processImages(data.rep_periodic_images, 'ReportPeriodic');
+
+    const payload = {
+      page_title: data.page_title || 'BIM',
+      introduction: data.introduction || '',
+      building_main_title: data.building_main_title || 'BUILDING',
+      building_main_desc: data.building_main_desc || '',
+      b_arch_title: data.b_arch_title || 'ARCHITECTURE',
+      b_arch_desc: data.b_arch_desc || '',
+      b_arch_images: bArchImages,
+      b_struct_title: data.b_struct_title || 'STRUCTURE',
+      b_struct_desc: data.b_struct_desc || '',
+      b_struct_images: bStructImages,
+      b_interior_title: data.b_interior_title || 'INTERIOR',
+      b_interior_desc: data.b_interior_desc || '',
+      b_interior_images: bInteriorImages,
+      b_mep_title: data.b_mep_title || 'MECHANICAL ELECTRICAL',
+      b_mep_desc: data.b_mep_desc || '',
+      b_mep_images: bMepImages,
+      infra_main_title: data.infra_main_title || 'INFRASTRUCTURE',
+      infra_main_desc: data.infra_main_desc || '',
+      i_landscape_title: data.i_landscape_title || 'LANDSCAPING',
+      i_landscape_desc: data.i_landscape_desc || '',
+      i_landscape_images: iLandscapeImages,
+      i_road_title: data.i_road_title || 'ROAD',
+      i_road_desc: data.i_road_desc || '',
+      i_road_images: iRoadImages,
+      i_street_light_title: data.i_street_light_title || 'STREET LIGHT',
+      i_street_light_desc: data.i_street_light_desc || '',
+      i_street_light_images: iStreetLightImages,
+      i_util_title: data.i_util_title || 'UNDERGROUND UTILITIES',
+      i_util_desc: data.i_util_desc || '',
+      i_util_images: iUtilImages,
+      fourd_main_title: data.fourd_main_title || '4D',
+      fourd_main_desc: data.fourd_main_desc || '',
+      fourd_b_title: data.fourd_b_title || 'BUILDING',
+      fourd_b_desc: data.fourd_b_desc || '',
+      fourd_b_images: fourdBImages,
+      fourd_i_title: data.fourd_i_title || 'INFRASTRUCTURE',
+      fourd_i_desc: data.fourd_i_desc || '',
+      fourd_i_images: fourdIImages,
+      fived_main_title: data.fived_main_title || '5D',
+      fived_main_desc: data.fived_main_desc || '',
+      fived_b_title: data.fived_b_title || 'BUILDING',
+      fived_b_desc: data.fived_b_desc || '',
+      fived_b_images: fivedBImages,
+      fived_i_title: data.fived_i_title || 'INFRASTRUCTURE',
+      fived_i_desc: data.fived_i_desc || '',
+      fived_i_images: fivedIImages,
+      render_main_title: data.render_main_title || 'RENDERING',
+      render_main_desc: data.render_main_desc || '',
+      r_walkthrough_title: data.r_walkthrough_title || 'WALK THROUGH',
+      r_walkthrough_desc: data.r_walkthrough_desc || '',
+      r_walkthrough_images: rWalkthroughImages,
+      report_main_title: data.report_main_title || 'REPORTING',
+      report_main_desc: data.report_main_desc || '',
+      rep_periodic_title: data.rep_periodic_title || 'PERIODICALLY',
+      rep_periodic_desc: data.rep_periodic_desc || '',
+      rep_periodic_images: repPeriodicImages
+    };
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM bim_content LIMIT 1');
+      if (rows.length > 0) {
+        await pool.query(`
+          UPDATE bim_content SET
+            page_title = ?, introduction = ?,
+            building_main_title = ?, building_main_desc = ?,
+            b_arch_title = ?, b_arch_desc = ?, b_arch_images = ?,
+            b_struct_title = ?, b_struct_desc = ?, b_struct_images = ?,
+            b_interior_title = ?, b_interior_desc = ?, b_interior_images = ?,
+            b_mep_title = ?, b_mep_desc = ?, b_mep_images = ?,
+            infra_main_title = ?, infra_main_desc = ?,
+            i_landscape_title = ?, i_landscape_desc = ?, i_landscape_images = ?,
+            i_road_title = ?, i_road_desc = ?, i_road_images = ?,
+            i_street_light_title = ?, i_street_light_desc = ?, i_street_light_images = ?,
+            i_util_title = ?, i_util_desc = ?, i_util_images = ?,
+            fourd_main_title = ?, fourd_main_desc = ?,
+            fourd_b_title = ?, fourd_b_desc = ?, fourd_b_images = ?,
+            fourd_i_title = ?, fourd_i_desc = ?, fourd_i_images = ?,
+            fived_main_title = ?, fived_main_desc = ?,
+            fived_b_title = ?, fived_b_desc = ?, fived_b_images = ?,
+            fived_i_title = ?, fived_i_desc = ?, fived_i_images = ?,
+            render_main_title = ?, render_main_desc = ?,
+            r_walkthrough_title = ?, r_walkthrough_desc = ?, r_walkthrough_images = ?,
+            report_main_title = ?, report_main_desc = ?,
+            rep_periodic_title = ?, rep_periodic_desc = ?, rep_periodic_images = ?
+          WHERE id = ?
+        `, [
+          payload.page_title, payload.introduction,
+          payload.building_main_title, payload.building_main_desc,
+          payload.b_arch_title, payload.b_arch_desc, JSON.stringify(payload.b_arch_images),
+          payload.b_struct_title, payload.b_struct_desc, JSON.stringify(payload.b_struct_images),
+          payload.b_interior_title, payload.b_interior_desc, JSON.stringify(payload.b_interior_images),
+          payload.b_mep_title, payload.b_mep_desc, JSON.stringify(payload.b_mep_images),
+          payload.infra_main_title, payload.infra_main_desc,
+          payload.i_landscape_title, payload.i_landscape_desc, JSON.stringify(payload.i_landscape_images),
+          payload.i_road_title, payload.i_road_desc, JSON.stringify(payload.i_road_images),
+          payload.i_street_light_title, payload.i_street_light_desc, JSON.stringify(payload.i_street_light_images),
+          payload.i_util_title, payload.i_util_desc, JSON.stringify(payload.i_util_images),
+          payload.fourd_main_title, payload.fourd_main_desc,
+          payload.fourd_b_title, payload.fourd_b_desc, JSON.stringify(payload.fourd_b_images),
+          payload.fourd_i_title, payload.fourd_i_desc, JSON.stringify(payload.fourd_i_images),
+          payload.fived_main_title, payload.fived_main_desc,
+          payload.fived_b_title, payload.fived_b_desc, JSON.stringify(payload.fived_b_images),
+          payload.fived_i_title, payload.fived_i_desc, JSON.stringify(payload.fived_i_images),
+          payload.render_main_title, payload.render_main_desc,
+          payload.r_walkthrough_title, payload.r_walkthrough_desc, JSON.stringify(payload.r_walkthrough_images),
+          payload.report_main_title, payload.report_main_desc,
+          payload.rep_periodic_title, payload.rep_periodic_desc, JSON.stringify(payload.rep_periodic_images),
+          rows[0].id
+        ]);
+      } else {
+        await pool.query(`
+          INSERT INTO bim_content (
+            page_title, introduction,
+            building_main_title, building_main_desc,
+            b_arch_title, b_arch_desc, b_arch_images,
+            b_struct_title, b_struct_desc, b_struct_images,
+            b_interior_title, b_interior_desc, b_interior_images,
+            b_mep_title, b_mep_desc, b_mep_images,
+            infra_main_title, infra_main_desc,
+            i_landscape_title, i_landscape_desc, i_landscape_images,
+            i_road_title, i_road_desc, i_road_images,
+            i_street_light_title, i_street_light_desc, i_street_light_images,
+            i_util_title, i_util_desc, i_util_images,
+            fourd_main_title, fourd_main_desc,
+            fourd_b_title, fourd_b_desc, fourd_b_images,
+            fourd_i_title, fourd_i_desc, fourd_i_images,
+            fived_main_title, fived_main_desc,
+            fived_b_title, fived_b_desc, fived_b_images,
+            fived_i_title, fived_i_desc, fived_i_images,
+            render_main_title, render_main_desc,
+            r_walkthrough_title, r_walkthrough_desc, r_walkthrough_images,
+            report_main_title, report_main_desc,
+            rep_periodic_title, rep_periodic_desc, rep_periodic_images
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          payload.page_title, payload.introduction,
+          payload.building_main_title, payload.building_main_desc,
+          payload.b_arch_title, payload.b_arch_desc, JSON.stringify(payload.b_arch_images),
+          payload.b_struct_title, payload.b_struct_desc, JSON.stringify(payload.b_struct_images),
+          payload.b_interior_title, payload.b_interior_desc, JSON.stringify(payload.b_interior_images),
+          payload.b_mep_title, payload.b_mep_desc, JSON.stringify(payload.b_mep_images),
+          payload.infra_main_title, payload.infra_main_desc,
+          payload.i_landscape_title, payload.i_landscape_desc, JSON.stringify(payload.i_landscape_images),
+          payload.i_road_title, payload.i_road_desc, JSON.stringify(payload.i_road_images),
+          payload.i_street_light_title, payload.i_street_light_desc, JSON.stringify(payload.i_street_light_images),
+          payload.i_util_title, payload.i_util_desc, JSON.stringify(payload.i_util_images),
+          payload.fourd_main_title, payload.fourd_main_desc,
+          payload.fourd_b_title, payload.fourd_b_desc, JSON.stringify(payload.fourd_b_images),
+          payload.fourd_i_title, payload.fourd_i_desc, JSON.stringify(payload.fourd_i_images),
+          payload.fived_main_title, payload.fived_main_desc,
+          payload.fived_b_title, payload.fived_b_desc, JSON.stringify(payload.fived_b_images),
+          payload.fived_i_title, payload.fived_i_desc, JSON.stringify(payload.fived_i_images),
+          payload.render_main_title, payload.render_main_desc,
+          payload.r_walkthrough_title, payload.r_walkthrough_desc, JSON.stringify(payload.r_walkthrough_images),
+          payload.report_main_title, payload.report_main_desc,
+          payload.rep_periodic_title, payload.rep_periodic_desc, JSON.stringify(payload.rep_periodic_images)
+        ]);
+      }
+    }
+
+    fallbackData.bim_content = payload;
+    return res.json({ success: true, message: 'BIM content updated successfully.', data: payload });
+  } catch (err) {
+    console.error('Error updating BIM content:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -1581,14 +2803,15 @@ app.get('/api/media', async (req, res) => {
 
 // POST add media item
 app.post('/api/media', async (req, res) => {
-  const { type, title, url } = req.body;
+  const { type, title, url, category } = req.body;
   if (!type || !title || !url) return res.status(400).json({ error: 'Type, title, and url are required.' });
+  const catToSave = category || (type === 'gallery' ? 'Site' : 'Our Work');
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
       const [result] = await pool.query(
-        'INSERT INTO media_items (type, title, url) VALUES (?, ?, ?)',
-        [type, title, url]
+        'INSERT INTO media_items (type, category, title, url) VALUES (?, ?, ?, ?)',
+        [type, catToSave, title, url]
       );
       const [rows] = await pool.query('SELECT * FROM media_items WHERE id = ?', [result.insertId]);
       return res.status(201).json(rows[0]);
@@ -1603,13 +2826,14 @@ app.post('/api/media', async (req, res) => {
 // PUT update media item
 app.put('/api/media/:id', async (req, res) => {
   const { id } = req.params;
-  const { type, title, url } = req.body;
+  const { type, title, url, category } = req.body;
+  const catToSave = category || (type === 'gallery' ? 'Site' : 'Our Work');
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
       await pool.query(
-        'UPDATE media_items SET type=?, title=?, url=? WHERE id=?',
-        [type, title, url, id]
+        'UPDATE media_items SET type=?, category=?, title=?, url=? WHERE id=?',
+        [type, catToSave, title, url, id]
       );
       const [rows] = await pool.query('SELECT * FROM media_items WHERE id = ?', [id]);
       return res.json(rows[0]);

@@ -3,11 +3,10 @@ import { ChevronLeft, ChevronRight, Briefcase, ArrowRight, Building2, Compass, R
 
 const CATEGORIES = [
   'ALL',
-  'BIM PROJECTS',
-  'CAD PROJECTS',
-  'LASER SCANNING PROJECTS',
-  'DIGITAL TWIN PROJECTS',
-  'SUSTAINABILITY PROJECTS'
+  'ENGINEERING SERVICES',
+  'SUSTAINABILITY SERVICES',
+  'DIGITAL TWIN',
+  'DIGITAL CONSTRUCTION TECHNOLOGY'
 ];
 
 const FALLBACK_PROJECTS = [
@@ -75,7 +74,7 @@ export default function ProjectsSlider({ onNavigate }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
+  const fetchProjectsData = () => {
     fetch('/api/projects')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
@@ -87,16 +86,40 @@ export default function ProjectsSlider({ onNavigate }) {
         }
       })
       .catch(err => console.warn('Projects slider fetch warning:', err));
+  };
+
+  useEffect(() => {
+    fetchProjectsData();
+    window.addEventListener('dataUpdated', fetchProjectsData);
+    window.addEventListener('menuUpdated', fetchProjectsData);
+    return () => {
+      window.removeEventListener('dataUpdated', fetchProjectsData);
+      window.removeEventListener('menuUpdated', fetchProjectsData);
+    };
   }, []);
+
+  const [isPaused, setIsPaused] = useState(false);
 
   // Filter projects by active category
   const filteredProjects = activeCategory === 'ALL'
     ? projects
     : projects.filter(p => {
-        const divType = (p.division_type || p.category || '').toUpperCase().trim();
+        const divType = (p.division_type || p.category || p.name || '').toUpperCase().trim();
         const active = activeCategory.toUpperCase().trim();
-        const activeShort = active.replace(' PROJECTS', '').trim();
-        return divType === active || divType.includes(activeShort) || active.includes(divType);
+        
+        if (active.includes('ENGINEERING')) {
+          return divType.includes('BIM') || divType.includes('CAD') || divType.includes('SCAN') || divType.includes('ENGINEERING');
+        }
+        if (active.includes('SUSTAINABILITY')) {
+          return divType.includes('GSAS') || divType.includes('LEED') || divType.includes('ENERGY') || divType.includes('ENVIRONMENT') || divType.includes('SUSTAINABILITY');
+        }
+        if (active.includes('TWIN')) {
+          return divType.includes('TWIN') || divType.includes('ASSET') || divType.includes('SYSTEM') || divType.includes('MONITORING');
+        }
+        if (active.includes('CONSTRUCTION') || active.includes('TECHNOLOGY')) {
+          return divType.includes('SCAN') || divType.includes('360') || divType.includes('AR') || divType.includes('COLLABORATION') || divType.includes('CONSTRUCTION') || divType.includes('ROBOTICS');
+        }
+        return divType.includes(active) || active.includes(divType);
       });
 
   const displayProjects = filteredProjects.length > 0 ? filteredProjects : projects;
@@ -108,6 +131,22 @@ export default function ProjectsSlider({ onNavigate }) {
   };
 
   const cardsToShow = getCardsToShow();
+
+  // Auto-scroll loop every 3.5 seconds
+  useEffect(() => {
+    if (isPaused || displayProjects.length <= cardsToShow) return;
+
+    const interval = setInterval(() => {
+      setStartIndex((prev) => {
+        if (prev >= displayProjects.length - cardsToShow) {
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [isPaused, displayProjects.length, cardsToShow]);
 
   const handlePrev = () => {
     setStartIndex((prev) => (prev > 0 ? prev - 1 : 0));
@@ -243,19 +282,22 @@ export default function ProjectsSlider({ onNavigate }) {
           ))}
         </div>
 
-        {/* Alternating Staggered Cards Track */}
-        <div style={{ width: '100%', overflow: 'hidden', padding: '16px 4px 24px 4px' }}>
+        {/* Slider Cards Track with Auto-Scroll Pause on Hover */}
+        <div 
+          style={{ width: '100%', overflow: 'hidden', padding: '16px 0 24px 0' }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           <div
             style={{
               display: 'flex',
-              transform: `translateX(-${startIndex * (100 / cardsToShow)}%)`,
+              transform: `translateX(calc(-${startIndex} * (100% / ${cardsToShow} + ${24 / cardsToShow}px)))`,
               transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               gap: '24px',
-              alignItems: 'flex-start'
+              alignItems: 'stretch'
             }}
           >
             {displayProjects.map((project, idx) => {
-              const isStaggered = idx % 2 === 1; // Alternating card offset
               return (
                 <div
                   key={project.id || idx}
@@ -274,10 +316,10 @@ export default function ProjectsSlider({ onNavigate }) {
                     transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
                     cursor: 'pointer',
                     minHeight: '350px',
-                    marginTop: isStaggered ? '36px' : '0px'
+                    marginTop: '0px'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = isStaggered ? 'translateY(28px)' : 'translateY(-8px)';
+                    e.currentTarget.style.transform = 'translateY(-8px)';
                     e.currentTarget.style.boxShadow = '0 20px 44px rgba(8, 124, 255, 0.16)';
                     e.currentTarget.style.borderColor = '#087CFF';
                   }}
@@ -293,7 +335,7 @@ export default function ProjectsSlider({ onNavigate }) {
                   }}
                 >
                   <div>
-                    {/* Image Thumbnail Block with Top-Left Icon Badge */}
+                    {/* Image Thumbnail Block (Icon Badge Removed as requested) */}
                     <div
                       style={{
                         width: '100%',
@@ -317,26 +359,6 @@ export default function ProjectsSlider({ onNavigate }) {
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.08)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                       />
-
-                      {/* Top-Left Green Icon Badge */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '12px',
-                          left: '12px',
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '12px',
-                          background: '#22C55E',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
-                          border: '2px solid #FFFFFF'
-                        }}
-                      >
-                        {getCategoryIcon(project.division_type)}
-                      </div>
                     </div>
 
                     {/* Title */}
@@ -346,7 +368,7 @@ export default function ProjectsSlider({ onNavigate }) {
                         fontSize: '20px',
                         fontWeight: '800',
                         color: '#063B73',
-                        margin: '0 0 10px 0',
+                        margin: '0 0 8px 0',
                         lineHeight: 1.35,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
@@ -358,31 +380,35 @@ export default function ProjectsSlider({ onNavigate }) {
                       {project.name}
                     </h4>
 
+                    {/* Sub-Category Title Badge under Title */}
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '4px 14px',
+                        borderRadius: '20px',
+                        background: '#ECFDF5',
+                        border: '1px solid #A7F3D0',
+                        color: '#059669',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        marginBottom: '14px'
+                      }}
+                    >
+                      {project.division_type || activeCategory}
+                    </div>
                   </div>
 
                   {/* Card Footer */}
                   <div
                     style={{
                       display: 'flex',
-                      justifyContent: 'space-between',
+                      justifyContent: 'flex-end',
                       alignItems: 'center',
                       borderTop: '1px solid rgba(6, 59, 115, 0.08)',
                       paddingTop: '16px'
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: '#22C55E',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <Briefcase size={15} color="#22C55E" />
-                      {project.project_count || 12}+ Projects
-                    </span>
                     <span
                       style={{
                         fontSize: '12.5px',

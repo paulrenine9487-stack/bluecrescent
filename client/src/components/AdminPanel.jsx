@@ -9,7 +9,8 @@ import {
   Mail, Send, History, Sliders, Database, Terminal, ChevronDown, FileCode,
   Building, MapPin, Phone, Map, Clock, Cpu, ExternalLink,
   Radio, Leaf, Building2, Wind, Volume2, Droplet, Activity, Zap, Users,
-  Monitor, Cloud, TrendingUp, Share2, ClipboardCheck, Heart, RefreshCw
+  Monitor, Cloud, TrendingUp, Share2, ClipboardCheck, Heart, RefreshCw,
+  CheckCircle, AlertCircle, Info
 } from 'lucide-react';
 import './AdminPanel.css';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
@@ -17,6 +18,42 @@ import logoBlueImg from '../assets/logo1_transparent_blue.png';
 export default function AdminPanel({ onNavigate }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+
+  // Toast Notification State
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
+
+  const closeToast = () => {
+    setToast(prev => ({ ...prev, show: false }));
+  };
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast(prev => ({ ...prev, show: false }));
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
+
+  // Intercept window.alert calls in Admin Panel to show modern UI toast notifications
+  useEffect(() => {
+    const originalAlert = window.alert;
+    window.alert = (msg) => {
+      if (!msg) return;
+      const lower = String(msg).toLowerCase();
+      const isError = lower.includes('failed') || lower.includes('error') || lower.includes('please check') || lower.includes('limit') || lower.includes('invalid');
+      const isInfo = lower.includes('discarded') || lower.includes('reverted') || lower.includes('cancel');
+      const type = isError ? 'error' : isInfo ? 'info' : 'success';
+      showToast(msg, type);
+    };
+    return () => {
+      window.alert = originalAlert;
+    };
+  }, []);
   
   // Auth state
   const [usernameInput, setUsernameInput] = useState('');
@@ -60,6 +97,843 @@ export default function AdminPanel({ onNavigate }) {
   const [mediaItems, setMediaItems] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [partners, setPartners] = useState([]);
+
+  // GSAS Content Management State
+  const [gsasForm, setGsasForm] = useState({
+    page_title: 'GSAS',
+    introduction: 'Professional GSAS sustainability consultancy supporting projects across design, construction and operational stages.',
+    design_title: 'DESIGN',
+    design_description: 'GSAS support during the design stage focuses on integrating sustainability requirements into project planning and design development. Our consultancy supports project teams in addressing GSAS criteria, sustainability strategies and documentation requirements from the early stages of design.',
+    design_images: [],
+    build_title: 'BUILD / CONSTRUCTION',
+    build_description: 'During construction, GSAS consultancy supports project teams in implementing sustainability requirements and maintaining alignment with applicable project objectives and documentation through the construction process.',
+    build_images: [],
+    operation_title: 'OPERATION',
+    operation_description: 'At the operational stage, GSAS support focuses on maintaining sustainable building performance and supporting applicable operational requirements, documentation and sustainability objectives.',
+    operation_images: []
+  });
+  const [isSavingGsas, setIsSavingGsas] = useState(false);
+
+  const saveGsasContent = async () => {
+    setIsSavingGsas(true);
+    try {
+      const res = await fetch('/api/gsas', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gsasForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setGsasForm(result.data);
+        }
+        alert('GSAS Content saved successfully! Changes are live on the public GSAS page.');
+        window.dispatchEvent(new Event('gsasContentUpdated'));
+      } else {
+        alert('Failed to save GSAS content. Please check inputs and try again.');
+      }
+    } catch (err) {
+      console.error('Error saving GSAS content:', err);
+      alert('Error saving GSAS content.');
+    } finally {
+      setIsSavingGsas(false);
+    }
+  };
+
+  const handleGsasImageUpload = (sectionKey, file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    const currentList = gsasForm[sectionKey] || [];
+    if (currentList.length >= 6) {
+      alert('Maximum limit of 6 images reached for this section.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImageObj = {
+        url: reader.result,
+        alt: `GSAS ${sectionKey.replace('_images', '').toUpperCase()} Image ${currentList.length + 1}`,
+        display_order: currentList.length + 1
+      };
+      setGsasForm(prev => ({
+        ...prev,
+        [sectionKey]: [...(prev[sectionKey] || []), newImageObj]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveGsasImage = (sectionKey, index) => {
+    setGsasForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      list.splice(index, 1);
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleMoveGsasImage = (sectionKey, index, direction) => {
+    setGsasForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= list.length) return prev;
+
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleUpdateGsasImageAlt = (sectionKey, index, newAlt) => {
+    setGsasForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      if (list[index]) {
+        list[index] = { ...list[index], alt: newAlt };
+      }
+      return { ...prev, [sectionKey]: list };
+    });
+  };
+
+  // Energy Audit Content Management State
+  const [energyAuditForm, setEnergyAuditForm] = useState({
+    page_title: 'Energy Audit',
+    introduction: 'Comprehensive Energy Audit services providing detailed diagnostics, energy consumption analysis, ASHRAE Level 1, 2 & 3 audits, and cost-effective energy conservation measures across residential and commercial building assets.',
+    residential_title: 'RESIDENTIAL BUILDING',
+    residential_description: 'Energy audits for residential developments, villas, high-rise apartments, and residential complexes focusing on HVAC optimization, lighting efficiency, thermal envelope insulation, and utility cost reduction.',
+    residential_images: [],
+    commercial_title: 'COMMERCIAL BUILDING',
+    commercial_description: 'Detailed energy diagnostics for commercial towers, corporate offices, shopping malls, hotels, and industrial facilities in accordance with ASHRAE audit standards to maximize operational energy efficiency.',
+    commercial_images: []
+  });
+  const [isSavingEnergyAudit, setIsSavingEnergyAudit] = useState(false);
+
+  const saveEnergyAuditContent = async () => {
+    setIsSavingEnergyAudit(true);
+    try {
+      const res = await fetch('/api/energy-audit', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(energyAuditForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setEnergyAuditForm(result.data);
+        }
+        alert('Energy Audit Content saved successfully! Changes are live on the public Energy Audit page.');
+        window.dispatchEvent(new Event('energyAuditContentUpdated'));
+      } else {
+        alert('Failed to save Energy Audit content. Please check inputs and try again.');
+      }
+    } catch (err) {
+      console.error('Error saving Energy Audit content:', err);
+      alert('Error saving Energy Audit content.');
+    } finally {
+      setIsSavingEnergyAudit(false);
+    }
+  };
+
+  const handleEnergyAuditImageUpload = (sectionKey, file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    const currentList = energyAuditForm[sectionKey] || [];
+    if (currentList.length >= 6) {
+      alert('Maximum limit of 6 images reached for this section.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImageObj = {
+        url: reader.result,
+        alt: `Energy Audit ${sectionKey.replace('_images', '').toUpperCase()} Image ${currentList.length + 1}`,
+        display_order: currentList.length + 1
+      };
+      setEnergyAuditForm(prev => ({
+        ...prev,
+        [sectionKey]: [...(prev[sectionKey] || []), newImageObj]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveEnergyAuditImage = (sectionKey, index) => {
+    setEnergyAuditForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      list.splice(index, 1);
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleMoveEnergyAuditImage = (sectionKey, index, direction) => {
+    setEnergyAuditForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= list.length) return prev;
+
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleUpdateEnergyAuditImageAlt = (sectionKey, index, newAlt) => {
+    setEnergyAuditForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      if (list[index]) {
+        list[index] = { ...list[index], alt: newAlt };
+      }
+      return { ...prev, [sectionKey]: list };
+    });
+  };
+
+  // Environmental Content Management State
+  const [environmentalForm, setEnvironmentalForm] = useState({
+    page_title: 'ENVIRONMENTAL',
+    introduction: 'Comprehensive Environmental consultancy services specializing in environmental impact assessments, real-time noise monitoring, carbon footprint auditing, and sustainable decarbonization strategies.',
+    noise_title: 'NOISE MONITORING',
+    noise_description: 'Continuous environmental noise monitoring, acoustic modeling, baseline sound level measurement, and noise mitigation planning for construction sites, industrial facilities, and urban developments.',
+    noise_images: [],
+    carbon_title: 'CARBON MANAGEMENT',
+    carbon_description: 'Strategic carbon management services including Scope 1, 2, and 3 greenhouse gas (GHG) accounting, organizational carbon footprint auditing, life cycle assessments (LCA), and net-zero decarbonization roadmaps.',
+    carbon_images: []
+  });
+  const [isSavingEnvironmental, setIsSavingEnvironmental] = useState(false);
+
+  const saveEnvironmentalContent = async () => {
+    setIsSavingEnvironmental(true);
+    try {
+      const res = await fetch('/api/environmental', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(environmentalForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setEnvironmentalForm(result.data);
+        }
+        alert('Environmental Content saved successfully! Changes are live on the public Environmental page.');
+        window.dispatchEvent(new Event('environmentalContentUpdated'));
+      } else {
+        alert('Failed to save Environmental content. Please check inputs and try again.');
+      }
+    } catch (err) {
+      console.error('Error saving Environmental content:', err);
+      alert('Error saving Environmental content.');
+    } finally {
+      setIsSavingEnvironmental(false);
+    }
+  };
+
+  const handleEnvironmentalImageUpload = (sectionKey, file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    const currentList = environmentalForm[sectionKey] || [];
+    if (currentList.length >= 6) {
+      alert('Maximum limit of 6 images reached for this section.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImageObj = {
+        url: reader.result,
+        alt: `Environmental ${sectionKey.replace('_images', '').toUpperCase()} Image ${currentList.length + 1}`,
+        display_order: currentList.length + 1
+      };
+      setEnvironmentalForm(prev => ({
+        ...prev,
+        [sectionKey]: [...(prev[sectionKey] || []), newImageObj]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveEnvironmentalImage = (sectionKey, index) => {
+    setEnvironmentalForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      list.splice(index, 1);
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleMoveEnvironmentalImage = (sectionKey, index, direction) => {
+    setEnvironmentalForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= list.length) return prev;
+
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleUpdateEnvironmentalImageAlt = (sectionKey, index, newAlt) => {
+    setEnvironmentalForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      if (list[index]) {
+        list[index] = { ...list[index], alt: newAlt };
+      }
+      return { ...prev, [sectionKey]: list };
+    });
+  };
+
+  // LEED Content Management State
+  const [leedForm, setLeedForm] = useState({
+    page_title: 'LEED',
+    introduction: 'Comprehensive LEED sustainability consultancy supporting green building projects across design, construction, and operational lifecycle stages to achieve USGBC certifications.',
+    design_title: 'DESIGN',
+    design_description: 'LEED support during the design stage focuses on integrating USGBC sustainability prerequisites and credits into early architectural planning, energy modeling, daylighting design, and sustainable material specifications.',
+    design_images: [],
+    build_title: 'BUILD / CONSTRUCTION',
+    build_description: 'During the construction phase, our LEED consultancy ensures strict compliance with construction activity pollution prevention, waste management diversion, indoor air quality management plans, and sustainable material tracking.',
+    build_images: [],
+    operation_title: 'OPERATION',
+    operation_description: 'For operational assets, LEED O+M consultancy focuses on optimizing building energy performance, indoor environmental quality monitoring, water efficiency verification, and continuous performance benchmarking.',
+    operation_images: []
+  });
+  const [isSavingLeed, setIsSavingLeed] = useState(false);
+
+  const saveLeedContent = async () => {
+    setIsSavingLeed(true);
+    try {
+      const res = await fetch('/api/leed', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leedForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setLeedForm(result.data);
+        }
+        alert('LEED Content saved successfully! Changes are live on the public LEED page.');
+        window.dispatchEvent(new Event('leedContentUpdated'));
+      } else {
+        alert('Failed to save LEED content. Please check inputs and try again.');
+      }
+    } catch (err) {
+      console.error('Error saving LEED content:', err);
+      alert('Error saving LEED content.');
+    } finally {
+      setIsSavingLeed(false);
+    }
+  };
+
+  const handleLeedImageUpload = (sectionKey, file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    const currentList = leedForm[sectionKey] || [];
+    if (currentList.length >= 6) {
+      alert('Maximum limit of 6 images reached for this section.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImageObj = {
+        url: reader.result,
+        alt: `LEED ${sectionKey.replace('_images', '').toUpperCase()} Image ${currentList.length + 1}`,
+        display_order: currentList.length + 1
+      };
+      setLeedForm(prev => ({
+        ...prev,
+        [sectionKey]: [...(prev[sectionKey] || []), newImageObj]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLeedImage = (sectionKey, index) => {
+    setLeedForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      list.splice(index, 1);
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleMoveLeedImage = (sectionKey, index, direction) => {
+    setLeedForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= list.length) return prev;
+
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleUpdateLeedImageAlt = (sectionKey, index, newAlt) => {
+    setLeedForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      if (list[index]) {
+        list[index] = { ...list[index], alt: newAlt };
+      }
+      return { ...prev, [sectionKey]: list };
+    });
+  };
+
+  // Laser Scanning Content Management State
+  const [laserScanningForm, setLaserScanningForm] = useState({
+    page_title: 'LASER SCANNING SERVICES',
+    introduction: 'High-precision 3D laser scanning, terrestrial reality capture, and point cloud registration services for buildings, civil infrastructure, as-built documentation, recap modeling, and seamless Scan-to-BIM digital twin integration.',
+    building_title: 'BUILDING',
+    building_description: 'Comprehensive 3D laser scanning for commercial, residential, healthcare, and historic buildings. Captures millimeter-accurate spatial geometry, MEP installations, structural components, and complex facades to deliver precise as-built point cloud datasets.',
+    building_images: [],
+    infrastructure_title: 'INFRASTRUCTURE',
+    infrastructure_description: 'Advanced 3D reality capture for major civil infrastructure including bridges, tunnels, highways, railway corridors, utility networks, and industrial plants. Ensures sub-centimeter accuracy for structural integrity assessment and expansion planning.',
+    infrastructure_images: [],
+    recap_title: 'RECAP WORK',
+    recap_description: 'End-to-end point cloud registration, indexing, noise filtration, georeferencing, and Autodesk ReCap project compilation. Transforms raw mobile, terrestrial, and aerial scanner files into structured, unified coordinate project files ready for engineering design.',
+    recap_images: [],
+    scan_to_bim_title: 'SCAN TO BIM',
+    scan_to_bim_description: 'Converting registered point cloud data into intelligent LOD 100 to LOD 400 Revit BIM models. Enables precise clash detection, facility renovation planning, MEP coordination, digital twin asset management, and verified as-built modeling.',
+    scan_to_bim_images: []
+  });
+  const [isSavingLaserScanning, setIsSavingLaserScanning] = useState(false);
+
+  const saveLaserScanningContent = async () => {
+    setIsSavingLaserScanning(true);
+    try {
+      const res = await fetch('/api/laser-scanning', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(laserScanningForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setLaserScanningForm(result.data);
+        }
+        alert('Laser Scanning Content saved successfully! Changes are live on the public Laser Scanning page.');
+        window.dispatchEvent(new Event('laserScanningContentUpdated'));
+      } else {
+        alert('Failed to save Laser Scanning content. Please check inputs and try again.');
+      }
+    } catch (err) {
+      console.error('Error saving Laser Scanning content:', err);
+      alert('Error saving Laser Scanning content.');
+    } finally {
+      setIsSavingLaserScanning(false);
+    }
+  };
+
+  const handleLaserScanningImageUpload = (sectionKey, file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    const currentList = laserScanningForm[sectionKey] || [];
+    if (currentList.length >= 6) {
+      alert('Maximum limit of 6 images reached for this section.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImageObj = {
+        url: reader.result,
+        alt: `Laser Scanning ${sectionKey.replace('_images', '').toUpperCase()} Image ${currentList.length + 1}`,
+        display_order: currentList.length + 1
+      };
+      setLaserScanningForm(prev => ({
+        ...prev,
+        [sectionKey]: [...(prev[sectionKey] || []), newImageObj]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLaserScanningImage = (sectionKey, index) => {
+    setLaserScanningForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      list.splice(index, 1);
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleMoveLaserScanningImage = (sectionKey, index, direction) => {
+    setLaserScanningForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= list.length) return prev;
+
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleUpdateLaserScanningImageAlt = (sectionKey, index, newAlt) => {
+    setLaserScanningForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      if (list[index]) {
+        list[index] = { ...list[index], alt: newAlt };
+      }
+      return { ...prev, [sectionKey]: list };
+    });
+  };
+
+  // CAD Content Management State
+  const [cadForm, setCadForm] = useState({
+    page_title: 'CAD',
+    introduction: 'Professional multidisciplinary 2D drafting, 3D CAD modeling, detailed shop drawings, and engineering documentation support across Building (Architecture, Structure, Interior, Mechanical, Electrical) and Infrastructure (Landscaping, Road, Street Light, Underground Utilities) domains.',
+    arch_title: 'ARCHITECTURE',
+    arch_description: 'Precision 2D/3D architectural CAD drafting, floor plans, building elevations, cross-sections, and detailed construction documentation complying with local authority standards.',
+    arch_images: [],
+    struct_title: 'STRUCTURE',
+    struct_description: 'Comprehensive structural CAD shop drawings including reinforced concrete detailing, structural steel framing, foundation layouts, and bar bending schedules (BBS).',
+    struct_images: [],
+    interior_title: 'INTERIOR',
+    interior_description: 'Detailed interior architectural fit-out CAD drawings, furniture layouts, reflected ceiling plans (RCP), wall elevations, and custom joinery detailing.',
+    interior_images: [],
+    mech_title: 'MECHANICAL',
+    mech_description: 'HVAC ductwork layouts, chilled water piping schematics, ventilation plans, mechanical equipment schedules, and clash-free shop drawings.',
+    mech_images: [],
+    elec_title: 'ELECTRICAL',
+    elec_description: 'Electrical power distribution schematics, lighting layouts, low voltage (LV) systems, containment routing, cable tray paths, and single line diagrams (SLD).',
+    elec_images: [],
+    landscape_title: 'LANDSCAPING',
+    landscape_description: 'Hardscape and softscape CAD layouts, site grading plans, irrigation network details, outdoor lighting paths, and urban amenity drafting.',
+    landscape_images: [],
+    road_title: 'ROAD',
+    road_description: 'Civil road alignment drafting, longitudinal profiles, cross-sections, pavement markings, traffic sign details, and junction CAD designs.',
+    road_images: [],
+    street_light_title: 'STREET LIGHT',
+    street_light_description: 'Public street lighting network plans, pole placement layouts, feeder pillar schematics, underground ducting, and photometrical CAD drawings.',
+    street_light_images: [],
+    util_title: 'UNDERGROUND UTILITIES',
+    util_description: 'Combined underground utility mapping (CUM), stormwater drainage, sewer networks, water supply lines, telecommunication ductways, and trench detail CAD drawings.',
+    util_images: []
+  });
+  const [isSavingCad, setIsSavingCad] = useState(false);
+
+  const saveCadContent = async () => {
+    setIsSavingCad(true);
+    try {
+      const res = await fetch('/api/cad', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cadForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setCadForm(result.data);
+        }
+        alert('CAD Content saved successfully! Changes are live on the public CAD page.');
+        window.dispatchEvent(new Event('cadContentUpdated'));
+      } else {
+        alert('Failed to save CAD content. Please check inputs and try again.');
+      }
+    } catch (err) {
+      console.error('Error saving CAD content:', err);
+      alert('Error saving CAD content.');
+    } finally {
+      setIsSavingCad(false);
+    }
+  };
+
+  const handleCadImageUpload = (sectionKey, file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    const currentList = cadForm[sectionKey] || [];
+    if (currentList.length >= 6) {
+      alert('Maximum limit of 6 images reached for this section.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImageObj = {
+        url: reader.result,
+        alt: `CAD ${sectionKey.replace('_images', '').toUpperCase()} Image ${currentList.length + 1}`,
+        display_order: currentList.length + 1
+      };
+      setCadForm(prev => ({
+        ...prev,
+        [sectionKey]: [...(prev[sectionKey] || []), newImageObj]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveCadImage = (sectionKey, index) => {
+    setCadForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      list.splice(index, 1);
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleMoveCadImage = (sectionKey, index, direction) => {
+    setCadForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= list.length) return prev;
+
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleUpdateCadImageAlt = (sectionKey, index, newAlt) => {
+    setCadForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      if (list[index]) {
+        list[index] = { ...list[index], alt: newAlt };
+      }
+      return { ...prev, [sectionKey]: list };
+    });
+  };
+
+  // BIM Content Management State
+  const [bimForm, setBimForm] = useState({
+    page_title: 'BIM',
+    introduction: 'End-to-end 3D Building Information Modeling up to LOD 500 across Architectural, Structural, MEP, Infrastructure, 4D Scheduling, 5D Cost Estimation, VR Rendering, and Periodic BIM Audit Reporting.',
+    building_main_title: 'BUILDING',
+    building_main_desc: 'End-to-end 3D Building Information Modeling up to LOD 500 for commercial, residential, healthcare, and industrial structures.',
+    b_arch_title: 'ARCHITECTURE',
+    b_arch_desc: 'Intelligent 3D parametric architectural BIM modeling, wall envelope assemblies, facade detailing, spatial floor plans, and authority compliance models.',
+    b_arch_images: [],
+    b_struct_title: 'STRUCTURE',
+    b_struct_desc: 'Structural 3D BIM modeling including reinforced concrete framing, post-tensioned slabs, structural steel connections, and foundation rebar detailing.',
+    b_struct_images: [],
+    b_interior_title: 'INTERIOR',
+    b_interior_desc: 'High-LOD interior BIM modeling, ceiling systems, wall finishes, custom millwork, furniture layouts, and spatial interior coordination.',
+    b_interior_images: [],
+    b_mep_title: 'MECHANICAL ELECTRICAL',
+    b_mep_desc: '3D MEP BIM modeling covering HVAC ductwork, chilled water piping, electrical containment pathways, plumbing networks, and clash-free plant room layouts.',
+    b_mep_images: [],
+    infra_main_title: 'INFRASTRUCTURE',
+    infra_main_desc: 'Comprehensive civil infrastructure BIM modeling for transportation, public utilities, roads, bridges, and site developments.',
+    i_landscape_title: 'LANDSCAPING',
+    i_landscape_desc: 'Civil site topography, hardscape/softscape 3D BIM modeling, site grading, retaining walls, and outdoor amenity spatial coordination.',
+    i_landscape_images: [],
+    i_road_title: 'ROAD',
+    i_road_desc: '3D civil road corridor modeling, alignment profiles, pavement layer modeling, junction grading, and traffic network BIM integration.',
+    i_road_images: [],
+    i_street_light_title: 'STREET LIGHT',
+    i_street_light_desc: 'Public street lighting BIM modeling, luminaire pole placement, underground electrical cabling, and feeder pillar distribution paths.',
+    i_street_light_images: [],
+    i_util_title: 'UNDERGROUND UTILITIES',
+    i_util_desc: 'Subsurface utility BIM modeling including stormwater networks, foul sewer mains, potable water distribution, and telecommunication trench conduits.',
+    i_util_images: [],
+    fourd_main_title: '4D',
+    fourd_main_desc: 'Time-based 4D BIM construction scheduling, visual sequence simulation, logistics planning, and progress tracking.',
+    fourd_b_title: 'BUILDING',
+    fourd_b_desc: 'Linking Primavera P6 / MS Project schedules to 3D building BIM models for step-by-step construction sequencing, crane logistics, and delay analysis.',
+    fourd_b_images: [],
+    fourd_i_title: 'INFRASTRUCTURE',
+    fourd_i_desc: '4D scheduling and earthwork sequencing simulations for civil roadworks, bridges, utility trenching, and site earthworks.',
+    fourd_i_images: [],
+    fived_main_title: '5D',
+    fived_main_desc: 'Cost-integrated 5D BIM quantity take-offs (QTO), automated bill of quantities (BOQ), and real-time cash flow estimation.',
+    fived_b_title: 'BUILDING',
+    fived_b_desc: 'Extracting accurate material quantities, concrete volumes, rebar tonnages, and MEP component counts directly from parametric 3D building models.',
+    fived_b_images: [],
+    fived_i_title: 'INFRASTRUCTURE',
+    fived_i_desc: 'Civil quantity estimation for cut/fill earthworks, asphalt tonnage, utility piping line lengths, and infrastructure material costing.',
+    fived_i_images: [],
+    render_main_title: 'RENDERING',
+    render_main_desc: 'Photorealistic 3D architectural visualization, virtual reality (VR) walkthroughs, and marketing animations created from BIM models.',
+    r_walkthrough_title: 'WALK THROUGH',
+    r_walkthrough_desc: 'Immersive 3D video walkthroughs, exterior fly-throughs, and interactive 360-degree panoramic virtual tours of building and infrastructure BIM assets.',
+    r_walkthrough_images: [],
+    report_main_title: 'REPORTING',
+    report_main_desc: 'Automated BIM coordination reports, clash detection audits, LOD verification summaries, and periodic progress documentation.',
+    rep_periodic_title: 'PERIODICALLY',
+    rep_periodic_desc: 'Regular weekly and monthly BIM audit reporting, issue tracking dashboards, model compliance checks, and CDE data handover reports.',
+    rep_periodic_images: []
+  });
+  const [isSavingBim, setIsSavingBim] = useState(false);
+
+  const saveBimContent = async () => {
+    setIsSavingBim(true);
+    try {
+      const res = await fetch('/api/bim', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bimForm)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setBimForm(result.data);
+        }
+        alert('BIM Content saved successfully! Changes are live on the public BIM page.');
+        window.dispatchEvent(new Event('bimContentUpdated'));
+      } else {
+        alert('Failed to save BIM content. Please check inputs and try again.');
+      }
+    } catch (err) {
+      console.error('Error saving BIM content:', err);
+      alert('Error saving BIM content.');
+    } finally {
+      setIsSavingBim(false);
+    }
+  };
+
+  const handleBimImageUpload = (sectionKey, file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    const currentList = bimForm[sectionKey] || [];
+    if (currentList.length >= 6) {
+      alert('Maximum limit of 6 images reached for this section.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newImageObj = {
+        url: reader.result,
+        alt: `BIM ${sectionKey.replace('_images', '').toUpperCase()} Image ${currentList.length + 1}`,
+        display_order: currentList.length + 1
+      };
+      setBimForm(prev => ({
+        ...prev,
+        [sectionKey]: [...(prev[sectionKey] || []), newImageObj]
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveBimImage = (sectionKey, index) => {
+    setBimForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      list.splice(index, 1);
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleMoveBimImage = (sectionKey, index, direction) => {
+    setBimForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= list.length) return prev;
+
+      const temp = list[index];
+      list[index] = list[targetIndex];
+      list[targetIndex] = temp;
+
+      const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
+      return { ...prev, [sectionKey]: reordered };
+    });
+  };
+
+  const handleUpdateBimImageAlt = (sectionKey, index, newAlt) => {
+    setBimForm(prev => {
+      const list = [...(prev[sectionKey] || [])];
+      if (list[index]) {
+        list[index] = { ...list[index], alt: newAlt };
+      }
+      return { ...prev, [sectionKey]: list };
+    });
+  };
 
   // SEO Management State
   const [seoPages, setSeoPages] = useState({
@@ -256,6 +1130,144 @@ export default function AdminPanel({ onNavigate }) {
     contactus: ''
   });
   const [bannerUploadingKey, setBannerUploadingKey] = useState(null);
+
+  // Maintenance Mode state
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceTitle, setMaintenanceTitle] = useState('WEBSITE UNDER MAINTENANCE');
+  const [maintenanceMessage, setMaintenanceMessage] = useState('We are currently performing scheduled maintenance to improve our website and digital services.\nThank you for your patience.\nWe will be back online shortly.');
+  const [maintenanceMeta, setMaintenanceMeta] = useState({
+    updatedBy: 'Super Admin',
+    updatedAt: null,
+    maintenanceStartedAt: null,
+    maintenanceEndedAt: null
+  });
+  const [isUpdatingMaintenance, setIsUpdatingMaintenance] = useState(false);
+  const [maintenanceModalOpen, setMaintenanceModalOpen] = useState(false);
+  const [targetMaintenanceState, setTargetMaintenanceState] = useState(false);
+  const [maintenanceFeedback, setMaintenanceFeedback] = useState(null);
+  const [activityLogs, setActivityLogs] = useState([]);
+
+  const fetchMaintenanceData = async () => {
+    try {
+      const res = await fetch('/api/admin/settings/maintenance');
+      if (res.ok) {
+        const data = await res.json();
+        setMaintenanceMode(Boolean(data.maintenanceMode));
+        if (data.maintenanceTitle) setMaintenanceTitle(data.maintenanceTitle);
+        if (data.maintenanceMessage) setMaintenanceMessage(data.maintenanceMessage);
+        setMaintenanceMeta({
+          updatedBy: data.updatedBy || 'Super Admin',
+          updatedAt: data.updatedAt,
+          maintenanceStartedAt: data.maintenanceStartedAt,
+          maintenanceEndedAt: data.maintenanceEndedAt
+        });
+      }
+      const logsRes = await fetch('/api/activity-logs');
+      if (logsRes.ok) {
+        setActivityLogs(await logsRes.json());
+      }
+    } catch (err) {
+      console.error('Error fetching maintenance data:', err);
+    }
+  };
+
+  const handleToggleMaintenanceClick = () => {
+    if (isUpdatingMaintenance) return;
+    setTargetMaintenanceState(!maintenanceMode);
+    setMaintenanceModalOpen(true);
+  };
+
+  const handleConfirmMaintenanceChange = async () => {
+    setMaintenanceModalOpen(false);
+    setIsUpdatingMaintenance(true);
+    setMaintenanceFeedback(null);
+
+    try {
+      const res = await fetch('/api/admin/settings/maintenance', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': currentUser?.role || 'super_admin'
+        },
+        body: JSON.stringify({
+          maintenanceMode: targetMaintenanceState,
+          userRole: currentUser?.role || 'super_admin',
+          updatedBy: currentUser?.username || 'Super Admin',
+          maintenanceTitle,
+          maintenanceMessage
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMaintenanceMode(targetMaintenanceState);
+        setMaintenanceFeedback({
+          type: 'success',
+          text: targetMaintenanceState
+            ? 'Maintenance Mode enabled successfully.'
+            : 'Maintenance Mode disabled successfully.'
+        });
+        fetchMaintenanceData();
+      } else {
+        setMaintenanceFeedback({
+          type: 'error',
+          text: data.error || 'Unable to update Maintenance Mode. Please try again.'
+        });
+      }
+    } catch (err) {
+      console.error('Error updating maintenance mode:', err);
+      setMaintenanceFeedback({
+        type: 'error',
+        text: 'Unable to update Maintenance Mode. Please try again.'
+      });
+    } finally {
+      setIsUpdatingMaintenance(false);
+    }
+  };
+
+  const handleSaveMaintenanceContent = async () => {
+    setIsUpdatingMaintenance(true);
+    setMaintenanceFeedback(null);
+
+    try {
+      const res = await fetch('/api/admin/settings/maintenance', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': currentUser?.role || 'super_admin'
+        },
+        body: JSON.stringify({
+          maintenanceMode,
+          userRole: currentUser?.role || 'super_admin',
+          updatedBy: currentUser?.username || 'Super Admin',
+          maintenanceTitle,
+          maintenanceMessage
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMaintenanceFeedback({
+          type: 'success',
+          text: 'Maintenance content updated successfully.'
+        });
+        fetchMaintenanceData();
+      } else {
+        setMaintenanceFeedback({
+          type: 'error',
+          text: 'Unable to update maintenance content. Please try again.'
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setMaintenanceFeedback({
+        type: 'error',
+        text: 'Unable to update maintenance content. Please try again.'
+      });
+    } finally {
+      setIsUpdatingMaintenance(false);
+    }
+  };
 
   const fetchPageBanners = async () => {
     try {
@@ -526,10 +1538,6 @@ export default function AdminPanel({ onNavigate }) {
       { name: 'CAD Documentation', icon: 'Building2' },
       { name: 'Reality Capture & Laser Scanning', icon: 'Radio' },
       { name: 'Specialized Engineering support', icon: 'Wrench' },
-      { name: 'Computational fluid dynamics (CFD)', icon: 'Wind' },
-      { name: 'Acoustic & Vibration Analysis', icon: 'Volume2' },
-      { name: 'Advanced Hydraulic Analysis', icon: 'Droplet' },
-      { name: 'Stress Analysis (Piping & Static)', icon: 'Activity' },
       { name: 'Energy Auditing & Commissioning', icon: 'Zap' },
       { name: 'Green Building Facilitation', icon: 'Leaf' },
       { name: 'Technical experts outsourcing', icon: 'Users' }
@@ -779,7 +1787,7 @@ export default function AdminPanel({ onNavigate }) {
   const [editingServiceId, setEditingServiceId] = useState(null);
 
   const [heroForm, setHeroForm] = useState({ title: '', subtitle: '', btn1_text: '', btn2_text: '', image: '', status: 'published', order_num: 1 });
-  const [certForm, setCertForm] = useState({ title: '', org: '', licenseNo: '', territory: '', validity: 'Valid & Recognized', borderColor: 'border-blue', badgeText: 'CERTIFIED', image: '', scope: '' });
+  const [certForm, setCertForm] = useState({ title: '', org: '', licenseNo: '', territory: '', validity: 'Valid & Recognized', borderColor: 'border-blue', badgeText: 'CERTIFIED', image: '', scope: '', cert_category: 'Authority Certificates' });
   const [newsForm, setNewsForm] = useState({ title: '', content: '', category: 'NEWS', image: '', date: '' });
   const [testimonialForm, setTestimonialForm] = useState({ title: '', content: '', author_name: '', company_name: '', status: 'approved' });
   const [menuForm, setMenuForm] = useState({ name: '', url: '', parent_id: '', order_num: 0 });
@@ -953,6 +1961,67 @@ export default function AdminPanel({ onNavigate }) {
             setContactSettings(prev => ({ ...prev, ...data }));
           }
         }
+      } else if (tab === '/admin/settings/maintenance') {
+        fetchMaintenanceData();
+      } else if (tab === '/admin/activity-logs') {
+        const res = await fetch('/api/activity-logs');
+        if (res.ok) setActivityLogs(await res.json());
+      } else if (tab === '/admin/services/gsas') {
+        const res = await fetch('/api/gsas');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            setGsasForm(prev => ({ ...prev, ...data }));
+          }
+        }
+      } else if (tab === '/admin/services/leed') {
+        const res = await fetch('/api/leed');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            setLeedForm(prev => ({ ...prev, ...data }));
+          }
+        }
+      } else if (tab === '/admin/services/energy-audit') {
+        const res = await fetch('/api/energy-audit');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            setEnergyAuditForm(prev => ({ ...prev, ...data }));
+          }
+        }
+      } else if (tab === '/admin/services/environmental') {
+        const res = await fetch('/api/environmental');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            setEnvironmentalForm(prev => ({ ...prev, ...data }));
+          }
+        }
+      } else if (tab === '/admin/services/laser-scanning') {
+        const res = await fetch('/api/laser-scanning');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            setLaserScanningForm(prev => ({ ...prev, ...data }));
+          }
+        }
+      } else if (tab === '/admin/services/cad') {
+        const res = await fetch('/api/cad');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            setCadForm(prev => ({ ...prev, ...data }));
+          }
+        }
+      } else if (tab === '/admin/services/bim') {
+        const res = await fetch('/api/bim');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            setBimForm(prev => ({ ...prev, ...data }));
+          }
+        }
       }
     } catch (err) {
       console.error(`Error fetching data for ${tab}:`, err);
@@ -1091,6 +2160,7 @@ export default function AdminPanel({ onNavigate }) {
         setActiveEditItem(null);
         resetForms();
         fetchDataForTab(apiTab);
+        window.dispatchEvent(new Event('menuUpdated'));
       } else {
         alert('Failed to save item.');
       }
@@ -1107,6 +2177,7 @@ export default function AdminPanel({ onNavigate }) {
       const res = await fetch(`/api/${routeName}/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchDataForTab(apiTab);
+        window.dispatchEvent(new Event('menuUpdated'));
       } else {
         alert('Failed to delete item.');
       }
@@ -1223,6 +2294,7 @@ export default function AdminPanel({ onNavigate }) {
         setEditingCategoryId(null);
         resetCategoryForm();
         fetchDataForTab('services');
+        window.dispatchEvent(new Event('menuUpdated'));
       } else {
         alert('Failed to save Category');
       }
@@ -1237,6 +2309,7 @@ export default function AdminPanel({ onNavigate }) {
       const res = await fetch(`/api/service-categories/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchDataForTab('services');
+        window.dispatchEvent(new Event('menuUpdated'));
       } else {
         alert('Failed to delete category.');
       }
@@ -1255,6 +2328,7 @@ export default function AdminPanel({ onNavigate }) {
       });
       if (res.ok) {
         fetchDataForTab('services');
+        window.dispatchEvent(new Event('menuUpdated'));
       }
     } catch (err) {
       console.error(err);
@@ -1284,12 +2358,45 @@ export default function AdminPanel({ onNavigate }) {
         body: JSON.stringify({ ...otherCat, display_order: tempOrder })
       });
       fetchDataForTab('services');
+      window.dispatchEvent(new Event('menuUpdated'));
     } catch (err) {
       console.error(err);
     }
   };
 
   const startEditService = (svc) => {
+    const titleLower = (svc.title || '').toLowerCase();
+    const slugLower = (svc.slug || '').toLowerCase();
+
+    if (titleLower.includes('gsas') || slugLower.includes('gsas')) {
+      handleNavClick('/admin/services/gsas');
+      return;
+    }
+    if (titleLower.includes('leed') || slugLower.includes('leed')) {
+      handleNavClick('/admin/services/leed');
+      return;
+    }
+    if (titleLower.includes('energy audit') || slugLower.includes('energy-audit') || slugLower.includes('energy_audit')) {
+      handleNavClick('/admin/services/energy-audit');
+      return;
+    }
+    if (titleLower.includes('environmental') || titleLower.includes('carbon') || slugLower.includes('carbon') || slugLower.includes('environmental')) {
+      handleNavClick('/admin/services/environmental');
+      return;
+    }
+    if (titleLower.includes('laser scanning') || titleLower.includes('laser-scanning') || slugLower.includes('laser-scanning') || titleLower.includes('scan to bim') || slugLower.includes('scan-to-bim') || titleLower.includes('recap')) {
+      handleNavClick('/admin/services/laser-scanning');
+      return;
+    }
+    if (titleLower === 'cad' || slugLower === 'cad' || titleLower.includes('cad drafting')) {
+      handleNavClick('/admin/services/cad');
+      return;
+    }
+    if (titleLower === 'bim' || slugLower === 'bim' || titleLower.includes('building information modeling')) {
+      handleNavClick('/admin/services/bim');
+      return;
+    }
+
     setEditingServiceId(svc.id);
     let bulletsParsed = [''];
     let toolsParsed = [['', '']];
@@ -1506,6 +2613,7 @@ export default function AdminPanel({ onNavigate }) {
     } else if (tab === 'media') {
       setMediaForm({
         type: item.type || 'gallery',
+        category: item.category || (item.type === 'gallery' ? 'Site' : 'Our Work'),
         title: item.title || '',
         url: item.url || ''
       });
@@ -1887,13 +2995,13 @@ export default function AdminPanel({ onNavigate }) {
                   {activeTab === '/admin/projects' && <div className="admin-nav-indicator" />}
                 </button>
                 <button 
-                  className={`admin-nav-item ${activeTab === '/admin/services' ? 'active' : ''}`}
+                  className={`admin-nav-item ${activeTab.startsWith('/admin/services') ? 'active' : ''}`}
                   onClick={() => handleNavClick('/admin/services')}
                 >
                   <div className="admin-nav-item-left">
                     <Wrench size={20} /> Services
                   </div>
-                  {activeTab === '/admin/services' && <div className="admin-nav-indicator" />}
+                  {activeTab.startsWith('/admin/services') && <div className="admin-nav-indicator" />}
                 </button>
                 <button 
                   className={`admin-nav-item ${activeTab === '/admin/certificates' ? 'active' : ''}`}
@@ -2018,6 +3126,27 @@ export default function AdminPanel({ onNavigate }) {
                     activeTab === '/admin/seo' && <div className="admin-nav-indicator" />
                   )}
                 </button>
+
+                {/* Maintenance Mode Item (Super Admin Only) */}
+                <button 
+                  className={`admin-nav-item ${activeTab === '/admin/settings/maintenance' ? 'active' : ''}`}
+                  style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                  onClick={() => {
+                    if (currentUser?.role === 'super_admin') {
+                      handleNavClick('/admin/settings/maintenance');
+                    }
+                  }}
+                >
+                  <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Wrench size={20} />
+                    <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Maintenance Mode</span>
+                  </div>
+                  {currentUser?.role !== 'super_admin' ? (
+                    <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
+                  ) : (
+                    activeTab === '/admin/settings/maintenance' && <div className="admin-nav-indicator" />
+                  )}
+                </button>
               </>
             )}
 
@@ -2036,6 +3165,15 @@ export default function AdminPanel({ onNavigate }) {
                     <Database size={20} /> Backup & Restore
                   </div>
                   {activeTab === '/admin/backup' && <div className="admin-nav-indicator" />}
+                </button>
+                <button 
+                  className={`admin-nav-item ${activeTab === '/admin/activity-logs' ? 'active' : ''}`}
+                  onClick={() => handleNavClick('/admin/activity-logs')}
+                >
+                  <div className="admin-nav-item-left">
+                    <History size={20} /> Activity Logs
+                  </div>
+                  {activeTab === '/admin/activity-logs' && <div className="admin-nav-indicator" />}
                 </button>
               </>
             )}
@@ -2126,11 +3264,294 @@ export default function AdminPanel({ onNavigate }) {
           <div className="admin-table-card">
             
             {/* PLACEHOLDER PAGES */}
-            {['/admin/categories/service', '/admin/categories/project', '/admin/categories/news', '/admin/activity-logs', '/admin/settings/social', '/admin/settings/seo', '/admin/documents', '/admin/system-logs'].includes(activeTab) && (
+            {['/admin/categories/service', '/admin/categories/project', '/admin/categories/news', '/admin/settings/social', '/admin/settings/seo', '/admin/documents', '/admin/system-logs'].includes(activeTab) && (
               renderPlaceholder(
                 activeTab.split('/').pop().replace(/-/g, ' '),
                 activeTab.replace('/admin/', '').replace(/\//g, ' > ').replace(/-/g, ' ')
               )
+            )}
+
+            {/* MAINTENANCE MODE SETTINGS VIEW (SUPER ADMIN) */}
+            {activeTab === '/admin/settings/maintenance' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#64748B', letterSpacing: '1px' }}>SUPER ADMIN &gt; SETTINGS</span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>Maintenance Mode</h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13.5px', color: '#64748B' }}>
+                      Temporarily disable public website access while maintenance, updates or system improvements are in progress.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Feedback Toast Banner */}
+                {maintenanceFeedback && (
+                  <div style={{ 
+                    padding: '14px 18px', 
+                    borderRadius: '8px', 
+                    marginBottom: '20px', 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justify: 'space-between',
+                    background: maintenanceFeedback.type === 'success' ? '#ECFDF5' : '#FEF2F2',
+                    color: maintenanceFeedback.type === 'success' ? '#065F46' : '#991B1B',
+                    border: `1px solid ${maintenanceFeedback.type === 'success' ? '#A7F3D0' : '#FCA5A5'}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {maintenanceFeedback.type === 'success' ? <Check size={18} /> : <Wrench size={18} />}
+                      <span>{maintenanceFeedback.text}</span>
+                    </div>
+                    <button type="button" onClick={() => setMaintenanceFeedback(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  
+                  {/* WEBSITE STATUS SUMMARY CARD */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', padding: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                      <div>
+                        <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#64748B', letterSpacing: '0.8px' }}>WEBSITE STATUS</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                          <span style={{ 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '8px', 
+                            padding: '8px 16px', 
+                            borderRadius: '30px', 
+                            fontSize: '13px', 
+                            fontWeight: '800', 
+                            letterSpacing: '0.5px',
+                            background: maintenanceMode ? '#FEF3C7' : '#D1FAE5',
+                            color: maintenanceMode ? '#92400E' : '#065F46',
+                            border: `1px solid ${maintenanceMode ? '#FCD34D' : '#6EE7B7'}`
+                          }}>
+                            <span style={{ 
+                              width: '10px', 
+                              height: '10px', 
+                              borderRadius: '50%', 
+                              background: maintenanceMode ? '#F59E0B' : '#10B981',
+                              boxShadow: `0 0 8px ${maintenanceMode ? '#F59E0B' : '#10B981'}`
+                            }} />
+                            {maintenanceMode ? 'WEBSITE IS UNDER MAINTENANCE' : 'WEBSITE IS LIVE'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right', fontSize: '12.5px', color: '#64748B' }}>
+                        <div><strong>Last Changed By:</strong> {maintenanceMeta.updatedBy || 'Super Admin'}</div>
+                        <div><strong>Last Updated:</strong> {maintenanceMeta.updatedAt ? new Date(maintenanceMeta.updatedAt).toLocaleString() : 'N/A'}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TOGGLE SWITCH CARD */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Maintenance Mode Control</h3>
+                    <p style={{ margin: '0 0 20px 0', fontSize: '13.5px', color: '#64748B', lineHeight: '1.5' }}>
+                      Use the switch below to toggle public access. When Maintenance Mode is ON, all public website visitors see the Maintenance Page while administrators retain full access to the Admin Panel.
+                    </p>
+
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justify: 'space-between', 
+                      padding: '20px 24px', 
+                      background: maintenanceMode ? '#FFFBEB' : '#F8FAFC', 
+                      border: `1px solid ${maintenanceMode ? '#FDE68A' : '#E2E8F0'}`, 
+                      borderRadius: '12px',
+                      flexWrap: 'wrap',
+                      gap: '16px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        {/* Accessible Switch Control */}
+                        <div 
+                          role="switch"
+                          aria-checked={maintenanceMode}
+                          aria-label="Maintenance Mode Toggle Switch"
+                          tabIndex={0}
+                          onClick={handleToggleMaintenanceClick}
+                          onKeyDown={(e) => {
+                            if (e.key === ' ' || e.key === 'Enter') {
+                              e.preventDefault();
+                              handleToggleMaintenanceClick();
+                            }
+                          }}
+                          style={{
+                            width: '64px',
+                            height: '34px',
+                            borderRadius: '20px',
+                            background: maintenanceMode ? '#F59E0B' : '#CBD5E1',
+                            position: 'relative',
+                            cursor: isUpdatingMaintenance ? 'not-allowed' : 'pointer',
+                            transition: 'background-color 0.3s ease',
+                            opacity: isUpdatingMaintenance ? 0.6 : 1,
+                            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
+                            outline: 'none'
+                          }}
+                        >
+                          <div style={{
+                            width: '26px',
+                            height: '26px',
+                            borderRadius: '50%',
+                            background: '#FFFFFF',
+                            position: 'absolute',
+                            top: '4px',
+                            left: '0',
+                            transform: maintenanceMode ? 'translateX(34px)' : 'translateX(4px)',
+                            transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justify: 'center'
+                          }}>
+                            {maintenanceMode ? (
+                              <Wrench size={14} style={{ color: '#D97706' }} />
+                            ) : (
+                              <Check size={14} style={{ color: '#64748B' }} />
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>
+                            Maintenance Mode: <span style={{ color: maintenanceMode ? '#D97706' : '#10B981' }}>{maintenanceMode ? 'ON' : 'OFF'}</span>
+                          </div>
+                          <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '2px' }}>
+                            Status: ● {maintenanceMode ? 'Website is Under Maintenance' : 'Website is Live'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {isUpdatingMaintenance && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: '#0057B8' }}>
+                          <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                          <span>Updating...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* EDITABLE CONTENT CARD (Requirement 18) */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Maintenance Page Content</h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>
+                          Maintenance Title
+                        </label>
+                        <input 
+                          type="text" 
+                          value={maintenanceTitle} 
+                          onChange={(e) => setMaintenanceTitle(e.target.value)}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>
+                          Maintenance Message / Notice
+                        </label>
+                        <textarea 
+                          rows={4}
+                          value={maintenanceMessage} 
+                          onChange={(e) => setMaintenanceMessage(e.target.value)}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <button 
+                          type="button" 
+                          onClick={handleSaveMaintenanceContent}
+                          disabled={isUpdatingMaintenance}
+                          style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                        >
+                          Save Content
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AUDIT LOG PREVIEW (Requirement 17) */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Recent Maintenance Audit Logs</h3>
+                    {activityLogs.length === 0 ? (
+                      <p style={{ fontSize: '13px', color: '#94A3B8' }}>No activity records logged yet.</p>
+                    ) : (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                          <thead>
+                            <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', textAlign: 'left' }}>
+                              <th style={{ padding: '10px 12px', color: '#64748B', fontWeight: '700' }}>Action</th>
+                              <th style={{ padding: '10px 12px', color: '#64748B', fontWeight: '700' }}>Changed By</th>
+                              <th style={{ padding: '10px 12px', color: '#64748B', fontWeight: '700' }}>Details</th>
+                              <th style={{ padding: '10px 12px', color: '#64748B', fontWeight: '700' }}>Timestamp</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activityLogs.slice(0, 5).map((log, idx) => (
+                              <tr key={log.id || idx} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                <td style={{ padding: '12px', fontWeight: '700', color: '#0F172A' }}>{log.action}</td>
+                                <td style={{ padding: '12px', color: '#475569' }}>{log.user_name || 'Super Admin'}</td>
+                                <td style={{ padding: '12px', color: '#64748B' }}>{log.details}</td>
+                                <td style={{ padding: '12px', color: '#94A3B8', fontSize: '12px' }}>
+                                  {log.created_at ? new Date(log.created_at).toLocaleString() : 'Just now'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* ACTIVITY LOGS VIEW */}
+            {activeTab === '/admin/activity-logs' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0F172A', marginBottom: '16px' }}>System Activity Logs</h2>
+                <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px' }}>
+                    <thead>
+                      <tr style={{ background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', textAlign: 'left' }}>
+                        <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '700' }}>Event / Action</th>
+                        <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '700' }}>User</th>
+                        <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '700' }}>Details</th>
+                        <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '700' }}>Date & Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activityLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>No activity records found.</td>
+                        </tr>
+                      ) : (
+                        activityLogs.map((log, idx) => (
+                          <tr key={log.id || idx} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <td style={{ padding: '14px 16px', fontWeight: '700', color: '#0F172A' }}>{log.action}</td>
+                            <td style={{ padding: '14px 16px', color: '#334155' }}>{log.user_name || 'System'}</td>
+                            <td style={{ padding: '14px 16px', color: '#64748B' }}>{log.details}</td>
+                            <td style={{ padding: '14px 16px', color: '#94A3B8', fontSize: '12.5px' }}>
+                              {log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
             
             {/* COMPANY INFORMATION SETTINGS */}
@@ -4328,6 +5749,13 @@ export default function AdminPanel({ onNavigate }) {
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <button
                       className="admin-add-btn"
+                      style={{ background: '#00A198', color: '#FFF' }}
+                      onClick={() => handleNavClick('/admin/services/gsas')}
+                    >
+                      <Leaf size={16} /> Manage GSAS Content
+                    </button>
+                    <button
+                      className="admin-add-btn"
                       style={{ background: '#0F172A', color: '#FFF' }}
                       onClick={() => {
                         resetCategoryForm();
@@ -4526,6 +5954,1656 @@ export default function AdminPanel({ onNavigate }) {
                         </div>
                       );
                     })}
+                </div>
+              </div>
+            )}
+
+            {/* GSAS SERVICE DETAIL CONTENT MANAGEMENT WORKSPACE */}
+            {activeTab === '/admin/services/gsas' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A198', letterSpacing: '1px' }}>
+                      SERVICES → SUSTAINABILITY SERVICES → GSAS
+                    </span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
+                      GSAS Service Content Editor
+                    </h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage dynamic page title, introduction, section descriptions, and image galleries for Design, Build/Construction, and Operational stages.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                      onClick={() => setActiveTab('/admin/services')}
+                    >
+                      ← Back to Services
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
+                      onClick={() => fetchDataForTab('/admin/services/gsas')}
+                    >
+                      Discard Changes
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingGsas}
+                      style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={saveGsasContent}
+                    >
+                      <Check size={14} /> {isSavingGsas ? 'Saving...' : 'Save GSAS Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                  {/* 1. Header & Introduction */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Leaf size={18} style={{ color: '#00A198' }} /> Page Header & Introduction
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
+                        <input 
+                          type="text" 
+                          value={gsasForm.page_title || ''} 
+                          onChange={e => setGsasForm(p => ({ ...p, page_title: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
+                        <textarea 
+                          rows={3} 
+                          value={gsasForm.introduction || ''} 
+                          onChange={e => setGsasForm(p => ({ ...p, introduction: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Helper renderer for Design, Build, Operation sections */}
+                  {[
+                    { titleKey: 'design_title', descKey: 'design_description', imagesKey: 'design_images', label: '01 - DESIGN SECTION', color: '#003E8A' },
+                    { titleKey: 'build_title', descKey: 'build_description', imagesKey: 'build_images', label: '02 - BUILD / CONSTRUCTION SECTION', color: '#0B3D91' },
+                    { titleKey: 'operation_title', descKey: 'operation_description', imagesKey: 'operation_images', label: '03 - OPERATION SECTION', color: '#00A198' }
+                  ].map(sec => {
+                    const images = gsasForm[sec.imagesKey] || [];
+                    return (
+                      <div key={sec.imagesKey} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: sec.color }}>
+                            {sec.label}
+                          </h3>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: images.length >= 4 && images.length <= 6 ? '#166534' : '#D97706', background: images.length >= 4 && images.length <= 6 ? '#F0FDF4' : '#FEF3C7', padding: '4px 10px', borderRadius: '12px' }}>
+                            {images.length} / 6 Images (Req: 4–6)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
+                            <input 
+                              type="text" 
+                              value={gsasForm[sec.titleKey] || ''} 
+                              onChange={e => setGsasForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                            <textarea 
+                              rows={4} 
+                              value={gsasForm[sec.descKey] || ''} 
+                              onChange={e => setGsasForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
+                                Image Gallery ({images.length} Uploaded)
+                              </label>
+
+                              <label style={{
+                                background: images.length >= 6 ? '#94A3B8' : '#003E8A',
+                                color: '#FFFFFF',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: images.length >= 6 ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}>
+                                <Plus size={14} /> + Upload Image
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                                  disabled={images.length >= 6}
+                                  onChange={e => {
+                                    const file = e.target.files[0];
+                                    if (file) handleGsasImageUpload(sec.imagesKey, file);
+                                    e.target.value = '';
+                                  }}
+                                  style={{ display: 'none' }}
+                                />
+                              </label>
+                            </div>
+
+                            {images.length === 0 ? (
+                              <div style={{ padding: '24px', border: '2px dashed #CBD5E1', borderRadius: '8px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>
+                                No images uploaded for this section yet. Click "+ Upload Image" to select 4 to 6 images (JPG, PNG, WEBP, max 5MB).
+                              </div>
+                            ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+                                {images.map((imgItem, idx) => {
+                                  const imgUrl = typeof imgItem === 'string' ? imgItem : imgItem.url;
+                                  const imgAlt = typeof imgItem === 'object' && imgItem.alt ? imgItem.alt : '';
+
+                                  return (
+                                    <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                                      <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                                        <img src={imgUrl} alt={imgAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', top: '6px', left: '6px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
+                                          #{idx + 1}
+                                        </span>
+                                      </div>
+
+                                      <input 
+                                        type="text" 
+                                        placeholder="Image Alt Text..."
+                                        value={imgAlt}
+                                        onChange={e => handleUpdateGsasImageAlt(sec.imagesKey, idx, e.target.value)}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontSize: '11px', boxSizing: 'border-box' }}
+                                      />
+
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={() => handleMoveGsasImage(sec.imagesKey, idx, 'left')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === 0 ? 0.4 : 1 }}
+                                            title="Move Left"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === images.length - 1}
+                                            onClick={() => handleMoveGsasImage(sec.imagesKey, idx, 'right')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === images.length - 1 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === images.length - 1 ? 0.4 : 1 }}
+                                            title="Move Right"
+                                          >
+                                            →
+                                          </button>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveGsasImage(sec.imagesKey, idx)}
+                                          style={{ background: '#FFF1F2', color: '#EF4444', border: '1px solid #FECDD3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
+                                          <Trash size={12} /> Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      disabled={isSavingGsas}
+                      style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '12px 32px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={saveGsasContent}
+                    >
+                      <Check size={16} /> {isSavingGsas ? 'Saving All Changes...' : 'Save All GSAS Service Content'}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* LEED SERVICE DETAIL CONTENT MANAGEMENT WORKSPACE */}
+            {activeTab === '/admin/services/leed' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#0057B8', letterSpacing: '1px' }}>
+                      SERVICES → SUSTAINABILITY SERVICES → LEED
+                    </span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
+                      LEED Service Content Editor
+                    </h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage dynamic page title, introduction, section descriptions, and image galleries for Design, Build/Construction, and Operational stages.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                      onClick={() => setActiveTab('/admin/services')}
+                    >
+                      ← Back to Services
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
+                      onClick={() => fetchDataForTab('/admin/services/leed')}
+                    >
+                      Discard Changes
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingLeed}
+                      style={{ background: '#0057B8', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={saveLeedContent}
+                    >
+                      <Check size={14} /> {isSavingLeed ? 'Saving...' : 'Save LEED Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                  {/* 1. Header & Introduction */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Leaf size={18} style={{ color: '#0057B8' }} /> Page Header & Introduction
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
+                        <input 
+                          type="text" 
+                          value={leedForm.page_title || ''} 
+                          onChange={e => setLeedForm(p => ({ ...p, page_title: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
+                        <textarea 
+                          rows={3} 
+                          value={leedForm.introduction || ''} 
+                          onChange={e => setLeedForm(p => ({ ...p, introduction: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Helper renderer for Design, Build, Operation sections */}
+                  {[
+                    { titleKey: 'design_title', descKey: 'design_description', imagesKey: 'design_images', label: '01 - DESIGN SECTION', color: '#0057B8' },
+                    { titleKey: 'build_title', descKey: 'build_description', imagesKey: 'build_images', label: '02 - BUILD / CONSTRUCTION SECTION', color: '#0B3D91' },
+                    { titleKey: 'operation_title', descKey: 'operation_description', imagesKey: 'operation_images', label: '03 - OPERATION SECTION', color: '#00A896' }
+                  ].map(sec => {
+                    const images = leedForm[sec.imagesKey] || [];
+                    return (
+                      <div key={sec.imagesKey} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: sec.color }}>
+                            {sec.label}
+                          </h3>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: images.length >= 4 && images.length <= 6 ? '#166534' : '#D97706', background: images.length >= 4 && images.length <= 6 ? '#F0FDF4' : '#FEF3C7', padding: '4px 10px', borderRadius: '12px' }}>
+                            {images.length} / 6 Images (Req: 4–6)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
+                            <input 
+                              type="text" 
+                              value={leedForm[sec.titleKey] || ''} 
+                              onChange={e => setLeedForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                            <textarea 
+                              rows={4} 
+                              value={leedForm[sec.descKey] || ''} 
+                              onChange={e => setLeedForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
+                                Image Gallery ({images.length} Uploaded)
+                              </label>
+
+                              <label style={{
+                                background: images.length >= 6 ? '#94A3B8' : '#0057B8',
+                                color: '#FFFFFF',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: images.length >= 6 ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}>
+                                <Plus size={14} /> + Upload Image
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                  disabled={images.length >= 6}
+                                  style={{ display: 'none' }}
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleLeedImageUpload(sec.imagesKey, e.target.files[0]);
+                                      e.target.value = '';
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {images.length === 0 ? (
+                              <div style={{ padding: '24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1', color: '#64748B', fontSize: '13px' }}>
+                                No images uploaded for this section yet. Click "+ Upload Image" to add photos.
+                              </div>
+                            ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                                {images.map((imgObj, idx) => {
+                                  const imgUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+                                  const imgAlt = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : '';
+                                  return (
+                                    <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                                      <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                                        <img src={imgUrl} alt={imgAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', top: '6px', left: '6px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
+                                          #{idx + 1}
+                                        </span>
+                                      </div>
+
+                                      <input 
+                                        type="text" 
+                                        placeholder="Image Alt Text..."
+                                        value={imgAlt}
+                                        onChange={e => handleUpdateLeedImageAlt(sec.imagesKey, idx, e.target.value)}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontSize: '11px', boxSizing: 'border-box' }}
+                                      />
+
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={() => handleMoveLeedImage(sec.imagesKey, idx, 'left')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === 0 ? 0.4 : 1 }}
+                                            title="Move Left"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === images.length - 1}
+                                            onClick={() => handleMoveLeedImage(sec.imagesKey, idx, 'right')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === images.length - 1 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === images.length - 1 ? 0.4 : 1 }}
+                                            title="Move Right"
+                                          >
+                                            →
+                                          </button>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveLeedImage(sec.imagesKey, idx)}
+                                          style={{ background: '#FFF1F2', color: '#EF4444', border: '1px solid #FECDD3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
+                                          <Trash size={12} /> Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      disabled={isSavingLeed}
+                      style={{ background: '#0057B8', color: '#FFFFFF', border: 'none', padding: '12px 32px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={saveLeedContent}
+                    >
+                      <Check size={16} /> {isSavingLeed ? 'Saving All Changes...' : 'Save All LEED Service Content'}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* ENERGY AUDIT SERVICE DETAIL CONTENT MANAGEMENT WORKSPACE */}
+            {activeTab === '/admin/services/energy-audit' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#0057B8', letterSpacing: '1px' }}>
+                      SERVICES → SUSTAINABILITY SERVICES → ENERGY AUDIT
+                    </span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
+                      Energy Audit Service Content Editor
+                    </h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage dynamic page title, introduction, section descriptions, and image galleries for Residential Building and Commercial Building sections.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                      onClick={() => setActiveTab('/admin/services')}
+                    >
+                      ← Back to Services
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
+                      onClick={() => fetchDataForTab('/admin/services/energy-audit')}
+                    >
+                      Discard Changes
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingEnergyAudit}
+                      style={{ background: '#0057B8', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={saveEnergyAuditContent}
+                    >
+                      <Check size={14} /> {isSavingEnergyAudit ? 'Saving...' : 'Save Energy Audit Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                  {/* 1. Header & Introduction */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Zap size={18} style={{ color: '#0057B8' }} /> Page Header & Introduction
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
+                        <input 
+                          type="text" 
+                          value={energyAuditForm.page_title || ''} 
+                          onChange={e => setEnergyAuditForm(p => ({ ...p, page_title: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
+                        <textarea 
+                          rows={3} 
+                          value={energyAuditForm.introduction || ''} 
+                          onChange={e => setEnergyAuditForm(p => ({ ...p, introduction: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Helper renderer for Residential and Commercial sections */}
+                  {[
+                    { titleKey: 'residential_title', descKey: 'residential_description', imagesKey: 'residential_images', label: '01 - RESIDENTIAL BUILDING SECTION', color: '#0057B8' },
+                    { titleKey: 'commercial_title', descKey: 'commercial_description', imagesKey: 'commercial_images', label: '02 - COMMERCIAL BUILDING SECTION', color: '#063B73' }
+                  ].map(sec => {
+                    const images = energyAuditForm[sec.imagesKey] || [];
+                    return (
+                      <div key={sec.imagesKey} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: sec.color }}>
+                            {sec.label}
+                          </h3>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: images.length >= 4 && images.length <= 6 ? '#166534' : '#D97706', background: images.length >= 4 && images.length <= 6 ? '#F0FDF4' : '#FEF3C7', padding: '4px 10px', borderRadius: '12px' }}>
+                            {images.length} / 6 Images (Req: 4–6)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
+                            <input 
+                              type="text" 
+                              value={energyAuditForm[sec.titleKey] || ''} 
+                              onChange={e => setEnergyAuditForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                            <textarea 
+                              rows={4} 
+                              value={energyAuditForm[sec.descKey] || ''} 
+                              onChange={e => setEnergyAuditForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
+                                Image Gallery ({images.length} Uploaded)
+                              </label>
+
+                              <label style={{
+                                background: images.length >= 6 ? '#94A3B8' : '#0057B8',
+                                color: '#FFFFFF',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: images.length >= 6 ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}>
+                                <Plus size={14} /> + Upload Image
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                  disabled={images.length >= 6}
+                                  style={{ display: 'none' }}
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleEnergyAuditImageUpload(sec.imagesKey, e.target.files[0]);
+                                      e.target.value = '';
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {images.length === 0 ? (
+                              <div style={{ padding: '24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1', color: '#64748B', fontSize: '13px' }}>
+                                No images uploaded for this section yet. Click "+ Upload Image" to add photos.
+                              </div>
+                            ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                                {images.map((imgObj, idx) => {
+                                  const imgUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+                                  const imgAlt = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : '';
+                                  return (
+                                    <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                                      <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                                        <img src={imgUrl} alt={imgAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', top: '6px', left: '6px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
+                                          #{idx + 1}
+                                        </span>
+                                      </div>
+
+                                      <input 
+                                        type="text" 
+                                        placeholder="Image Alt Text..."
+                                        value={imgAlt}
+                                        onChange={e => handleUpdateEnergyAuditImageAlt(sec.imagesKey, idx, e.target.value)}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontSize: '11px', boxSizing: 'border-box' }}
+                                      />
+
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={() => handleMoveEnergyAuditImage(sec.imagesKey, idx, 'left')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === 0 ? 0.4 : 1 }}
+                                            title="Move Left"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === images.length - 1}
+                                            onClick={() => handleMoveEnergyAuditImage(sec.imagesKey, idx, 'right')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === images.length - 1 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === images.length - 1 ? 0.4 : 1 }}
+                                            title="Move Right"
+                                          >
+                                            →
+                                          </button>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveEnergyAuditImage(sec.imagesKey, idx)}
+                                          style={{ background: '#FFF1F2', color: '#EF4444', border: '1px solid #FECDD3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
+                                          <Trash size={12} /> Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      disabled={isSavingEnergyAudit}
+                      style={{ background: '#0057B8', color: '#FFFFFF', border: 'none', padding: '12px 32px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={saveEnergyAuditContent}
+                    >
+                      <Check size={16} /> {isSavingEnergyAudit ? 'Saving All Changes...' : 'Save All Energy Audit Content'}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* ENVIRONMENTAL SERVICE DETAIL CONTENT MANAGEMENT WORKSPACE */}
+            {activeTab === '/admin/services/environmental' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
+                      SERVICES → SUSTAINABILITY SERVICES → ENVIRONMENTAL & CARBON MANAGEMENT
+                    </span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
+                      Environmental & Carbon Management Content Editor
+                    </h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage dynamic page title, introduction, section descriptions, and image galleries for Noise Monitoring and Carbon Management sections.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                      onClick={() => setActiveTab('/admin/services')}
+                    >
+                      ← Back to Services
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
+                      onClick={() => fetchDataForTab('/admin/services/environmental')}
+                    >
+                      Discard Changes
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingEnvironmental}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={saveEnvironmentalContent}
+                    >
+                      <Check size={14} /> {isSavingEnvironmental ? 'Saving...' : 'Save Environmental Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                  {/* 1. Header & Introduction */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Leaf size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
+                        <input 
+                          type="text" 
+                          value={environmentalForm.page_title || ''} 
+                          onChange={e => setEnvironmentalForm(p => ({ ...p, page_title: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
+                        <textarea 
+                          rows={3} 
+                          value={environmentalForm.introduction || ''} 
+                          onChange={e => setEnvironmentalForm(p => ({ ...p, introduction: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Helper renderer for Noise Monitoring and Carbon Management sections */}
+                  {[
+                    { titleKey: 'noise_title', descKey: 'noise_description', imagesKey: 'noise_images', label: '01 - NOISE MONITORING SECTION', color: '#0057B8' },
+                    { titleKey: 'carbon_title', descKey: 'carbon_description', imagesKey: 'carbon_images', label: '02 - CARBON MANAGEMENT SECTION', color: '#00A896' }
+                  ].map(sec => {
+                    const images = environmentalForm[sec.imagesKey] || [];
+                    return (
+                      <div key={sec.imagesKey} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: sec.color }}>
+                            {sec.label}
+                          </h3>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: images.length >= 4 && images.length <= 6 ? '#166534' : '#D97706', background: images.length >= 4 && images.length <= 6 ? '#F0FDF4' : '#FEF3C7', padding: '4px 10px', borderRadius: '12px' }}>
+                            {images.length} / 6 Images (Req: 4–6)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
+                            <input 
+                              type="text" 
+                              value={environmentalForm[sec.titleKey] || ''} 
+                              onChange={e => setEnvironmentalForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                            <textarea 
+                              rows={4} 
+                              value={environmentalForm[sec.descKey] || ''} 
+                              onChange={e => setEnvironmentalForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
+                                Image Gallery ({images.length} Uploaded)
+                              </label>
+
+                              <label style={{
+                                background: images.length >= 6 ? '#94A3B8' : '#00A896',
+                                color: '#FFFFFF',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: images.length >= 6 ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}>
+                                <Plus size={14} /> + Upload Image
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                  disabled={images.length >= 6}
+                                  style={{ display: 'none' }}
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleEnvironmentalImageUpload(sec.imagesKey, e.target.files[0]);
+                                      e.target.value = '';
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {images.length === 0 ? (
+                              <div style={{ padding: '24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1', color: '#64748B', fontSize: '13px' }}>
+                                No images uploaded for this section yet. Click "+ Upload Image" to add photos.
+                              </div>
+                            ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                                {images.map((imgObj, idx) => {
+                                  const imgUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+                                  const imgAlt = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : '';
+                                  return (
+                                    <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                                      <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                                        <img src={imgUrl} alt={imgAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', top: '6px', left: '6px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
+                                          #{idx + 1}
+                                        </span>
+                                      </div>
+
+                                      <input 
+                                        type="text" 
+                                        placeholder="Image Alt Text..."
+                                        value={imgAlt}
+                                        onChange={e => handleUpdateEnvironmentalImageAlt(sec.imagesKey, idx, e.target.value)}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontSize: '11px', boxSizing: 'border-box' }}
+                                      />
+
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={() => handleMoveEnvironmentalImage(sec.imagesKey, idx, 'left')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === 0 ? 0.4 : 1 }}
+                                            title="Move Left"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === images.length - 1}
+                                            onClick={() => handleMoveEnvironmentalImage(sec.imagesKey, idx, 'right')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === images.length - 1 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === images.length - 1 ? 0.4 : 1 }}
+                                            title="Move Right"
+                                          >
+                                            →
+                                          </button>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveEnvironmentalImage(sec.imagesKey, idx)}
+                                          style={{ background: '#FFF1F2', color: '#EF4444', border: '1px solid #FECDD3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
+                                          <Trash size={12} /> Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      disabled={isSavingEnvironmental}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '12px 32px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={saveEnvironmentalContent}
+                    >
+                      <Check size={16} /> {isSavingEnvironmental ? 'Saving All Changes...' : 'Save All Environmental Content'}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* LASER SCANNING SERVICE DETAIL CONTENT MANAGEMENT WORKSPACE */}
+            {activeTab === '/admin/services/laser-scanning' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
+                      SERVICES → ENGINEERING SERVICES → LASER SCANNING SERVICES
+                    </span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
+                      Laser Scanning Services Content Editor
+                    </h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage dynamic page title, introduction, section descriptions, and image galleries for Building, Infrastructure, Recap Work, and Scan-to-BIM sections.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                      onClick={() => setActiveTab('/admin/services')}
+                    >
+                      ← Back to Services
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
+                      onClick={() => fetchDataForTab('/admin/services/laser-scanning')}
+                    >
+                      Discard Changes
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingLaserScanning}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={saveLaserScanningContent}
+                    >
+                      <Check size={14} /> {isSavingLaserScanning ? 'Saving...' : 'Save Laser Scanning Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                  {/* 1. Header & Introduction */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Wrench size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
+                        <input 
+                          type="text" 
+                          value={laserScanningForm.page_title || ''} 
+                          onChange={e => setLaserScanningForm(p => ({ ...p, page_title: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
+                        <textarea 
+                          rows={3} 
+                          value={laserScanningForm.introduction || ''} 
+                          onChange={e => setLaserScanningForm(p => ({ ...p, introduction: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Helper renderer for Building, Infrastructure, Recap Work, Scan to BIM sections */}
+                  {[
+                    { titleKey: 'building_title', descKey: 'building_description', imagesKey: 'building_images', label: '01 - BUILDING SECTION', color: '#0057B8' },
+                    { titleKey: 'infrastructure_title', descKey: 'infrastructure_description', imagesKey: 'infrastructure_images', label: '02 - INFRASTRUCTURE SECTION', color: '#0B3D91' },
+                    { titleKey: 'recap_title', descKey: 'recap_description', imagesKey: 'recap_images', label: '03 - RECAP WORK SECTION', color: '#00A896' },
+                    { titleKey: 'scan_to_bim_title', descKey: 'scan_to_bim_description', imagesKey: 'scan_to_bim_images', label: '04 - SCAN TO BIM SECTION', color: '#0284C7' }
+                  ].map(sec => {
+                    const images = laserScanningForm[sec.imagesKey] || [];
+                    return (
+                      <div key={sec.imagesKey} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: sec.color }}>
+                            {sec.label}
+                          </h3>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: images.length >= 4 && images.length <= 6 ? '#166534' : '#D97706', background: images.length >= 4 && images.length <= 6 ? '#F0FDF4' : '#FEF3C7', padding: '4px 10px', borderRadius: '12px' }}>
+                            {images.length} / 6 Images (Req: 4–6)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
+                            <input 
+                              type="text" 
+                              value={laserScanningForm[sec.titleKey] || ''} 
+                              onChange={e => setLaserScanningForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                            <textarea 
+                              rows={4} 
+                              value={laserScanningForm[sec.descKey] || ''} 
+                              onChange={e => setLaserScanningForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
+                                Image Gallery ({images.length} Uploaded)
+                              </label>
+
+                              <label style={{
+                                background: images.length >= 6 ? '#94A3B8' : '#00A896',
+                                color: '#FFFFFF',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: images.length >= 6 ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}>
+                                <Plus size={14} /> + Upload Image
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                  disabled={images.length >= 6}
+                                  style={{ display: 'none' }}
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleLaserScanningImageUpload(sec.imagesKey, e.target.files[0]);
+                                      e.target.value = '';
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {images.length === 0 ? (
+                              <div style={{ padding: '24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1', color: '#64748B', fontSize: '13px' }}>
+                                No images uploaded for this section yet. Click "+ Upload Image" to add photos.
+                              </div>
+                            ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                                {images.map((imgObj, idx) => {
+                                  const imgUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+                                  const imgAlt = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : '';
+                                  return (
+                                    <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                                      <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                                        <img src={imgUrl} alt={imgAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', top: '6px', left: '6px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
+                                          #{idx + 1}
+                                        </span>
+                                      </div>
+
+                                      <input 
+                                        type="text" 
+                                        placeholder="Image Alt Text..."
+                                        value={imgAlt}
+                                        onChange={e => handleUpdateLaserScanningImageAlt(sec.imagesKey, idx, e.target.value)}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontSize: '11px', boxSizing: 'border-box' }}
+                                      />
+
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={() => handleMoveLaserScanningImage(sec.imagesKey, idx, 'left')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === 0 ? 0.4 : 1 }}
+                                            title="Move Left"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === images.length - 1}
+                                            onClick={() => handleMoveLaserScanningImage(sec.imagesKey, idx, 'right')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === images.length - 1 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === images.length - 1 ? 0.4 : 1 }}
+                                            title="Move Right"
+                                          >
+                                            →
+                                          </button>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveLaserScanningImage(sec.imagesKey, idx)}
+                                          style={{ background: '#FFF1F2', color: '#EF4444', border: '1px solid #FECDD3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
+                                          <Trash size={12} /> Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      disabled={isSavingLaserScanning}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '12px 32px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={saveLaserScanningContent}
+                    >
+                      <Check size={16} /> {isSavingLaserScanning ? 'Saving All Changes...' : 'Save All Laser Scanning Content'}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* CAD SERVICE DETAIL CONTENT MANAGEMENT WORKSPACE */}
+            {activeTab === '/admin/services/cad' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
+                      SERVICES → ENGINEERING SERVICES → CAD
+                    </span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
+                      CAD Services Content Editor
+                    </h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage dynamic page title, introduction, section descriptions, and image galleries for Building (Architecture, Structure, Interior, Mechanical, Electrical) and Infrastructure (Landscaping, Road, Street Light, Underground Utilities) sub-topics.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                      onClick={() => setActiveTab('/admin/services')}
+                    >
+                      ← Back to Services
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
+                      onClick={() => fetchDataForTab('/admin/services/cad')}
+                    >
+                      Discard Changes
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingCad}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={saveCadContent}
+                    >
+                      <Check size={14} /> {isSavingCad ? 'Saving...' : 'Save CAD Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                  {/* 1. Header & Introduction */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Wrench size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
+                        <input 
+                          type="text" 
+                          value={cadForm.page_title || ''} 
+                          onChange={e => setCadForm(p => ({ ...p, page_title: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
+                        <textarea 
+                          rows={3} 
+                          value={cadForm.introduction || ''} 
+                          onChange={e => setCadForm(p => ({ ...p, introduction: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 9 Sub-Topic Sections Renderer */}
+                  {[
+                    { titleKey: 'arch_title', descKey: 'arch_description', imagesKey: 'arch_images', label: 'BUILDING → 01. ARCHITECTURE', color: '#0057B8' },
+                    { titleKey: 'struct_title', descKey: 'struct_description', imagesKey: 'struct_images', label: 'BUILDING → 02. STRUCTURE', color: '#0057B8' },
+                    { titleKey: 'interior_title', descKey: 'interior_description', imagesKey: 'interior_images', label: 'BUILDING → 03. INTERIOR', color: '#0057B8' },
+                    { titleKey: 'mech_title', descKey: 'mech_description', imagesKey: 'mech_images', label: 'BUILDING → 04. MECHANICAL', color: '#0057B8' },
+                    { titleKey: 'elec_title', descKey: 'elec_description', imagesKey: 'elec_images', label: 'BUILDING → 05. ELECTRICAL', color: '#0057B8' },
+                    { titleKey: 'landscape_title', descKey: 'landscape_description', imagesKey: 'landscape_images', label: 'INFRASTRUCTURE → 06. LANDSCAPING', color: '#00A896' },
+                    { titleKey: 'road_title', descKey: 'road_description', imagesKey: 'road_images', label: 'INFRASTRUCTURE → 07. ROAD', color: '#00A896' },
+                    { titleKey: 'street_light_title', descKey: 'street_light_description', imagesKey: 'street_light_images', label: 'INFRASTRUCTURE → 08. STREET LIGHT', color: '#00A896' },
+                    { titleKey: 'util_title', descKey: 'util_description', imagesKey: 'util_images', label: 'INFRASTRUCTURE → 09. UNDERGROUND UTILITIES', color: '#00A896' }
+                  ].map(sec => {
+                    const images = cadForm[sec.imagesKey] || [];
+                    return (
+                      <div key={sec.imagesKey} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: sec.color }}>
+                            {sec.label}
+                          </h3>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: images.length >= 4 && images.length <= 6 ? '#166534' : '#D97706', background: images.length >= 4 && images.length <= 6 ? '#F0FDF4' : '#FEF3C7', padding: '4px 10px', borderRadius: '12px' }}>
+                            {images.length} / 6 Images (Req: 4–6)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Sub-Topic Title</label>
+                            <input 
+                              type="text" 
+                              value={cadForm[sec.titleKey] || ''} 
+                              onChange={e => setCadForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                            <textarea 
+                              rows={3} 
+                              value={cadForm[sec.descKey] || ''} 
+                              onChange={e => setCadForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
+                                Image Gallery ({images.length} Uploaded)
+                              </label>
+
+                              <label style={{
+                                background: images.length >= 6 ? '#94A3B8' : '#00A896',
+                                color: '#FFFFFF',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: images.length >= 6 ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}>
+                                <Plus size={14} /> + Upload Image
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                  disabled={images.length >= 6}
+                                  style={{ display: 'none' }}
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleCadImageUpload(sec.imagesKey, e.target.files[0]);
+                                      e.target.value = '';
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {images.length === 0 ? (
+                              <div style={{ padding: '24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1', color: '#64748B', fontSize: '13px' }}>
+                                No images uploaded for this section yet. Click "+ Upload Image" to add photos.
+                              </div>
+                            ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                                {images.map((imgObj, idx) => {
+                                  const imgUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+                                  const imgAlt = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : '';
+                                  return (
+                                    <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                                      <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                                        <img src={imgUrl} alt={imgAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', top: '6px', left: '6px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
+                                          #{idx + 1}
+                                        </span>
+                                      </div>
+
+                                      <input 
+                                        type="text" 
+                                        placeholder="Image Alt Text..."
+                                        value={imgAlt}
+                                        onChange={e => handleUpdateCadImageAlt(sec.imagesKey, idx, e.target.value)}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontSize: '11px', boxSizing: 'border-box' }}
+                                      />
+
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={() => handleMoveCadImage(sec.imagesKey, idx, 'left')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === 0 ? 0.4 : 1 }}
+                                            title="Move Left"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === images.length - 1}
+                                            onClick={() => handleMoveCadImage(sec.imagesKey, idx, 'right')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === images.length - 1 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === images.length - 1 ? 0.4 : 1 }}
+                                            title="Move Right"
+                                          >
+                                            →
+                                          </button>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveCadImage(sec.imagesKey, idx)}
+                                          style={{ background: '#FFF1F2', color: '#EF4444', border: '1px solid #FECDD3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
+                                          <Trash size={12} /> Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      disabled={isSavingCad}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '12px 32px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={saveCadContent}
+                    >
+                      <Check size={16} /> {isSavingCad ? 'Saving All Changes...' : 'Save All CAD Content'}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* BIM SERVICE DETAIL CONTENT MANAGEMENT WORKSPACE */}
+            {activeTab === '/admin/services/bim' && (
+              <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
+                {/* Page Header */}
+                <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
+                      SERVICES → ENGINEERING SERVICES → BIM
+                    </span>
+                    <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
+                      BIM Services Content Editor
+                    </h2>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      Manage dynamic page title, introduction, main section titles, section descriptions, and image galleries across Building, Infrastructure, 4D, 5D, Rendering, and Reporting sub-topics.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                      onClick={() => setActiveTab('/admin/services')}
+                    >
+                      ← Back to Services
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
+                      onClick={() => fetchDataForTab('/admin/services/bim')}
+                    >
+                      Discard Changes
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingBim}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      onClick={saveBimContent}
+                    >
+                      <Check size={14} /> {isSavingBim ? 'Saving...' : 'Save BIM Changes'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                  {/* 1. Header & Introduction */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Wrench size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
+                    </h3>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
+                        <input 
+                          type="text" 
+                          value={bimForm.page_title || ''} 
+                          onChange={e => setBimForm(p => ({ ...p, page_title: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
+                        <textarea 
+                          rows={3} 
+                          value={bimForm.introduction || ''} 
+                          onChange={e => setBimForm(p => ({ ...p, introduction: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 6 Main Category Titles & Descriptions */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#063B73' }}>
+                      Main Section Category Headers (Building, Infrastructure, 4D, 5D, Rendering, Reporting)
+                    </h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+                      {[
+                        { titleKey: 'building_main_title', descKey: 'building_main_desc', label: '1. BUILDING SECTION' },
+                        { titleKey: 'infra_main_title', descKey: 'infra_main_desc', label: '2. INFRASTRUCTURE SECTION' },
+                        { titleKey: 'fourd_main_title', descKey: 'fourd_main_desc', label: '3. 4D SECTION' },
+                        { titleKey: 'fived_main_title', descKey: 'fived_main_desc', label: '4. 5D SECTION' },
+                        { titleKey: 'render_main_title', descKey: 'render_main_desc', label: '5. RENDERING SECTION' },
+                        { titleKey: 'report_main_title', descKey: 'report_main_desc', label: '6. REPORTING SECTION' }
+                      ].map((item, idx) => (
+                        <div key={idx} style={{ background: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase', marginBottom: '8px' }}>{item.label}</label>
+                          
+                          <input 
+                            type="text" 
+                            placeholder="Section Title..."
+                            value={bimForm[item.titleKey] || ''} 
+                            onChange={e => setBimForm(p => ({ ...p, [item.titleKey]: e.target.value }))}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', fontWeight: '700', marginBottom: '8px', boxSizing: 'border-box' }}
+                          />
+
+                          <textarea 
+                            rows={2} 
+                            placeholder="Section Description..."
+                            value={bimForm[item.descKey] || ''} 
+                            onChange={e => setBimForm(p => ({ ...p, [item.descKey]: e.target.value }))}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 14 Sub-Topic Sections Renderer */}
+                  {[
+                    { titleKey: 'b_arch_title', descKey: 'b_arch_desc', imagesKey: 'b_arch_images', label: 'BUILDING → 01. ARCHITECTURE', color: '#0057B8' },
+                    { titleKey: 'b_struct_title', descKey: 'b_struct_desc', imagesKey: 'b_struct_images', label: 'BUILDING → 02. STRUCTURE', color: '#0057B8' },
+                    { titleKey: 'b_interior_title', descKey: 'b_interior_desc', imagesKey: 'b_interior_images', label: 'BUILDING → 03. INTERIOR', color: '#0057B8' },
+                    { titleKey: 'b_mep_title', descKey: 'b_mep_desc', imagesKey: 'b_mep_images', label: 'BUILDING → 04. MECHANICAL ELECTRICAL', color: '#0057B8' },
+                    { titleKey: 'i_landscape_title', descKey: 'i_landscape_desc', imagesKey: 'i_landscape_images', label: 'INFRASTRUCTURE → 05. LANDSCAPING', color: '#00A896' },
+                    { titleKey: 'i_road_title', descKey: 'i_road_desc', imagesKey: 'i_road_images', label: 'INFRASTRUCTURE → 06. ROAD', color: '#00A896' },
+                    { titleKey: 'i_street_light_title', descKey: 'i_street_light_desc', imagesKey: 'i_street_light_images', label: 'INFRASTRUCTURE → 07. STREET LIGHT', color: '#00A896' },
+                    { titleKey: 'i_util_title', descKey: 'i_util_desc', imagesKey: 'i_util_images', label: 'INFRASTRUCTURE → 08. UNDERGROUND UTILITIES', color: '#00A896' },
+                    { titleKey: 'fourd_b_title', descKey: 'fourd_b_desc', imagesKey: 'fourd_b_images', label: '4D → 09. BUILDING', color: '#063B73' },
+                    { titleKey: 'fourd_i_title', descKey: 'fourd_i_desc', imagesKey: 'fourd_i_images', label: '4D → 10. INFRASTRUCTURE', color: '#063B73' },
+                    { titleKey: 'fived_b_title', descKey: 'fived_b_desc', imagesKey: 'fived_b_images', label: '5D → 11. BUILDING', color: '#00A896' },
+                    { titleKey: 'fived_i_title', descKey: 'fived_i_desc', imagesKey: 'fived_i_images', label: '5D → 12. INFRASTRUCTURE', color: '#00A896' },
+                    { titleKey: 'r_walkthrough_title', descKey: 'r_walkthrough_desc', imagesKey: 'r_walkthrough_images', label: 'RENDERING → 13. WALK THROUGH', color: '#0057B8' },
+                    { titleKey: 'rep_periodic_title', descKey: 'rep_periodic_desc', imagesKey: 'rep_periodic_images', label: 'REPORTING → 14. PERIODICALLY', color: '#0057B8' }
+                  ].map(sec => {
+                    const images = bimForm[sec.imagesKey] || [];
+                    return (
+                      <div key={sec.imagesKey} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: sec.color }}>
+                            {sec.label}
+                          </h3>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: images.length >= 4 && images.length <= 6 ? '#166534' : '#D97706', background: images.length >= 4 && images.length <= 6 ? '#F0FDF4' : '#FEF3C7', padding: '4px 10px', borderRadius: '12px' }}>
+                            {images.length} / 6 Images (Req: 4–6)
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Sub-Topic Title</label>
+                            <input 
+                              type="text" 
+                              value={bimForm[sec.titleKey] || ''} 
+                              onChange={e => setBimForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
+                            <textarea 
+                              rows={3} 
+                              value={bimForm[sec.descKey] || ''} 
+                              onChange={e => setBimForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
+                              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                            />
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase' }}>
+                                Image Gallery ({images.length} Uploaded)
+                              </label>
+
+                              <label style={{
+                                background: images.length >= 6 ? '#94A3B8' : '#00A896',
+                                color: '#FFFFFF',
+                                padding: '6px 14px',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: images.length >= 6 ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                              }}>
+                                <Plus size={14} /> + Upload Image
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                  disabled={images.length >= 6}
+                                  style={{ display: 'none' }}
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleBimImageUpload(sec.imagesKey, e.target.files[0]);
+                                      e.target.value = '';
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {images.length === 0 ? (
+                              <div style={{ padding: '24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1', color: '#64748B', fontSize: '13px' }}>
+                                No images uploaded for this section yet. Click "+ Upload Image" to add photos.
+                              </div>
+                            ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                                {images.map((imgObj, idx) => {
+                                  const imgUrl = typeof imgObj === 'string' ? imgObj : (imgObj.url || '');
+                                  const imgAlt = typeof imgObj === 'object' && imgObj.alt ? imgObj.alt : '';
+                                  return (
+                                    <div key={idx} style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
+                                      <div style={{ height: '130px', borderRadius: '6px', overflow: 'hidden', background: '#000', position: 'relative' }}>
+                                        <img src={imgUrl} alt={imgAlt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', top: '6px', left: '6px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '4px' }}>
+                                          #{idx + 1}
+                                        </span>
+                                      </div>
+
+                                      <input 
+                                        type="text" 
+                                        placeholder="Image Alt Text..."
+                                        value={imgAlt}
+                                        onChange={e => handleUpdateBimImageAlt(sec.imagesKey, idx, e.target.value)}
+                                        style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid #CBD5E1', fontSize: '11px', boxSizing: 'border-box' }}
+                                      />
+
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={() => handleMoveBimImage(sec.imagesKey, idx, 'left')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === 0 ? 0.4 : 1 }}
+                                            title="Move Left"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === images.length - 1}
+                                            onClick={() => handleMoveBimImage(sec.imagesKey, idx, 'right')}
+                                            style={{ background: '#FFF', border: '1px solid #CBD5E1', padding: '4px 8px', borderRadius: '4px', cursor: idx === images.length - 1 ? 'not-allowed' : 'pointer', fontSize: '11px', opacity: idx === images.length - 1 ? 0.4 : 1 }}
+                                            title="Move Right"
+                                          >
+                                            →
+                                          </button>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveBimImage(sec.imagesKey, idx)}
+                                          style={{ background: '#FFF1F2', color: '#EF4444', border: '1px solid #FECDD3', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        >
+                                          <Trash size={12} /> Remove
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      disabled={isSavingBim}
+                      style={{ background: '#00A896', color: '#FFFFFF', border: 'none', padding: '12px 32px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={saveBimContent}
+                    >
+                      <Check size={16} /> {isSavingBim ? 'Saving All Changes...' : 'Save All BIM Content'}
+                    </button>
+                  </div>
+
                 </div>
               </div>
             )}
@@ -5291,6 +8369,7 @@ export default function AdminPanel({ onNavigate }) {
                           <img src={item.url} alt={item.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display='none'; }} />
                         </div>
                         <div style={{ padding: '8px' }}>
+                          <span className="admin-badge" style={{ fontSize: '9px', marginBottom: '4px', display: 'inline-block' }}>{item.category || 'Site'}</span>
                           <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title || 'Untitled'}</div>
                           <div style={{ display: 'flex', gap: '6px' }}>
                             <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={12} /></button>
@@ -5313,6 +8392,7 @@ export default function AdminPanel({ onNavigate }) {
                         <tr>
                           <th style={{ width: '40px' }}>#</th>
                           <th style={{ width: '120px' }}>Thumbnail</th>
+                          <th>Category</th>
                           <th>Title</th>
                           <th>YouTube URL</th>
                           <th style={{ width: '90px' }}>Actions</th>
@@ -5329,6 +8409,7 @@ export default function AdminPanel({ onNavigate }) {
                                   <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={item.title} style={{ width: '100px', height: '56px', objectFit: 'cover', borderRadius: '6px' }} />
                                 ) : <span style={{ color: '#94A3B8', fontSize: '12px' }}>No Thumb</span>}
                               </td>
+                              <td><span className="admin-badge">{item.category || 'Our Work'}</span></td>
                               <td style={{ fontWeight: 600 }}>{item.title}</td>
                               <td style={{ color: '#00B8A0', fontSize: '13px', wordBreak: 'break-all' }}>{item.url}</td>
                               <td>
@@ -5461,29 +8542,6 @@ export default function AdminPanel({ onNavigate }) {
               </div>
             )}
 
-            {/* MEDIA LIBRARY (MOCK) */}
-            {activeTab === '/admin/media' && (
-              <div>
-                <div className="admin-table-card-header" style={{ marginBottom: '20px' }}>
-                  <h3>Static Media Assets</h3>
-                </div>
-                <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                  <button className="admin-add-btn" onClick={() => alert('Upload files triggers system uploader.')}>
-                    <Plus size={15} /> Upload Files
-                  </button>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '15px' }}>
-                  {['/why.png', '/sust_workshop.png', '/simulation.png', '/project1.png'].map((img, i) => (
-                    <div key={i} style={{ border: '1px solid var(--panel-border)', borderRadius: '6px', overflow: 'hidden', background: '#F8FAFC' }}>
-                      <img src={img} alt="media preview" style={{ width: '100%', height: '80px', objectFit: 'cover' }} />
-                      <div style={{ padding: '6px', fontSize: '10px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'center' }}>
-                        {img.split('/').pop()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* BACKUP & RESTORE WORKSPACE */}
             {activeTab === '/admin/backup' && (
@@ -5703,15 +8761,29 @@ export default function AdminPanel({ onNavigate }) {
                 <div>
                   <div className="admin-form-grid">
                     <div className="admin-form-group">
+                      <label>Certificate Category</label>
+                      <select
+                        className="admin-input"
+                        value={certForm.cert_category || 'Authority Certificates'}
+                        onChange={(e) => setCertForm(prev => ({ ...prev, cert_category: e.target.value }))}
+                      >
+                        <option value="Authority Certificates">Authority Certificates (ISO, GSAS)</option>
+                        <option value="Completion Certificates">Completion Certificates (GSAS, BIM, Laser Scanning, Digital Twin)</option>
+                      </select>
+                    </div>
+                    <div className="admin-form-group">
                       <label>Certificate Title</label>
                       <input
                         type="text"
                         className="admin-input"
-                        placeholder="e.g. ISO 9001:2015"
+                        placeholder="e.g. ISO 9001:2015 Quality Management System"
                         value={certForm.title}
                         onChange={(e) => setCertForm(prev => ({ ...prev, title: e.target.value }))}
                       />
                     </div>
+                  </div>
+
+                  <div className="admin-form-grid">
                     <div className="admin-form-group">
                       <label>Issuing Organization</label>
                       <input
@@ -5722,9 +8794,6 @@ export default function AdminPanel({ onNavigate }) {
                         onChange={(e) => setCertForm(prev => ({ ...prev, org: e.target.value }))}
                       />
                     </div>
-                  </div>
-
-                  <div className="admin-form-grid">
                     <div className="admin-form-group">
                       <label>License / Certificate No</label>
                       <input
@@ -5735,6 +8804,9 @@ export default function AdminPanel({ onNavigate }) {
                         onChange={(e) => setCertForm(prev => ({ ...prev, licenseNo: e.target.value }))}
                       />
                     </div>
+                  </div>
+
+                  <div className="admin-form-grid">
                     <div className="admin-form-group">
                       <label>Territory</label>
                       <input
@@ -6224,17 +9296,48 @@ export default function AdminPanel({ onNavigate }) {
               {/* media form */}
               {activeTab === '/admin/media' && (
                 <div>
-                  <div className="admin-form-group">
-                    <label>Media Type</label>
-                    <select
-                      className="admin-input"
-                      value={mediaForm.type}
-                      onChange={e => setMediaForm(prev => ({ ...prev, type: e.target.value }))}
-                    >
-                      <option value="gallery">📸 Gallery Image</option>
-                      <option value="video">🎥 YouTube Video</option>
-                    </select>
+                  <div className="admin-form-grid">
+                    <div className="admin-form-group">
+                      <label>Media Type</label>
+                      <select
+                        className="admin-input"
+                        value={mediaForm.type}
+                        onChange={e => {
+                          const newType = e.target.value;
+                          const defaultCat = newType === 'gallery' ? 'Site' : 'Our Work';
+                          setMediaForm(prev => ({ ...prev, type: newType, category: defaultCat }));
+                        }}
+                      >
+                        <option value="gallery">📸 Gallery (Photo)</option>
+                        <option value="video">🎥 Video Showcase</option>
+                      </select>
+                    </div>
+
+                    <div className="admin-form-group">
+                      <label>Sub-Category Section</label>
+                      <select
+                        className="admin-input"
+                        value={mediaForm.category || (mediaForm.type === 'gallery' ? 'Site' : 'Our Work')}
+                        onChange={e => setMediaForm(prev => ({ ...prev, category: e.target.value }))}
+                      >
+                        {mediaForm.type === 'gallery' ? (
+                          <>
+                            <option value="Site">Site</option>
+                            <option value="Our Office">Our Office</option>
+                            <option value="Expo">Expo</option>
+                            <option value="Our Work">Our Work</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="Our Work">Our Work</option>
+                            <option value="Our Team">Our Team</option>
+                            <option value="Knowledge Sharing">Knowledge Sharing</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
                   </div>
+
                   <div className="admin-form-group">
                     <label>Title / Caption</label>
                     <input
@@ -6822,6 +9925,124 @@ export default function AdminPanel({ onNavigate }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* MAINTENANCE MODE CONFIRMATION MODAL (Requirements 3 & 4) */}
+      {maintenanceModalOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justify: 'center',
+            zIndex: 99999,
+            padding: '20px'
+          }}
+          onClick={() => setMaintenanceModalOpen(false)}
+        >
+          <div 
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '16px',
+              maxWidth: '480px',
+              width: '100%',
+              padding: '28px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              animation: 'modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              boxSizing: 'border-box'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: targetMaintenanceState ? '#FEF3C7' : '#D1FAE5',
+                display: 'flex',
+                alignItems: 'center',
+                justify: 'center',
+                color: targetMaintenanceState ? '#D97706' : '#059669'
+              }}>
+                <Wrench size={22} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>
+                {targetMaintenanceState ? 'Enable Maintenance Mode?' : 'Disable Maintenance Mode?'}
+              </h3>
+            </div>
+
+            <p style={{ margin: '0 0 24px 0', fontSize: '14px', lineHeight: '1.6', color: '#475569' }}>
+              {targetMaintenanceState ? (
+                'The public website will temporarily display the maintenance page. The Admin Panel and authorized administrators will continue to have access.'
+              ) : (
+                'The public website will become available immediately.'
+              )}
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button 
+                type="button" 
+                onClick={() => setMaintenanceModalOpen(false)}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  color: '#475569',
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  fontSize: '13.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                CANCEL
+              </button>
+
+              <button 
+                type="button" 
+                onClick={handleConfirmMaintenanceChange}
+                style={{
+                  background: targetMaintenanceState ? '#D97706' : '#0057B8',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '13.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  boxShadow: targetMaintenanceState ? '0 4px 12px rgba(217, 119, 6, 0.3)' : '0 4px 12px rgba(0, 87, 184, 0.3)'
+                }}
+              >
+                {targetMaintenanceState ? 'ENABLE MAINTENANCE' : 'MAKE WEBSITE LIVE'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modern UI Toast Notification Banner (Replaces default browser alert) */}
+      {toast.show && (
+        <div className={`admin-toast-banner ${toast.type}`}>
+          <div className="admin-toast-icon">
+            {toast.type === 'success' && <CheckCircle size={22} />}
+            {toast.type === 'error' && <AlertCircle size={22} />}
+            {toast.type === 'info' && <Info size={22} />}
+          </div>
+          <div className="admin-toast-content">
+            <span className="admin-toast-title">
+              {toast.type === 'success' ? 'Success' : toast.type === 'error' ? 'Error' : 'Notice'}
+            </span>
+            <span className="admin-toast-message">{toast.message}</span>
+          </div>
+          <button className="admin-toast-close" onClick={closeToast} aria-label="Close notification">
+            <X size={16} />
+          </button>
         </div>
       )}
     </div>

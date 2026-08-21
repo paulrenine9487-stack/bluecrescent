@@ -20,6 +20,7 @@ import OurJourneyPage from './components/OurJourneyPage';
 import Footer from './components/Footer';
 import TestimonialModal from './components/TestimonialModal';
 import AdminPanel from './components/AdminPanel';
+import MaintenancePage from './components/MaintenancePage';
 import ProjectDetailPage from './components/ProjectDetailPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -28,6 +29,30 @@ export default function App() {
   const [activeSubTab, setActiveSubTab] = useState(''); // Stores sub-tab or project slug
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Dynamic Maintenance Mode State
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [maintenanceData, setMaintenanceData] = useState(null);
+
+  useEffect(() => {
+    const checkMaintenanceStatus = async () => {
+      try {
+        const res = await fetch('/api/settings/maintenance-status');
+        if (res.ok) {
+          const data = await res.json();
+          setIsMaintenanceMode(Boolean(data.maintenanceMode));
+          setMaintenanceData(data);
+        }
+      } catch (err) {
+        console.warn('Could not fetch maintenance status (fail-safe to live site):', err);
+        setIsMaintenanceMode(false);
+      }
+    };
+
+    checkMaintenanceStatus();
+    const interval = setInterval(checkMaintenanceStatus, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Sync state with URL pathname on mount and handle back/forward navigation
   useEffect(() => {
@@ -49,7 +74,8 @@ export default function App() {
       } else if (path === '/projects') {
         setCurrentView('Projects');
       } else if (path.startsWith('/services/')) {
-        const sub = path.replace('/services/', '').split('/')[0];
+        const parts = path.replace('/services/', '').split('/').filter(Boolean);
+        const sub = parts.length > 0 ? parts[parts.length - 1] : '';
         setCurrentView('Services');
         setActiveSubTab(sub ? decodeURIComponent(sub) : '');
       } else if (path === '/services') {
@@ -135,24 +161,40 @@ export default function App() {
     }
   };
 
+  // CRITICAL ADMIN BYPASS: If current view is Admin (/admin, /manager), Admin Panel renders normally
+  if (currentView === 'Admin') {
+    return (
+      <div className="app-root is-admin-view">
+        <ErrorBoundary key="Admin">
+          <AdminPanel onNavigate={handleNavigate} />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // PUBLIC WEBSITE MAINTENANCE PAGE wrapper
+  if (isMaintenanceMode) {
+    return (
+      <div className="app-root is-maintenance-view">
+        <ErrorBoundary key="Maintenance">
+          <MaintenancePage onNavigate={handleNavigate} maintenanceData={maintenanceData} />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
   return (
-    <div className={`app-root ${currentView === 'Home' ? 'is-home-view' : (currentView === 'Admin' ? 'is-admin-view' : 'is-subpage-view')}`}>
+    <div className={`app-root ${currentView === 'Home' ? 'is-home-view' : 'is-subpage-view'}`}>
       {/* Top Header Navigation */}
-      {currentView !== 'Admin' && (
-        <Header
-          currentView={currentView}
-          activeSubTab={activeSubTab}
-          onNavigate={handleNavigate}
-        />
-      )}
+      <Header
+        currentView={currentView}
+        activeSubTab={activeSubTab}
+        onNavigate={handleNavigate}
+      />
 
       {/* Main View Router */}
       <ErrorBoundary key={currentView}>
-        {currentView === 'Admin' ? (
-          <AdminPanel
-            onNavigate={handleNavigate}
-          />
-        ) : currentView === 'ProjectDetail' ? (
+        {currentView === 'ProjectDetail' ? (
           <ProjectDetailPage
             projectSlug={activeSubTab}
             onNavigate={handleNavigate}
@@ -230,7 +272,7 @@ export default function App() {
       </ErrorBoundary>
 
       {/* Footer */}
-      {currentView !== 'Admin' && <Footer onNavigate={handleNavigate} />}
+      <Footer onNavigate={handleNavigate} />
 
       {/* Interactive Testimonial Submission Modal */}
       <TestimonialModal

@@ -277,7 +277,7 @@ export default function OurJourneyPage({ onNavigate }) {
                 lineHeight: 1.2
               }}
             >
-              Timeline &amp; Milestones
+              OUR JOURNEY
             </h2>
             <div style={{ width: '60px', height: '3.5px', background: '#087CFF', borderRadius: '4px', margin: '0 auto 12px auto' }}></div>
             <h3 

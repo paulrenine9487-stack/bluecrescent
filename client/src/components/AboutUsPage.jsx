@@ -341,22 +341,26 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       { name: 'CAD Documentation', image: '/our capacity/cad.png' },
       { name: 'Reality Capture & Laser Scanning', image: '/our capacity/reality.png' },
       { name: 'Specialized Engineering support', image: '/our capacity/special.png' },
-      { name: 'Computational fluid dynamics (CFD)', image: '/our capacity/cfd.png' },
-      { name: 'Acoustic & Vibration Analysis', image: '/our capacity/vibration.png' },
-      { name: 'Advanced Hydraulic Analysis', image: '/our capacity/hydralic.png' },
-      { name: 'Stress Analysis (Piping & Static)', image: '/our capacity/stress.png' },
       { name: 'Energy Auditing & Commissioning', image: '/our capacity/energy.png' },
       { name: 'Green Building Facilitation', image: '/our capacity/green.png' },
       { name: 'Technical experts outsourcing', image: '/our capacity/technical.png' }
+    ];
+    const EXCLUDED_DISCIPLINES = [
+      'computational fluid dynamics',
+      'acoustic & vibration',
+      'hydraulic analysis',
+      'stress analysis'
     ];
     try {
       if (companySettings.aboutUsDisciplinesJson) {
         const parsed = JSON.parse(companySettings.aboutUsDisciplinesJson);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((item, idx) => ({
-            ...item,
-            image: (item.name && item.name.toLowerCase().includes('bim')) ? '/uploads/bimmodel.png' : (item.image || DEFAULT_DISCIPLINES[idx]?.image || (item.name && item.name.toLowerCase().includes('cad') ? '/our capacity/cad.png' : null))
-          }));
+          return parsed
+            .filter(item => !EXCLUDED_DISCIPLINES.some(ex => (item.name || '').toLowerCase().includes(ex)))
+            .map((item, idx) => ({
+              ...item,
+              image: (item.name && item.name.toLowerCase().includes('bim')) ? '/uploads/bimmodel.png' : (item.image || DEFAULT_DISCIPLINES[idx]?.image || (item.name && item.name.toLowerCase().includes('cad') ? '/our capacity/cad.png' : null))
+            }));
         }
       }
     } catch (e) {
@@ -477,33 +481,6 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                 {companySettings.whoWeArePara5 || "With our Head Office in Qatar, an engineering delivery office in India, and market presence across the GCC, we combine regional project understanding with strong technical production capacity."}
               </p>
 
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  const el = document.getElementById('our-journey-section');
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  } else if (onNavigate) {
-                    onNavigate('Our Journey');
-                  }
-                }}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(90deg, #0057B8, #08A8F0)',
-                  color: '#FFFFFF',
-                  fontWeight: '800',
-                  fontSize: '14.5px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(8, 168, 240, 0.3)',
-                  transition: 'transform 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                DISCOVER OUR JOURNEY →
-              </button>
             </div>
 
             {/* Right: Video player or fallback image */}
@@ -1005,38 +982,44 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                 </h3>
               </div>
 
-              {/* Grid of Icon Cards */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: windowWidth >= 1200 ? 'flex-start' : 'center' }}>
+              {/* Grid of Icon Cards - 2 Rows Layout with Larger Cards */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: windowWidth >= 1200 ? 'repeat(4, 1fr)' : windowWidth >= 768 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+                gap: '18px',
+                width: '100%'
+              }}>
                 {disciplines.map(item => (
                   <div
                     key={item.name}
                     style={{
                       background: '#FFFFFF',
-                      border: '1.5px solid #F0F4FA',
-                      borderRadius: '16px',
-                      padding: '20px 10px',
-                      width: '125px',
-                      height: '165px',
+                      border: '1.5px solid #E2E8F0',
+                      borderRadius: '18px',
+                      padding: '22px 12px',
+                      width: '100%',
+                      height: '195px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      boxShadow: '0 4px 12px rgba(6, 59, 115, 0.03)',
-                      transition: 'all 0.25s ease',
+                      boxShadow: '0 6px 16px rgba(6, 59, 115, 0.05)',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       boxSizing: 'border-box'
                     }}
                     className="strength-card-hover"
                   >
                     <div style={{
-                      width: '52px',
-                      height: '52px',
+                      width: '64px',
+                      height: '64px',
                       borderRadius: '50%',
                       background: '#F2F7FD',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 8px rgba(0, 87, 184, 0.08)'
                     }}>
                       {(() => {
                         const nameLower = (item.name || '').toLowerCase();
@@ -1058,21 +1041,21 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                           <img
                             src={imagePath}
                             alt={item.name}
-                            style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                            style={{ width: '48px', height: '48px', objectFit: 'contain' }}
                           />
                         ) : (
-                          getLucideIcon(item.icon, 26, '#0057B8')
+                          getLucideIcon(item.icon, 30, '#0057B8')
                         );
                       })()}
                     </div>
-                    <div style={{ width: '22px', height: '2px', background: '#0057B8', margin: '6px 0', opacity: 0.7 }} />
+                    <div style={{ width: '28px', height: '3px', background: 'linear-gradient(90deg, #0057B8, #00A896)', margin: '6px 0', borderRadius: '2px' }} />
                     <span style={{
                       fontFamily: 'Space Grotesk, sans-serif',
-                      fontSize: '12px',
+                      fontSize: '13.5px',
                       fontWeight: '800',
                       color: '#0F2747',
                       textAlign: 'center',
-                      lineHeight: 1.25,
+                      lineHeight: 1.3,
                       display: 'block'
                     }}>
                       {item.name}
@@ -1409,7 +1392,7 @@ function CoreStrengthsCarousel({ windowWidth }) {
   /* ── auto-play ── */
   React.useEffect(() => {
     if (hovering) return;
-    autoRef.current = setInterval(next, 4500);
+    autoRef.current = setInterval(next, 3000);
     return () => clearInterval(autoRef.current);
   }, [next, hovering]);
 
@@ -1473,8 +1456,6 @@ function CoreStrengthsCarousel({ windowWidth }) {
         border: '1px solid #E1EDFA',
         boxShadow: '0 8px 30px rgba(0, 87, 184, 0.02)'
       }}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
     >
       {/* ── Header ── */}
       <div style={{ textAlign: 'center', marginBottom: '52px' }}>
@@ -1537,7 +1518,11 @@ function CoreStrengthsCarousel({ windowWidth }) {
         </button>
 
         {/* Track container — clips overflow */}
-        <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+        <div 
+          style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={() => setHovering(false)}
+        >
           <div
             ref={trackRef}
             onMouseDown={handlePointerDown}
@@ -2322,7 +2307,7 @@ function OurJourneySection({ windowWidth }) {
               lineHeight: 1.2
             }}
           >
-            Timeline &amp; Milestones
+            OUR JOURNEY
           </h2>
 
           {/* Decorative Divider */}
@@ -2635,21 +2620,18 @@ function OurTeamSection({ windowWidth }) {
     { id: 7, name: 'Karthik', role: 'Project Lead', image: '' },
     { id: 8, name: 'Divya', role: 'Sustainability Specialist', image: '' }
   ]);
-  const trackRef = React.useRef(null);
 
-  useEffect(() => {
-    // Preload static team images into browser memory cache for instant paint
-    ['/uploads/team_1786560739404.jpg', '/uploads/team_1786562045607.jpg', '/uploads/team_1786562084689.jpg', '/uploads/team_1786562368113.jpg', '/uploads/team_1786562504613.jpg'].forEach(url => {
-      const img = new Image();
-      img.src = url;
-    });
+  const [teamIndex, setTeamIndex] = useState(0);
+  const [isTeamPaused, setIsTeamPaused] = useState(false);
 
+  const teamCardsToShow = windowWidth >= 1024 ? 4 : windowWidth >= 640 ? 2 : 1;
+
+  const fetchTeamData = () => {
     fetch('/api/team')
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           setTeam(data);
-          // Preload fetched images
           data.forEach(item => {
             if (item.image) {
               const img = new Image();
@@ -2659,19 +2641,41 @@ function OurTeamSection({ windowWidth }) {
         }
       })
       .catch(err => console.warn('Team fetch warning:', err));
+  };
+
+  useEffect(() => {
+    ['/uploads/team_1786560739404.jpg', '/uploads/team_1786562045607.jpg', '/uploads/team_1786562084689.jpg', '/uploads/team_1786562368113.jpg', '/uploads/team_1786562504613.jpg'].forEach(url => {
+      const img = new Image();
+      img.src = url;
+    });
+
+    fetchTeamData();
+    window.addEventListener('dataUpdated', fetchTeamData);
+    window.addEventListener('menuUpdated', fetchTeamData);
+    return () => {
+      window.removeEventListener('dataUpdated', fetchTeamData);
+      window.removeEventListener('menuUpdated', fetchTeamData);
+    };
   }, []);
 
-  const scrollLeft = () => {
-    if (trackRef.current) {
-      trackRef.current.scrollBy({ left: -320, behavior: 'smooth' });
-    }
+  const handlePrev = () => {
+    setTeamIndex(prev => (prev > 0 ? prev - 1 : team.length - teamCardsToShow));
   };
 
-  const scrollRight = () => {
-    if (trackRef.current) {
-      trackRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-    }
+  const handleNext = () => {
+    setTeamIndex(prev => (prev < team.length - teamCardsToShow ? prev + 1 : 0));
   };
+
+  // Auto-play interval for automatic smooth moving every 3.0 seconds
+  useEffect(() => {
+    if (isTeamPaused || team.length <= teamCardsToShow) return;
+
+    const autoTimer = setInterval(() => {
+      setTeamIndex(prev => (prev < team.length - teamCardsToShow ? prev + 1 : 0));
+    }, 3000);
+
+    return () => clearInterval(autoTimer);
+  }, [isTeamPaused, team.length, teamCardsToShow]);
 
   return (
     <section 
@@ -2717,7 +2721,7 @@ function OurTeamSection({ windowWidth }) {
 
       <div style={{ position: 'relative', padding: windowWidth >= 768 ? '0 56px' : '0 40px' }}>
         <button
-          onClick={scrollLeft}
+          onClick={handlePrev}
           title="Previous"
           style={{
             position: 'absolute',
@@ -2755,7 +2759,7 @@ function OurTeamSection({ windowWidth }) {
         </button>
 
         <button
-          onClick={scrollRight}
+          onClick={handleNext}
           title="Next"
           style={{
             position: 'absolute',
@@ -2792,98 +2796,100 @@ function OurTeamSection({ windowWidth }) {
           <ChevronRight size={22} />
         </button>
 
-        <div
-          ref={trackRef}
-          className="no-scrollbar"
-          style={{
-            display: 'flex',
-            gap: '24px',
-            overflowX: 'auto',
-            scrollSnapType: 'x mandatory',
-            scrollBehavior: 'smooth',
-            WebkitOverflowScrolling: 'touch',
-            padding: '12px 4px 20px 4px'
-          }}
+        {/* Track Slider Container */}
+        <div 
+          style={{ width: '100%', overflow: 'hidden', padding: '12px 0 20px 0' }}
+          onMouseEnter={() => setIsTeamPaused(true)}
+          onMouseLeave={() => setIsTeamPaused(false)}
         >
-          {team.map((member, idx) => (
-            <div
-              key={member.id || idx}
-              style={{
-                flex: windowWidth >= 1024 ? '0 0 calc(25% - 18px)' : windowWidth >= 640 ? '0 0 calc(50% - 12px)' : '0 0 270px',
-                minWidth: '250px',
-                scrollSnapAlign: 'start',
-                background: '#FFFFFF',
-                borderRadius: '20px',
-                border: '1px solid #E2EAF3',
-                overflow: 'hidden',
-                boxShadow: '0 10px 30px rgba(6, 59, 115, 0.06)',
-                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-6px)';
-                e.currentTarget.style.boxShadow = '0 18px 40px rgba(6, 59, 115, 0.12)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(6, 59, 115, 0.06)';
-              }}
-            >
-              <div style={{ position: 'relative', height: '290px', background: '#F1F5F9', overflow: 'hidden' }}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #071C3B 0%, #0057B8 100%)',
-                    color: '#FFFFFF',
-                    fontSize: '54px',
-                    fontWeight: '800',
-                    zIndex: 1
-                  }}
-                >
-                  {member.name ? member.name.charAt(0) : 'T'}
-                </div>
-
-                {member.image ? (
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    loading="eager"
-                    fetchPriority="high"
-                    style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
+          <div
+            style={{
+              display: 'flex',
+              transform: `translateX(calc(-${teamIndex} * (100% / ${teamCardsToShow} + ${24 / teamCardsToShow}px)))`,
+              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              gap: '24px',
+              alignItems: 'stretch'
+            }}
+          >
+            {team.map((member, idx) => (
+              <div
+                key={member.id || idx}
+                style={{
+                  flex: `0 0 calc(${100 / teamCardsToShow}% - ${(24 * (teamCardsToShow - 1)) / teamCardsToShow}px)`,
+                  boxSizing: 'border-box',
+                  background: '#FFFFFF',
+                  borderRadius: '20px',
+                  border: '1px solid #E2EAF3',
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 30px rgba(6, 59, 115, 0.06)',
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 18px 40px rgba(6, 59, 115, 0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 10px 30px rgba(6, 59, 115, 0.06)';
+                }}
+              >
+                <div style={{ position: 'relative', height: '280px', background: '#F1F5F9', overflow: 'hidden', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, #071C3B 0%, #0057B8 100%)',
+                      color: '#FFFFFF',
+                      fontSize: '54px',
+                      fontWeight: '800',
+                      zIndex: 1
                     }}
-                  />
-                ) : null}
-              </div>
+                  >
+                    {member.name ? member.name.charAt(0) : 'T'}
+                  </div>
 
-              <div style={{ padding: '20px 16px', textAlign: 'center', background: '#FFFFFF' }}>
-                <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '19px', fontWeight: '800', color: '#062F63', margin: '0 0 6px 0' }}>
-                  {member.name}
-                </h3>
-                <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#10B981', letterSpacing: '0.2px' }}>
-                  {member.role || 'Team Member'}
+                  {member.image ? (
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      loading="eager"
+                      fetchPriority="high"
+                      style={{
+                        position: 'relative',
+                        zIndex: 2,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center 20%',
+                        transform: 'scale(1.35)',
+                        borderRadius: '0px',
+                        transition: 'transform 0.3s ease'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                </div>
+
+                <div style={{ padding: '20px 16px', textAlign: 'center', background: '#FFFFFF' }}>
+                  <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '19px', fontWeight: '800', color: '#062F63', margin: '0 0 6px 0' }}>
+                    {member.name}
+                  </h3>
+                  <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#10B981', letterSpacing: '0.2px' }}>
+                    {member.role || 'Team Member'}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </section>
   );
 }

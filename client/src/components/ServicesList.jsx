@@ -15,7 +15,7 @@ const FALLBACK_CATEGORIES = [
     textColor: '#1E293B',
     iconBg: '#E0F2FE',
     description: 'Comprehensive engineering services including BIM modeling, CAD drafting, 3D laser scanning, and scan-to-BIM conversions.',
-    subServices: ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM']
+    subServices: ['BIM', 'CAD', 'Laser Scanning']
   },
   {
     id: 2,
@@ -29,8 +29,8 @@ const FALLBACK_CATEGORIES = [
     titleColor: '#064E3B',
     textColor: '#1E293B',
     iconBg: '#DCFCE7',
-    description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.',
-    subServices: ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management']
+    description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and environment strategies.',
+    subServices: ['Energy Audit', 'GSAS', 'Environment', 'LEED']
   },
   {
     id: 3,
@@ -45,7 +45,7 @@ const FALLBACK_CATEGORIES = [
     textColor: '#1E293B',
     iconBg: '#FFE4E6',
     description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.',
-    subServices: ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management']
+    subServices: ['System Integration', 'Asset Management']
   },
   {
     id: 4,
@@ -59,8 +59,8 @@ const FALLBACK_CATEGORIES = [
     titleColor: '#78350F',
     textColor: '#1E293B',
     iconBg: '#FEF3C7',
-    description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.',
-    subServices: ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics']
+    description: 'Cutting-edge construction technologies including laser scanning, 360° site documentation, AR solutions, and digital collaboration.',
+    subServices: ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration']
   }
 ];
 
@@ -75,28 +75,21 @@ export default function ServicesList({ onNavigate }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
+  const fetchServicesListData = () => {
     Promise.all([
       fetch('/api/service-categories').then(res => res.ok ? res.json() : []),
       fetch('/api/services').then(res => res.ok ? res.json() : [])
     ]).then(([catsData, svcsData]) => {
+      if (!Array.isArray(catsData)) return;
       const activeCats = catsData.filter(c => c.status !== 'Inactive');
-      const activeSvcs = svcsData.filter(s => s.status !== 'Inactive');
+      const activeSvcs = Array.isArray(svcsData) ? svcsData.filter(s => s.status !== 'Inactive') : [];
 
-      const catsToUse = activeCats.length > 0 ? activeCats : FALLBACK_CATEGORIES;
-
-      setCategories(catsToUse.map((cat, idx) => {
+      setCategories(activeCats.map((cat, idx) => {
         const numStr = (idx + 1).toString().padStart(2, '0');
         const fallback = FALLBACK_CATEGORIES.find(f => f.slug === cat.slug || f.name.toLowerCase() === (cat.name || '').toLowerCase()) || FALLBACK_CATEGORIES[idx % FALLBACK_CATEGORIES.length];
         
-        let subServicesList = [];
-        if (activeSvcs.length > 0) {
-          const matching = activeSvcs.filter(s => s.category === cat.name || s.category_id === cat.id);
-          subServicesList = matching.map(s => s.title);
-        }
-        if (subServicesList.length === 0) {
-          subServicesList = cat.subServices || fallback.subServices || [];
-        }
+        const matching = activeSvcs.filter(s => s.category === cat.name || s.category_id === cat.id);
+        const subServicesList = matching.map(s => s.title);
 
         return {
           id: cat.id || idx + 1,
@@ -115,22 +108,56 @@ export default function ServicesList({ onNavigate }) {
         };
       }));
     }).catch(err => console.warn('ServicesList fetch warning:', err));
+  };
+
+  useEffect(() => {
+    fetchServicesListData();
+    window.addEventListener('dataUpdated', fetchServicesListData);
+    window.addEventListener('menuUpdated', fetchServicesListData);
+    return () => {
+      window.removeEventListener('dataUpdated', fetchServicesListData);
+      window.removeEventListener('menuUpdated', fetchServicesListData);
+    };
   }, []);
+
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   const getCardsToShow = () => {
     if (windowWidth < 640) return 1;
     if (windowWidth < 1024) return 2;
-    return 3;
+    if (windowWidth < 1280) return 3;
+    return 4;
   };
 
   const cardsToShow = getCardsToShow();
 
   const handlePrev = () => {
-    setStartIndex((prev) => (prev > 0 ? prev - 1 : categories.length - cardsToShow));
+    setStartIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, categories.length - cardsToShow)));
   };
 
   const handleNext = () => {
     setStartIndex((prev) => (prev < categories.length - cardsToShow ? prev + 1 : 0));
+  };
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > 50) {
+      handleNext();
+    } else if (distance < -50) {
+      handlePrev();
+    }
+    setTouchStart(0);
+    setTouchEnd(0);
   };
 
   const getCategoryIcon = (iconName, color) => {
@@ -155,7 +182,7 @@ export default function ServicesList({ onNavigate }) {
     <section id="services" className="services-section-premium" style={{ marginTop: '64px', marginBottom: '80px' }}>
       <div className="services-container-inner">
         {/* Section Header */}
-        <div className="services-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '40px', padding: '0 100px' }}>
+        <div className="services-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '40px', padding: '0 20px' }}>
           <h2 className="services-title-premium" style={{ margin: '0 0 10px 0', color: '#063B73', fontSize: '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
             Our Services
           </h2>
@@ -163,59 +190,19 @@ export default function ServicesList({ onNavigate }) {
           <p className="services-subtitle-premium" style={{ margin: '0 auto', maxWidth: '760px', color: '#475569', fontSize: '15px', lineHeight: 1.6, fontWeight: '400' }}>
             Comprehensive engineering and digital transformation solutions connecting design, construction and asset lifecycle management.
           </p>
-
-          <div className="carousel-nav-arrows" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '10px' }}>
-            <button
-              className="carousel-arrow-btn"
-              onClick={handlePrev}
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '50%',
-                border: '1px solid rgba(6, 59, 115, 0.2)',
-                color: '#063B73',
-                background: '#FFFFFF',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)'
-              }}
-              aria-label="Previous service"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              className="carousel-arrow-btn"
-              onClick={handleNext}
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '50%',
-                border: '1px solid rgba(6, 59, 115, 0.2)',
-                color: '#063B73',
-                background: '#FFFFFF',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)'
-              }}
-              aria-label="Next service"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
         </div>
 
-        {/* Carousel Track */}
-        <div style={{ width: '100%', overflow: 'hidden', padding: '12px 4px' }}>
+        {/* Carousel Track with Touch Swipe */}
+        <div 
+          style={{ width: '100%', overflow: 'hidden', padding: '12px 0' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
             style={{
               display: 'flex',
-              transform: `translateX(-${startIndex * (100 / cardsToShow)}%)`,
+              transform: `translateX(calc(-${startIndex} * (100% / ${cardsToShow} + ${24 / cardsToShow}px)))`,
               transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               gap: '24px'
             }}
@@ -408,6 +395,73 @@ export default function ServicesList({ onNavigate }) {
             })}
           </div>
         </div>
+
+        {/* Bottom Pagination Controls (Shown on Mobile & Tablet when cardsToShow < categories.length) */}
+        {cardsToShow < categories.length && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', marginTop: '24px' }}>
+            <button
+              onClick={handlePrev}
+              aria-label="Previous Service Card"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                border: '1.5px solid #CBD5E1',
+                background: '#FFFFFF',
+                color: '#063B73',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {/* Pagination Indicators */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {categories.map((cat, idx) => (
+                <button
+                  key={cat.id || idx}
+                  onClick={() => setStartIndex(idx)}
+                  aria-label={`Show ${cat.name}`}
+                  style={{
+                    width: startIndex === idx ? '28px' : '10px',
+                    height: '10px',
+                    borderRadius: '5px',
+                    background: startIndex === idx ? 'linear-gradient(90deg, #087CFF, #00B8FF)' : '#CBD5E1',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              aria-label="Next Service Card"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                border: '1.5px solid #CBD5E1',
+                background: '#FFFFFF',
+                color: '#063B73',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(6, 59, 115, 0.08)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

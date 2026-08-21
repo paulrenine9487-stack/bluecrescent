@@ -2,41 +2,129 @@ import React, { useState, useEffect } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import projectBanner from '../assets/project1.png';
 
-const TABS = [
-  { 
-    label: 'BIM Projects',   
-    key: 'BIM Projects',   
-    icon: '⚙', 
-    description: 'Advanced Building Information Modeling up to LOD 500, clash detection, 4D scheduling, and 5D quantity take-offs across disciplines.',
-    tags: ['3D BIM Modeling', 'Clash Detection', '4D Scheduling', '5D Take-Off', 'LOD 500'] 
+const PROJECT_CATEGORIES = [
+  {
+    id: 'engineering-services',
+    name: 'Engineering Services',
+    slug: 'engineering-services',
+    icon: '⚙',
+    subCategories: [
+      {
+        key: 'BIM Projects',
+        label: 'BIM Projects',
+        icon: '⚙',
+        description: 'Advanced Building Information Modeling up to LOD 500, clash detection, 4D scheduling, and 5D quantity take-offs across disciplines.',
+        tags: ['3D BIM Modeling', 'Clash Detection', '4D Scheduling', '5D Take-Off', 'LOD 500']
+      },
+      {
+        key: 'CAD Projects',
+        label: 'CAD Projects',
+        icon: '📐',
+        description: 'Multidisciplinary 2D/3D CAD drafting, shop drawings, and engineering documentation support for complex building and infrastructure developments.',
+        tags: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination']
+      },
+      {
+        key: 'Laser Scanning Projects',
+        label: 'Laser Scanning Projects',
+        icon: '📸',
+        description: 'High-precision 3D laser scanning, point cloud registration, existing-condition modeling, and Scan-to-BIM conversions.',
+        tags: ['3D Laser Scanning', 'Point Cloud', 'Scan-to-BIM', 'As-Built Verification']
+      }
+    ]
   },
-  { 
-    label: 'CAD Projects',   
-    key: 'CAD Projects',   
-    icon: '📐', 
-    description: 'Multidisciplinary 2D/3D CAD drafting, shop drawings, and engineering documentation support for complex building and infrastructure developments.',
-    tags: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'] 
+  {
+    id: 'sustainability-services',
+    name: 'Sustainability Services',
+    slug: 'sustainability-services',
+    icon: '🌱',
+    subCategories: [
+      {
+        key: 'GSAS Projects',
+        label: 'GSAS Projects',
+        icon: '🌱',
+        description: 'GSAS green building certification, thermal modeling, and sustainability compliance for Qatar and MENA region developments.',
+        tags: ['GSAS Certification', 'Sustainability Assessment', 'Thermal Modeling', 'Green Building']
+      },
+      {
+        key: 'LEED Projects',
+        label: 'LEED Projects',
+        icon: '🌿',
+        description: 'LEED rating system facilitation, indoor environmental quality, and energy-efficient building lifecycle solutions.',
+        tags: ['LEED Gold/Platinum', 'Energy Efficiency', 'IEQ Management', 'Sustainable Materials']
+      },
+      {
+        key: 'Energy Audit Projects',
+        label: 'Energy Audit Projects',
+        icon: '⚡',
+        description: 'Comprehensive facility energy diagnostic audits, HVAC optimization, and benchmark performance reporting.',
+        tags: ['Energy Diagnostic', 'HVAC Optimization', 'Consumption Audit', 'Efficiency Strategy']
+      },
+      {
+        key: 'Environment Projects',
+        label: 'Environment Projects',
+        icon: '🌍',
+        description: 'Environmental management, sustainability strategies, embodied carbon assessment, and greenhouse gas inventory tracking across asset lifecycles.',
+        tags: ['Environmental Protection', 'Carbon Management', 'GHG Inventory', 'Lifecycle Assessment']
+      }
+    ]
   },
-  { 
-    label: 'Laser Scanning Projects',      
-    key: 'Laser Scanning Projects',      
-    icon: '📸', 
-    description: 'High-precision 3D laser scanning, point cloud registration, existing-condition modeling, and Scan-to-BIM conversions.',
-    tags: ['3D Laser Scanning', 'Point Cloud', 'Scan-to-BIM', 'As-Built Verification'] 
+  {
+    id: 'digital-twin',
+    name: 'Digital Twin',
+    slug: 'digital-twin',
+    icon: '💻',
+    subCategories: [
+      {
+        key: 'Asset Management Projects',
+        label: 'Asset Management Projects',
+        icon: '🏢',
+        description: 'Digital asset tagging, maintenance scheduling, space optimization, and operational efficiency analytics.',
+        tags: ['Asset Tagging', 'Maintenance Automation', 'Space Analytics', 'OpEx Reduction']
+      },
+      {
+        key: 'System Integration Projects',
+        label: 'System Integration Projects',
+        icon: '🔄',
+        description: 'Seamless integration of BMS, CAFM, and SCADA telemetry into unified digital twin command dashboards.',
+        tags: ['BMS Integration', 'CAFM Sync', 'SCADA Telemetry', 'Unified Dashboard']
+      }
+    ]
   },
-  { 
-    label: 'Digital Twin Projects',         
-    key: 'Digital Twin Projects',         
-    icon: '💻', 
-    description: 'Transformative Digital Twin solutions connecting 3D spatial models with real-time IoT monitoring and lifecycle asset management.',
-    tags: ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'] 
-  },
-  { 
-    label: 'Sustainability Projects',       
-    key: 'Sustainability Projects',       
-    icon: '🌱', 
-    description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.',
-    tags: ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'] 
+  {
+    id: 'construction-technology',
+    name: 'Digital Construction Technology',
+    slug: 'construction-technology',
+    icon: '📡',
+    subCategories: [
+      {
+        key: 'Laser Scanning Projects',
+        label: 'Laser Scanning Projects',
+        icon: '📸',
+        description: 'High-precision 3D laser scanning, point cloud registration, existing-condition modeling, and Scan-to-BIM conversions.',
+        tags: ['3D Laser Scanning', 'Point Cloud', 'Scan-to-BIM', 'As-Built Verification']
+      },
+      {
+        key: '360° Site Documentation Projects',
+        label: '360° Site Documentation Projects',
+        icon: '📷',
+        description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual progress tracking.',
+        tags: ['360° Photo Capture', 'Reality Tracking', 'BIM Overlay', 'Site Documentation']
+      },
+      {
+        key: 'AR Solutions Projects',
+        label: 'AR Solutions Projects',
+        icon: '👓',
+        description: 'Augmented Reality on-site model overlays for clash inspection, spatial verification, and client walkthroughs.',
+        tags: ['Augmented Reality', 'On-Site Overlay', 'Spatial Verification', 'Interactive Inspection']
+      },
+      {
+        key: 'Digital Collaboration Projects',
+        label: 'Digital Collaboration Projects',
+        icon: '💻',
+        description: 'Cloud-based common data environments (CDE), real-time BIM collaboration, and digital project management.',
+        tags: ['CDE Environment', 'BIM Cloud', 'Digital Collaboration', 'Project Management']
+      }
+    ]
   }
 ];
 
@@ -44,29 +132,73 @@ const FALLBACK_DIVISIONS = [
   { division_type: 'BIM Projects',              name: 'Advanced BIM Coordination & LOD 500 Modeling',  project_count: 28, description: 'Building Information Modeling up to LOD 500, clash detection, and 4D/5D simulations.' },
   { division_type: 'CAD Projects',              name: 'Multidisciplinary CAD Drafting & Shop Drawings', project_count: 24, description: 'Multidisciplinary 2D/3D CAD drafting, shop drawings, and engineering documentation support.' },
   { division_type: 'Laser Scanning Projects',   name: '3D Laser Scanning & Scan-to-BIM Conversion',     project_count: 18, description: 'High-precision 3D laser scanning and point-cloud to BIM workflows.' },
-  { division_type: 'Digital Twin Projects',     name: 'Integrated Life Cycle Digital Twin Platform',    project_count: 15, description: 'Connecting physical assets with digital information for IoT monitoring and lifecycle asset management.' },
-  { division_type: 'Sustainability Projects',   name: 'GSAS & LEED Green Building Certification',      project_count: 12, description: 'Green building consulting, GSAS/LEED certification, and energy diagnostic audits.' }
+  { division_type: 'Scan to BIM Projects',      name: 'Scan-to-BIM Heritage & As-Built Conversion',     project_count: 16, description: 'As-built point cloud conversion into intelligent Revit BIM families and asset models.' },
+  { division_type: 'GSAS Projects',             name: 'GSAS 4-Star Sustainability & Thermal Modeling', project_count: 14, description: 'Green building facilitation, GSAS 4-star certification, and energy diagnostics.' },
+  { division_type: 'LEED Projects',             name: 'LEED Gold Building Environmental Certification', project_count: 12, description: 'LEED Gold compliance, energy benchmarking, and sustainable material tracking.' },
+  { division_type: 'Energy Audit Projects',     name: 'Facility Diagnostic Energy & HVAC Performance',  project_count: 10, description: 'Level 2 ASHRAE energy diagnostic audits and HVAC retro-commissioning.' },
+  { division_type: 'Environment Projects',      name: 'Environmental Management & Decarbonization',     project_count: 9,  description: 'Whole-life environmental assessment and zero-carbon building strategy.' },
+  { division_type: 'Asset Twin Projects',       name: 'Integrated Life Cycle Digital Twin Platform',    project_count: 15, description: 'Connecting physical assets with digital information for IoT monitoring and lifecycle management.' },
+  { division_type: 'System Integration Projects',name: 'IoT Telemetry & BMS Command Dashboard Sync',   project_count: 11, description: 'Integrating BMS, CAFM, and telemetry sensors into unified command platforms.' },
+  { division_type: 'Real-Time Monitoring Projects', name: 'Live Environmental Sensor & IAQ Monitoring', project_count: 13, description: 'Real-time IoT environmental monitoring and predictive maintenance analytics.' },
+  { division_type: 'Asset Management Projects', name: 'Digital Asset Tagging & Space Analytics',       project_count: 14, description: 'Automated asset lifecycle management, maintenance dispatch, and space utilization.' },
+  { division_type: 'Remote Construction Projects', name: 'Remote Site Inspection & Cloud Monitoring',  project_count: 12, description: 'Remote virtual site visits, live progress tracking, and cloud status reporting.' },
+  { division_type: '360° Capture Projects',     name: '360° Reality Documentation & BIM Overlay',       project_count: 15, description: '360-degree site visual capture integrated with 4D BIM progress timeline.' },
+  { division_type: 'AR Solutions Projects',     name: 'On-Site Augmented Reality BIM Overlay',         project_count: 8,  description: 'HoloLens AR visual overlay for MEP clash verification and inspection.' },
+  { division_type: 'Robotics Projects',         name: 'Autonomous Rover & Drone Surveying',            project_count: 7,  description: 'Robotic site capture rovers and autonomous drone laser scanning surveys.' }
 ];
 
-const resolveTabKey = (subTab) => {
-  if (!subTab) return TABS[0].key;
-  const cleanSub = subTab.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const match = TABS.find(t => {
-    const cleanKey = t.key.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const cleanLabel = t.label.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return cleanKey.includes(cleanSub) || cleanSub.includes(cleanKey) || cleanLabel.includes(cleanSub) || cleanSub.includes(cleanLabel);
-  });
-  return match ? match.key : TABS[0].key;
+const resolveCategoryAndSubTab = (subTabParam) => {
+  if (!subTabParam) {
+    return {
+      category: PROJECT_CATEGORIES[0],
+      subCategory: PROJECT_CATEGORIES[0].subCategories[0]
+    };
+  }
+
+  const clean = subTabParam.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  for (const cat of PROJECT_CATEGORIES) {
+    const cleanCatName = cat.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanCatSlug = cat.slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    if (clean === cleanCatName || clean === cleanCatSlug || cleanCatName.includes(clean) || clean.includes(cleanCatName)) {
+      return {
+        category: cat,
+        subCategory: cat.subCategories[0]
+      };
+    }
+
+    for (const sub of cat.subCategories) {
+      const cleanSubKey = sub.key.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanSubLabel = sub.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanSubKey.includes(clean) || clean.includes(cleanSubKey) || cleanSubLabel.includes(clean) || clean.includes(cleanSubLabel)) {
+        return {
+          category: cat,
+          subCategory: sub
+        };
+      }
+    }
+  }
+
+  return {
+    category: PROJECT_CATEGORIES[0],
+    subCategory: PROJECT_CATEGORIES[0].subCategories[0]
+  };
 };
 
-export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate }) {
+export default function ProjectsPage({ activeSubTab = 'engineering-services', onNavigate }) {
   const [projectDivisions, setProjectDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(resolveTabKey(activeSubTab));
+
+  const initialResolved = resolveCategoryAndSubTab(activeSubTab);
+  const [activeCategory, setActiveCategory] = useState(initialResolved.category);
+  const [activeSubCategory, setActiveSubCategory] = useState(initialResolved.subCategory);
 
   useEffect(() => {
     if (activeSubTab) {
-      setActiveTab(resolveTabKey(activeSubTab));
+      const resolved = resolveCategoryAndSubTab(activeSubTab);
+      setActiveCategory(resolved.category);
+      setActiveSubCategory(resolved.subCategory);
     }
   }, [activeSubTab]);
 
@@ -113,18 +245,32 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
     };
   }, []);
 
-  const activeTabObj = TABS.find(t => t.key === activeTab) || TABS[0];
+  const handleSelectMainCategory = (cat) => {
+    setActiveCategory(cat);
+    if (cat.subCategories && cat.subCategories.length > 0) {
+      setActiveSubCategory(cat.subCategories[0]);
+    }
+  };
+
   const currentProjects = projectDivisions.filter(p => {
-    const pDiv = (p.division_type || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const actTab = activeTab.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return pDiv.includes(actTab) || actTab.includes(pDiv);
+    const pCat = (p.division_type || p.category || p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const actSub = activeSubCategory.key.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const actCat = activeCategory.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return pCat.includes(actSub) || actSub.includes(pCat) || (pCat.includes(actCat) && pCat.includes(actSub.slice(0, 4)));
   });
-  const displayProjects = currentProjects.length > 0 ? currentProjects : FALLBACK_DIVISIONS.filter(p => resolveTabKey(p.division_type) === activeTab);
+
+  const displayProjects = currentProjects.length > 0
+    ? currentProjects
+    : FALLBACK_DIVISIONS.filter(p => {
+        const pDiv = p.division_type.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const actSub = activeSubCategory.key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return pDiv.includes(actSub) || actSub.includes(pDiv);
+      });
 
   return (
     <div className="projects-page">
       {/* Full-Width Projects Banner */}
-      <section className="about-full-banner-wrap" style={{ width: '100%', overflow: 'hidden' }}>
+      <section className="about-full-banner-wrap" style={{ width: '100%', overflow: 'hidden', marginBottom: 0 }}>
         <img
           src={companySettings?.projectsPageBannerUrl || projectBanner}
           alt="Projects Banner"
@@ -132,57 +278,81 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
         />
       </section>
 
-      {/* Sub-menu Tab Bar (5 Categories) */}
-      <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E9F0', position: 'sticky', top: '90px', zIndex: 10 }}>
-        <div className="container" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px', padding: '8px 16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              style={{
-                padding: '18px 24px',
-                background: 'none',
-                border: 'none',
-                borderBottom: activeTab === tab.key ? '3px solid #087CFF' : '3px solid transparent',
-                color: activeTab === tab.key ? '#087CFF' : '#64748B',
-                fontWeight: activeTab === tab.key ? '700' : '600',
-                fontSize: '14px',
-                cursor: 'pointer',
-                letterSpacing: '0.3px',
-                transition: 'all 0.2s ease',
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                flexShrink: 0
-              }}
-            >
-              <span style={{ fontSize: '16px' }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+      {/* Sub-Category Tab Bar (ONLY sub-categories for active category) */}
+      <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E9F0', position: 'sticky', top: '85px', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+        <div className="container" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', padding: '6px 16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+          {activeCategory.subCategories.map(sub => {
+            const isSubActive = activeSubCategory.key === sub.key;
+            return (
+              <button
+                key={sub.key}
+                onClick={() => setActiveSubCategory(sub)}
+                style={{
+                  padding: '14px 20px',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: isSubActive ? '3px solid #087CFF' : '3px solid transparent',
+                  color: isSubActive ? '#087CFF' : '#64748B',
+                  fontWeight: isSubActive ? '700' : '600',
+                  fontSize: '13.5px',
+                  cursor: 'pointer',
+                  letterSpacing: '0.3px',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flexShrink: 0
+                }}
+              >
+                <span style={{ fontSize: '15px' }}>{sub.icon}</span>
+                {sub.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container" style={{ paddingTop: '48px', paddingBottom: '60px' }}>
+      <div className="container" style={{ paddingTop: '40px', paddingBottom: '60px' }}>
         {/* Title & Subtitle Header Block */}
         <div 
           style={{ 
-            marginBottom: '36px', 
-            background: '#F8FAFC', 
+            marginBottom: '32px', 
+            background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)', 
             borderRadius: '16px', 
             padding: '28px 32px', 
-            border: '1px solid rgba(6, 59, 115, 0.08)',
+            border: '1px solid rgba(8, 124, 255, 0.12)',
             textAlign: 'center'
           }}
         >
-          <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#063B73', margin: '0 0 12px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
-            {activeTabObj.label}
+          <div style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', color: '#087CFF', letterSpacing: '1.2px', marginBottom: '8px' }}>
+            {activeCategory.name}
+          </div>
+          <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
+            {activeSubCategory.label}
           </h2>
-          <p style={{ fontSize: '15px', color: '#475569', margin: 0, lineHeight: 1.65, maxWidth: '780px', marginLeft: 'auto', marginRight: 'auto', fontWeight: '500' }}>
-            {activeTabObj.description}
+          <p style={{ fontSize: '14.5px', color: '#475569', margin: '0 0 16px 0', lineHeight: 1.6, maxWidth: '780px', marginLeft: 'auto', marginRight: 'auto', fontWeight: '500' }}>
+            {activeSubCategory.description}
           </p>
+          {activeSubCategory.tags && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
+              {activeSubCategory.tags.map(t => (
+                <span key={t} style={{
+                  fontSize: '11.5px',
+                  fontWeight: '700',
+                  color: '#063B73',
+                  background: '#FFFFFF',
+                  border: '1px solid rgba(6, 59, 115, 0.12)',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                }}>
+                  #{t}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -236,7 +406,7 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
                     borderRadius: '20px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                   }}>
-                    {proj.division_type || proj.category}
+                    {proj.division_type || activeSubCategory.label}
                   </span>
                 </div>
 
@@ -252,6 +422,24 @@ export default function ProjectsPage({ activeSubTab = 'BIM Projects', onNavigate
                   }}>
                     {proj.name}
                   </h3>
+
+                  {/* Sub-Category Badge Under Title */}
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '4px 12px',
+                      borderRadius: '16px',
+                      background: '#ECFDF5',
+                      border: '1px solid #A7F3D0',
+                      color: '#059669',
+                      fontSize: '11.5px',
+                      fontWeight: '700',
+                      width: 'fit-content'
+                    }}
+                  >
+                    {proj.division_type || activeSubCategory.label}
+                  </div>
 
                   {(proj.location || proj.sector) && (
                     <p style={{ margin: 0, fontSize: '13px', color: '#087CFF', fontWeight: '600' }}>

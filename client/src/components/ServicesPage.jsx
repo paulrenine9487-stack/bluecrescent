@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import TestimonialsSection from './TestimonialsSection';
+import GSASDetailPage from './GSASDetailPage';
+import LEEDDetailPage from './LEEDDetailPage';
+import EnergyAuditDetailPage from './EnergyAuditDetailPage';
+import EnvironmentalDetailPage from './EnvironmentalDetailPage';
+import LaserScanningDetailPage from './LaserScanningDetailPage';
+import CADDetailPage from './CADDetailPage';
+import BIMDetailPage from './BIMDetailPage';
 import serviceBanner from '../assets/servicepage1.png';
 import aboutBanner from '../assets/about.png';
 import projectBanner from '../assets/project1.png';
@@ -65,8 +72,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     'CAD': { title: 'CAD', category: 'Engineering Services', description: 'Professional multidisciplinary 2D/3D CAD drafting, shop drawing production, and engineering documentation support.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['2D Drafting', 'Shop Drawings', 'As-Built Documentation', 'Engineering Coordination'], tools: [['AutoCAD', 'MicroStation'], ['Civil 3D', 'Revit CAD']] },
     'bim': { title: 'BIM', category: 'Engineering Services', description: 'End-to-end Building Information Modeling (BIM) up to LOD 500 across architectural, structural, and MEP disciplines.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D BIM Modeling', 'Clash Detection & Resolution', '4D Construction Scheduling', '5D Quantity Take-Off (QTO)'], tools: [['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']] },
     'BIM': { title: 'BIM', category: 'Engineering Services', description: 'End-to-end Building Information Modeling (BIM) up to LOD 500 across architectural, structural, and MEP disciplines.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D BIM Modeling', 'Clash Detection & Resolution', '4D Construction Scheduling', '5D Quantity Take-Off (QTO)'], tools: [['Autodesk Revit', 'Navisworks Manage'], ['Solibri', 'BIM 360']] },
-    'laser-scanning': { title: 'Laser Scanning', category: 'Engineering Services', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Reality Capture'], tools: [['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']] },
-    'Laser Scanning': { title: 'Laser Scanning', category: 'Engineering Services', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Reality Capture'], tools: [['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']] },
+    'laser-scanning': { title: 'Laser Scanning Services', category: 'Engineering Services', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Reality Capture'], tools: [['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']] },
+    'Laser Scanning': { title: 'Laser Scanning Services', category: 'Engineering Services', description: 'High-precision 3D laser scanning and point cloud capture for as-built verification and asset documentation.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['3D Laser Scanning', 'Point Cloud Registration', 'Dimensional Verification', 'Site Reality Capture'], tools: [['Leica RTC360', 'Faro Focus'], ['Cyclone', 'Recap Pro']] },
     'scan-to-bim': { title: 'Scan to BIM', category: 'Engineering Services', description: 'Converting raw point cloud scans into intelligent 3D BIM models for renovation, retrofit, and facility management.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Point Cloud to BIM Conversion', 'As-Built Model Verification', 'Retrofit Modeling', 'Deviation Analysis'], tools: [['Autodesk Revit', 'CloudCompare'], ['ClearEdge3D Edgewise', 'Recap Pro']] },
     'Scan to BIM': { title: 'Scan to BIM', category: 'Engineering Services', description: 'Converting raw point cloud scans into intelligent 3D BIM models for renovation, retrofit, and facility management.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Point Cloud to BIM Conversion', 'As-Built Model Verification', 'Retrofit Modeling', 'Deviation Analysis'], tools: [['Autodesk Revit', 'CloudCompare'], ['ClearEdge3D Edgewise', 'Recap Pro']] },
 
@@ -91,22 +98,26 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     'Asset Management': { title: 'Asset Management', category: 'Digital Twin', description: 'Comprehensive facility asset lifecycle tracking, maintenance scheduling, and digital operations handover.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Maintenance Scheduling', 'Work Order Automation', 'Lifecycle Cost Analysis', 'Asset Register Management'], tools: [['IBM Maximo', 'SAP PM'], ['Autodesk Tandem', 'Archibus']] },
 
     // Construction Technology
-    'remote-construction': { title: 'Remote Construction', category: 'Construction Technology', description: 'Remote site monitoring, virtual walkthroughs, and automated progress reporting for distributed teams.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Remote Site Walkthroughs', 'Progress Monitoring', 'Virtual Inspections', 'Cloud Collaboration'], tools: [['OpenSpace', 'Cupix'], ['Matterport', 'Autodesk ACC']] },
-    'Remote Construction': { title: 'Remote Construction', category: 'Construction Technology', description: 'Remote site monitoring, virtual walkthroughs, and automated progress reporting for distributed teams.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Remote Site Walkthroughs', 'Progress Monitoring', 'Virtual Inspections', 'Cloud Collaboration'], tools: [['OpenSpace', 'Cupix'], ['Matterport', 'Autodesk ACC']] },
-    '360-capture': { title: '360° Capture', category: 'Construction Technology', description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual tracking.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation'], tools: [['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']] },
-    '360° Capture': { title: '360° Capture', category: 'Construction Technology', description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual tracking.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation'], tools: [['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']] },
+    'digital-construction-technology': { title: 'Digital Construction Technology', category: 'Digital Construction Technology', description: 'Cutting-edge digital construction technologies including 3D reality capture, 360° site documentation, augmented reality solutions, and digital BIM collaboration.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration'], tools: [['Leica RTC360', 'Faro Focus'], ['OpenSpace', 'Autodesk ACC']] },
+    'Digital Construction Technology': { title: 'Digital Construction Technology', category: 'Digital Construction Technology', description: 'Cutting-edge digital construction technologies including 3D reality capture, 360° site documentation, augmented reality solutions, and digital BIM collaboration.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration'], tools: [['Leica RTC360', 'Faro Focus'], ['OpenSpace', 'Autodesk ACC']] },
+    'construction-technology': { title: 'Digital Construction Technology', category: 'Digital Construction Technology', description: 'Cutting-edge digital construction technologies including 3D reality capture, 360° site documentation, augmented reality solutions, and digital BIM collaboration.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration'], tools: [['Leica RTC360', 'Faro Focus'], ['OpenSpace', 'Autodesk ACC']] },
+    'Construction Technology': { title: 'Digital Construction Technology', category: 'Digital Construction Technology', description: 'Cutting-edge digital construction technologies including 3D reality capture, 360° site documentation, augmented reality solutions, and digital BIM collaboration.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration'], tools: [['Leica RTC360', 'Faro Focus'], ['OpenSpace', 'Autodesk ACC']] },
+    'construction-laser-scanning': { title: 'Construction Laser Scanning', category: 'Digital Construction Technology', description: 'Active construction site 3D reality capture, scan vs. BIM design deviation analysis, floor flatness/levelness verification, and automated progress monitoring.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Construction Site Reality Capture', 'Scan vs. BIM Deviation Analysis', 'Floor Flatness & Levelness (FF/FL)', '4D Construction Progress Verification'], tools: [['Leica RTC360', 'Faro Focus'], ['Verity ClearEdge3D', 'Autodesk ACC']] },
+    '360-site-documentation': { title: '360° Site Documentation', category: 'Construction Technology', description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual progress tracking.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation'], tools: [['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']] },
+    '360° Site Documentation': { title: '360° Site Documentation', category: 'Construction Technology', description: 'High-resolution 360-degree photo and video documentation indexed to BIM drawings for visual progress tracking.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['360° Site Photo Mapping', 'Time-Lapse Progress Tracking', 'BIM Overlay Comparison', 'Historical Documentation'], tools: [['Insta360 Pro', 'Ricoh Theta'], ['OpenSpace', 'HoloBuilder']] },
     'ar-solutions': { title: 'AR Solutions', category: 'Construction Technology', description: 'Augmented reality visualization overlaying 3D BIM models directly onto job site physical spaces.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['BIM Overlay on Site', 'Clash Detection in AR', 'Remote Expert Assistance', 'Safety Hazard Training'], tools: [['Trimble Connect AR', 'HoloLens 2'], ['vGIS', 'Unity Industrial']] },
     'AR Solutions': { title: 'AR Solutions', category: 'Construction Technology', description: 'Augmented reality visualization overlaying 3D BIM models directly onto job site physical spaces.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['BIM Overlay on Site', 'Clash Detection in AR', 'Remote Expert Assistance', 'Safety Hazard Training'], tools: [['Trimble Connect AR', 'HoloLens 2'], ['vGIS', 'Unity Industrial']] },
-    'robotics': { title: 'Robotics', category: 'Construction Technology', description: 'Robotic site layout, autonomous scanning, and robotic inspection integrations for modern job sites.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Autonomous Scanning Robots', 'Robotic Layout Marking', 'Drone Photogrammetry', 'Automated Surveys'], tools: [['Boston Dynamics Spot', 'Dusty Robotics'], ['Skydio Drones', 'Pix4D']] },
-    'Robotics': { title: 'Robotics', category: 'Construction Technology', description: 'Robotic site layout, autonomous scanning, and robotic inspection integrations for modern job sites.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['Autonomous Scanning Robots', 'Robotic Layout Marking', 'Drone Photogrammetry', 'Automated Surveys'], tools: [['Boston Dynamics Spot', 'Dusty Robotics'], ['Skydio Drones', 'Pix4D']] }
+    'digital-collaboration': { title: 'Digital Collaboration', category: 'Construction Technology', description: 'Cloud-based common data environments (CDE), real-time BIM collaboration, and digital project management.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['CDE Common Data Environment', 'Real-Time BIM Cloud Sync', 'Digital Workflow Automation', 'Issue Management'], tools: [['Autodesk ACC', 'BIM 360'], ['Trimble Connect', 'Procore']] },
+    'Digital Collaboration': { title: 'Digital Collaboration', category: 'Construction Technology', description: 'Cloud-based common data environments (CDE), real-time BIM collaboration, and digital project management.', bulletsTitle: 'Key Scope & Deliverables Include:', bullets: ['CDE Common Data Environment', 'Real-Time BIM Cloud Sync', 'Digital Workflow Automation', 'Issue Management'], tools: [['Autodesk ACC', 'BIM 360'], ['Trimble Connect', 'Procore']] }
   };
 
   // Map 4 core categories
   const coreServiceMap = {
-    'engineering-services': { title: 'Engineering Services', description: 'Comprehensive engineering services including BIM modeling, CAD drafting, 3D laser scanning, and scan-to-BIM conversions.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM'], tools: [['AutoCAD', 'Revit'], ['Leica RTC360', 'CloudCompare']] },
-    'sustainability-services': { title: 'Sustainability Services', description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and carbon management strategies.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'], tools: [['GSAS Gate Tool', 'IES VE'], ['eQUEST', 'ISO 14064 Guidelines']] },
-    'digital-twin': { title: 'Digital Twin', description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'], tools: [['Autodesk Tandem', 'Grafana'], ['Node-RED', 'IBM Maximo']] },
-    'construction-technology': { title: 'Construction Technology', description: 'Cutting-edge construction technologies including remote site support, 360° capture, augmented reality, and robotics.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics'], tools: [['OpenSpace', 'Trimble AR'], ['Insta360', 'Boston Dynamics Spot']] }
+    'engineering-services': { title: 'Engineering Services', description: 'Comprehensive engineering services including BIM modeling, CAD drafting, and 3D laser scanning.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['BIM', 'CAD', 'Laser Scanning'], tools: [['AutoCAD', 'Revit'], ['Leica RTC360', 'CloudCompare']] },
+    'sustainability-services': { title: 'Sustainability Services', description: 'Green building facilitation, GSAS & LEED certifications, energy diagnostic audits, and environment strategies.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['GSAS', 'LEED', 'Energy Audit', 'Environment'], tools: [['GSAS Gate Tool', 'IES VE'], ['eQUEST', 'ISO 14064 Guidelines']] },
+    'digital-twin': { title: 'Digital Twin', description: 'Transformative Digital Twin solutions connecting spatial BIM models with real-time IoT monitoring and lifecycle asset management.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Asset Management', 'System Integration'], tools: [['Autodesk Tandem', 'Grafana'], ['Node-RED', 'IBM Maximo']] },
+    'digital-construction-technology': { title: 'Digital Construction Technology', description: 'Cutting-edge construction technologies including laser scanning, 360° site documentation, AR solutions, and digital collaboration.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration'], tools: [['Leica RTC360', 'Trimble AR'], ['Insta360', 'Autodesk ACC']] },
+    'construction-technology': { title: 'Digital Construction Technology', description: 'Cutting-edge construction technologies including laser scanning, 360° site documentation, AR solutions, and digital collaboration.', bulletsTitle: 'Key Sub-Services Include:', bullets: ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration'], tools: [['Leica RTC360', 'Trimble AR'], ['Insta360', 'Autodesk ACC']] }
   };
 
   // Convert dynamicServices database list to map structure
@@ -198,16 +209,17 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
 
   // Resolve Categories list dynamically for the main overview
   const categoryGroups = {
-    'Engineering Services': ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM'],
-    'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'],
-    'Digital Twin': ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'],
-    'Construction Technology': ['Remote Construction', '360° Capture', 'AR Solutions', 'Robotics']
+    'Engineering Services': ['BIM', 'CAD', 'Laser Scanning'],
+    'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Environment'],
+    'Digital Twin': ['Asset Management', 'System Integration'],
+    'Digital Construction Technology': ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration']
   };
 
   if (dynamicServices.length > 0) {
     const dynamicGroups = {};
     dynamicServices.filter(s => s.status !== 'Inactive').forEach(s => {
-      const catName = s.category || 'Engineering Services';
+      let catName = s.category || 'Engineering Services';
+      if (catName === 'Construction Technology') catName = 'Digital Construction Technology';
       if (!dynamicGroups[catName]) dynamicGroups[catName] = [];
       const itemTitle = s.title;
       if (!dynamicGroups[catName].includes(itemTitle)) {
@@ -215,6 +227,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
       }
     });
     if (Object.keys(dynamicGroups).length > 0) {
+      delete categoryGroups['Construction Technology'];
       Object.assign(categoryGroups, dynamicGroups);
     }
   }
@@ -243,6 +256,176 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16M4 18h.01"/></svg>;
     }
   };
+
+  const subKey = (activeSubTab || '').toLowerCase().trim();
+  const isGsas = subKey === 'gsas' || subKey.endsWith('/gsas') || subKey.endsWith('-gsas') || subKey === 'sustainability-services/gsas';
+  const isLeed = subKey === 'leed' || subKey.endsWith('/leed') || subKey.endsWith('-leed') || subKey === 'sustainability-services/leed';
+  const isEnergyAudit = subKey === 'energy audit' || subKey === 'energy-audit' || subKey.endsWith('/energy-audit') || subKey.endsWith('/energy audit') || subKey === 'sustainability-services/energy-audit';
+  const isEnvironmental = subKey === 'environmental' || subKey === 'carbon management' || subKey === 'carbon-management' || subKey === 'noise monitoring' || subKey === 'noise-monitoring' || subKey.endsWith('/environmental') || subKey.endsWith('/carbon-management') || subKey.endsWith('/noise-monitoring') || subKey === 'sustainability-services/carbon-management';
+  const isLaserScanning = (subKey === 'laser scanning' || subKey === 'laser-scanning' || subKey === 'laser scanning services' || subKey === 'scan to bim' || subKey === 'scan-to-bim' || subKey === 'recap work' || subKey === 'recap-work' || subKey.endsWith('/laser-scanning') || subKey.endsWith('/scan-to-bim')) && !subKey.includes('construction');
+  const isCad = subKey === 'cad' || subKey.endsWith('/cad') || subKey.endsWith('-cad') || subKey === 'engineering-services/cad';
+  const isBim = subKey === 'bim' || subKey.endsWith('/bim') || subKey.endsWith('-bim') || subKey === 'engineering-services/bim';
+
+  if (isGsas) {
+    return (
+      <div className="services-page">
+        {/* 1. Header Title Banner */}
+        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <img
+            src={bannerToDisplay}
+            alt="Services Banner"
+            className="about-hero-banner-img page-banner-img"
+          />
+        </section>
+
+        {/* 2. GSAS Service Detail Component */}
+        <GSASDetailPage onNavigate={onNavigate} />
+
+        {/* 3. Client Testimonials Section */}
+        <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+          <TestimonialsSection />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLeed) {
+    return (
+      <div className="services-page">
+        {/* 1. Header Title Banner */}
+        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <img
+            src={bannerToDisplay}
+            alt="Services Banner"
+            className="about-hero-banner-img page-banner-img"
+          />
+        </section>
+
+        {/* 2. LEED Service Detail Component */}
+        <LEEDDetailPage onNavigate={onNavigate} />
+
+        {/* 3. Client Testimonials Section */}
+        <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+          <TestimonialsSection />
+        </div>
+      </div>
+    );
+  }
+
+  if (isEnergyAudit) {
+    return (
+      <div className="services-page">
+        {/* 1. Header Title Banner */}
+        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <img
+            src={bannerToDisplay}
+            alt="Services Banner"
+            className="about-hero-banner-img page-banner-img"
+          />
+        </section>
+
+        {/* 2. Energy Audit Service Detail Component */}
+        <EnergyAuditDetailPage onNavigate={onNavigate} />
+
+        {/* 3. Client Testimonials Section */}
+        <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+          <TestimonialsSection />
+        </div>
+      </div>
+    );
+  }
+
+  if (isEnvironmental) {
+    return (
+      <div className="services-page">
+        {/* 1. Header Title Banner */}
+        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <img
+            src={bannerToDisplay}
+            alt="Services Banner"
+            className="about-hero-banner-img page-banner-img"
+          />
+        </section>
+
+        {/* 2. Environmental Service Detail Component */}
+        <EnvironmentalDetailPage onNavigate={onNavigate} />
+
+        {/* 3. Client Testimonials Section */}
+        <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+          <TestimonialsSection />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLaserScanning) {
+    return (
+      <div className="services-page">
+        {/* 1. Header Title Banner */}
+        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <img
+            src={bannerToDisplay}
+            alt="Services Banner"
+            className="about-hero-banner-img page-banner-img"
+          />
+        </section>
+
+        {/* 2. Laser Scanning Service Detail Component */}
+        <LaserScanningDetailPage onNavigate={onNavigate} />
+
+        {/* 3. Client Testimonials Section */}
+        <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+          <TestimonialsSection />
+        </div>
+      </div>
+    );
+  }
+
+  if (isCad) {
+    return (
+      <div className="services-page">
+        {/* 1. Header Title Banner */}
+        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <img
+            src={bannerToDisplay}
+            alt="Services Banner"
+            className="about-hero-banner-img page-banner-img"
+          />
+        </section>
+
+        {/* 2. CAD Service Detail Component */}
+        <CADDetailPage onNavigate={onNavigate} />
+
+        {/* 3. Client Testimonials Section */}
+        <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+          <TestimonialsSection />
+        </div>
+      </div>
+    );
+  }
+
+  if (isBim) {
+    return (
+      <div className="services-page">
+        {/* 1. Header Title Banner */}
+        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+          <img
+            src={bannerToDisplay}
+            alt="Services Banner"
+            className="about-hero-banner-img page-banner-img"
+          />
+        </section>
+
+        {/* 2. BIM Service Detail Component */}
+        <BIMDetailPage onNavigate={onNavigate} />
+
+        {/* 3. Client Testimonials Section */}
+        <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
+          <TestimonialsSection />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="services-page">
@@ -321,7 +504,9 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
               /* Dedicated Service Sub-Page View */
               <div>
                 <h2 className="section-heading-grey" style={{ fontSize: '26px', marginTop: 0 }}>
-                  {currentServiceTitle}
+                  {selectedDetails?.category && !currentServiceTitle.toLowerCase().includes(selectedDetails.category.toLowerCase())
+                    ? `${selectedDetails.category} (${currentServiceTitle})`
+                    : currentServiceTitle}
                 </h2>
 
                 {selectedDetails ? (
@@ -397,10 +582,21 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                       Service Overview & Deliverables
                     </h3>
                     <ul className="bullet-list">
-                      <li>Detailed engineering calculation & compliance reporting</li>
-                      <li>Full integration with Architecture, MEP, and Structural teams</li>
-                      <li>Value engineering & cost-effective solutions for clients</li>
-                      <li>Authority approvals and technical clearance support</li>
+                      {currentServiceTitle.toLowerCase().includes('construction') ? (
+                        <>
+                          <li>Laser Scanning</li>
+                          <li>360° Site Documentation</li>
+                          <li>AR Solutions</li>
+                          <li>Digital Collaboration</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Detailed engineering calculation & compliance reporting</li>
+                          <li>Full integration with Architecture, MEP, and Structural teams</li>
+                          <li>Value engineering & cost-effective solutions for clients</li>
+                          <li>Authority approvals and technical clearance support</li>
+                        </>
+                      )}
                     </ul>
                   </div>
                 )}
