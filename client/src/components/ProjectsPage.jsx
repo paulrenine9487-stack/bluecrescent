@@ -225,23 +225,32 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
       })
       .catch(err => console.warn('Company settings fetch warning:', err));
 
-    fetch('/api/projects')
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setProjectDivisions(data.filter(p => p.status !== 'Inactive'));
-        } else {
+    const fetchProjects = () => {
+      fetch('/api/projects')
+        .then(res => res.ok ? res.json() : [])
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            setProjectDivisions(data.filter(p => p.status !== 'Inactive'));
+          } else {
+            setProjectDivisions(FALLBACK_DIVISIONS);
+          }
+          setLoading(false);
+        })
+        .catch(() => {
           setProjectDivisions(FALLBACK_DIVISIONS);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setProjectDivisions(FALLBACK_DIVISIONS);
-        setLoading(false);
-      });
+          setLoading(false);
+        });
+    };
+
+    fetchProjects();
+
+    window.addEventListener('menuUpdated', fetchProjects);
+    window.addEventListener('dataUpdated', fetchProjects);
 
     return () => {
       window.removeEventListener('companySettingsUpdated', handleSettingsUpdated);
+      window.removeEventListener('menuUpdated', fetchProjects);
+      window.removeEventListener('dataUpdated', fetchProjects);
     };
   }, []);
 
@@ -252,20 +261,100 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
     }
   };
 
+  const isProjectInActiveCategory = (p, category) => {
+    const pDiv = (p.division_type || p.category || '').toLowerCase().trim();
+    const catName = (category.name || '').toLowerCase().trim();
+    const catSlug = (category.slug || category.id || '').toLowerCase().trim();
+    const pDivClean = pDiv.replace(/[^a-z0-9]/g, '');
+    const catNameClean = catName.replace(/[^a-z0-9]/g, '');
+
+    // 1. Direct or substring match on main category name/slug
+    if (pDivClean === catNameClean || (pDivClean && catNameClean && (pDivClean.includes(catNameClean) || catNameClean.includes(pDivClean)))) {
+      return true;
+    }
+
+    // 2. Main category keyword match
+    if (catName.includes('engineering') && (pDiv.includes('engineering') || pDiv.includes('bim') || pDiv.includes('cad') || pDiv.includes('laser'))) {
+      return true;
+    }
+    if (catName.includes('sustainability') && (pDiv.includes('sustainability') || pDiv.includes('gsas') || pDiv.includes('leed') || pDiv.includes('energy') || pDiv.includes('environment'))) {
+      return true;
+    }
+    if (catName.includes('digital twin') || catName.includes('twin')) {
+      if (pDiv.includes('twin') || pDiv.includes('asset') || pDiv.includes('system') || pDiv.includes('telemetry')) {
+        return true;
+      }
+    }
+    if (catName.includes('construction') || catName.includes('technology')) {
+      if (pDiv.includes('construction') || pDiv.includes('technology') || pDiv.includes('360') || pDiv.includes('ar') || pDiv.includes('collaboration')) {
+        return true;
+      }
+    }
+
+    // 3. Match any subCategory key
+    if (category.subCategories && category.subCategories.length > 0) {
+      return category.subCategories.some(sub => {
+        const subKeyClean = sub.key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return pDivClean.includes(subKeyClean) || subKeyClean.includes(pDivClean);
+      });
+    }
+
+    return false;
+  };
+
   const currentProjects = projectDivisions.filter(p => {
-    const pCat = (p.division_type || p.category || p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const actSub = activeSubCategory.key.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const actCat = activeCategory.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return pCat.includes(actSub) || actSub.includes(pCat) || (pCat.includes(actCat) && pCat.includes(actSub.slice(0, 4)));
+    // Must belong to active main category
+    if (!isProjectInActiveCategory(p, activeCategory)) return false;
+
+    // Filter by active sub-category tab if present
+    if (!activeSubCategory) return true;
+
+    const pDiv = (p.division_type || p.category || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const pServices = (p.services || '').toLowerCase();
+    const pName = (p.name || '').toLowerCase();
+    const pDesc = (p.description || p.short_description || '').toLowerCase();
+
+    const subKeyClean = activeSubCategory.key.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const coreKeyword = subKeyClean.replace('projects', '').replace('services', '').trim();
+
+    // Explicit sub-category assignment
+    if (pDiv.includes(subKeyClean) || subKeyClean.includes(pDiv) || (coreKeyword && pDiv.includes(coreKeyword))) {
+      return true;
+    }
+
+    // Main category project fallback
+    const catNameClean = activeCategory.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isMainCatProject = pDiv === catNameClean || pDiv.includes(catNameClean) || catNameClean.includes(pDiv);
+
+    if (isMainCatProject) {
+      if (!coreKeyword) return true;
+      if (pServices.includes(coreKeyword) || pName.includes(coreKeyword) || pDesc.includes(coreKeyword)) return true;
+      return true;
+    }
+
+    // Services or text keyword match
+    if (coreKeyword && (pServices.includes(coreKeyword) || pName.includes(coreKeyword))) {
+      return true;
+    }
+
+    return false;
   });
+
+  const hasRealBackendProjects = projectDivisions.length > 0 && projectDivisions !== FALLBACK_DIVISIONS;
+
+  const categoryBackendProjects = hasRealBackendProjects 
+    ? projectDivisions.filter(p => isProjectInActiveCategory(p, activeCategory))
+    : [];
 
   const displayProjects = currentProjects.length > 0
     ? currentProjects
-    : FALLBACK_DIVISIONS.filter(p => {
-        const pDiv = p.division_type.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const actSub = activeSubCategory.key.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return pDiv.includes(actSub) || actSub.includes(pDiv);
-      });
+    : (categoryBackendProjects.length > 0
+        ? categoryBackendProjects
+        : (hasRealBackendProjects ? [] : FALLBACK_DIVISIONS.filter(p => {
+            const pDiv = p.division_type.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const actSub = activeSubCategory ? activeSubCategory.key.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+            return pDiv.includes(actSub) || actSub.includes(pDiv);
+          })));
 
   return (
     <div className="projects-page">

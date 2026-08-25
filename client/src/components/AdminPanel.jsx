@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
-import { 
-  Lock, User, Plus, Trash, Edit, Check, LogOut, Settings, 
+import {
+  Lock, User, Plus, Trash, Edit, Check, LogOut, Settings,
   Globe, Award, FileText, Menu, Layers, Shield, Eye, Trash2,
   Search, Bell, FileDown, Folder, Key, Image as ImageIcon,
   ChevronLeft, ChevronRight, CheckSquare, X,
@@ -10,7 +10,7 @@ import {
   Building, MapPin, Phone, Map, Clock, Cpu, ExternalLink,
   Radio, Leaf, Building2, Wind, Volume2, Droplet, Activity, Zap, Users,
   Monitor, Cloud, TrendingUp, Share2, ClipboardCheck, Heart, RefreshCw,
-  CheckCircle, AlertCircle, Info
+  CheckCircle, AlertCircle, Info, BarChart3
 } from 'lucide-react';
 import './AdminPanel.css';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
@@ -54,15 +54,15 @@ export default function AdminPanel({ onNavigate }) {
       window.alert = originalAlert;
     };
   }, []);
-  
+
   // Auth state
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
-  
+
   // Sidebar tab state
   const [activeTab, setActiveTab] = useState('/admin/dashboard');
-  
+
   // Sidebar collapsible sections state
   const [sectionsExpanded, setSectionsExpanded] = useState({
     content: true,
@@ -80,7 +80,7 @@ export default function AdminPanel({ onNavigate }) {
       [section]: !prev[section]
     }));
   };
-  
+
   // Entities lists state
   const [heroSlides, setHeroSlides] = useState([]);
   const [services, setServices] = useState([]);
@@ -1395,14 +1395,15 @@ export default function AdminPanel({ onNavigate }) {
         if (result.data) {
           const finalUrl = result.data.aboutUsHeroUrl || '';
           const finalVideoUrl = result.data.aboutUsVideoUrl || '';
-          
+
           setAboutUsHeroUrl(finalUrl);
           setAboutUsVideoUrl(finalVideoUrl);
-          
+
           localStorage.setItem('companySettings', JSON.stringify(companySettings));
           localStorage.setItem('aboutUsHeroType', aboutUsHeroType);
           localStorage.setItem('aboutUsHeroUrl', finalUrl);
-          localStorage.setItem('aboutUsVideoUrl', finalVideoUrl);
+          window.dispatchEvent(new CustomEvent('companySettingsUpdated', { detail: payload }));
+          window.dispatchEvent(new Event('dataUpdated'));
         }
       }
     } catch (err) {
@@ -1422,7 +1423,7 @@ export default function AdminPanel({ onNavigate }) {
 
   const saveContactSettings = async () => {
     localStorage.setItem('contactSettings', JSON.stringify(contactSettings));
-    
+
     try {
       const payload = { ...contactSettings };
       delete payload.id;
@@ -1441,7 +1442,7 @@ export default function AdminPanel({ onNavigate }) {
   const defaultProjectForm = {
     name: '',
     slug: '',
-    division_type: 'BIM Projects',
+    division_type: 'Engineering Services',
     client: '',
     contractor: '',
     consultant: '',
@@ -1522,6 +1523,15 @@ export default function AdminPanel({ onNavigate }) {
     value4Desc: 'Together we achieve more through collaborative engineering.',
     value5Title: 'Innovation',
     value5Desc: 'Pioneering green technology and sustainable design.',
+    heroStat1Value: '13+',
+    heroStat1Label: 'YEARS OF EXPERIENCE',
+    heroStat2Value: '50+',
+    heroStat2Label: 'COMPLETED PROJECTS',
+    heroStat3Value: '150+',
+    heroStat3Label: 'TECHNICAL EXPERTS',
+    heroStat4Value: '5',
+    heroStat4Label: 'REGIONAL MARKETS',
+    heroStat4Sublabel: 'Qatar • UAE • Kuwait • Saudi Arabia • India',
     aboutUsMapImg: '/map1.png',
     aboutUsCapaImg: '/capa.png',
     aboutUsDigitalImg: '/digital.png',
@@ -1632,11 +1642,11 @@ export default function AdminPanel({ onNavigate }) {
     try {
       const parsed = typeof val === 'string' ? JSON.parse(val) : val;
       if (Array.isArray(parsed)) return parsed;
-    } catch (e) {}
+    } catch (e) { }
     try {
       const fb = typeof fallbackJsonStr === 'string' ? JSON.parse(fallbackJsonStr) : fallbackJsonStr;
       return Array.isArray(fb) ? fb : [];
-    } catch (e) {}
+    } catch (e) { }
     return [];
   };
 
@@ -1723,7 +1733,7 @@ export default function AdminPanel({ onNavigate }) {
       if (editIndex !== null) {
         const member = (Array.isArray(teamMembers) ? teamMembers : [])[editIndex];
         if (member) {
-          const updatedMember = { ...member, name: data.name, role: data.role, image: data.image };
+          const updatedMember = { ...member, name: data.name, role: data.role || '', image: data.image, department: data.department || '' };
           try {
             const res = await fetch(`/api/team/${member.id}`, {
               method: 'PUT',
@@ -1744,9 +1754,10 @@ export default function AdminPanel({ onNavigate }) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: data.name || 'New Team Member',
-              role: data.role || 'Team Member',
+              name: data.name || '',
+              role: data.role || '',
               image: data.image || null,
+              department: data.department || '',
               order_num: (Array.isArray(teamMembers) ? teamMembers.length : 0) + 1
             })
           });
@@ -1846,6 +1857,7 @@ export default function AdminPanel({ onNavigate }) {
     if (route === '/admin/backup') return 'backup';
     if (route === '/admin/media') return 'media';
     if (route === '/admin/partners') return 'partners';
+    if (route === '/admin/team' || route === '/admin/our-team') return 'team';
     return route;
   };
 
@@ -1853,10 +1865,10 @@ export default function AdminPanel({ onNavigate }) {
     try {
       const resServ = await fetch('/api/services');
       if (resServ.ok) setServices(await resServ.json());
-      
+
       const resCert = await fetch('/api/certificates');
       if (resCert.ok) setCertificates(await resCert.json());
-      
+
       const resProj = await fetch('/api/projects');
       if (resProj.ok) setProjects(await resProj.json());
 
@@ -1930,6 +1942,9 @@ export default function AdminPanel({ onNavigate }) {
       } else if (tab === 'media') {
         const res = await fetch('/api/media');
         if (res.ok) setMediaItems(await res.json());
+      } else if (tab === 'team' || tab === '/admin/team') {
+        const resTeam = await fetch('/api/team?all=true');
+        if (resTeam.ok) setTeamMembers(await resTeam.json());
       } else if (tab === '/admin/settings/company') {
         fetchPageBanners();
         const resTeam = await fetch('/api/team?all=true');
@@ -2402,10 +2417,10 @@ export default function AdminPanel({ onNavigate }) {
     let toolsParsed = [['', '']];
     try {
       bulletsParsed = typeof svc.bullets === 'string' ? JSON.parse(svc.bullets) : (svc.bullets || ['']);
-    } catch(e) {}
+    } catch (e) { }
     try {
       toolsParsed = typeof svc.tools === 'string' ? JSON.parse(svc.tools) : (svc.tools || [['', '']]);
-    } catch(e) {}
+    } catch (e) { }
 
     setServiceForm({
       category: svc.category || 'Engineering Services',
@@ -2527,7 +2542,7 @@ export default function AdminPanel({ onNavigate }) {
       try {
         bulletsParsed = typeof item.bullets === 'string' ? JSON.parse(item.bullets) : (item.bullets || ['']);
         toolsParsed = typeof item.tools === 'string' ? JSON.parse(item.tools) : (item.tools || [['', '']]);
-      } catch(e) {}
+      } catch (e) { }
       setServiceForm({
         category: item.category,
         title: item.title,
@@ -2581,7 +2596,7 @@ export default function AdminPanel({ onNavigate }) {
       setProjectForm({
         name: item.name || '',
         slug: item.slug || '',
-        division_type: item.division_type || item.category || 'BIM Projects',
+        division_type: item.division_type || item.category || 'Engineering Services',
         client: item.client || '',
         contractor: item.contractor || '',
         consultant: item.consultant || '',
@@ -2857,9 +2872,9 @@ export default function AdminPanel({ onNavigate }) {
               <h2>BLUE CRESCENT</h2>
               <p>CONTROL PANEL LOGIN</p>
             </div>
-            
+
             {authError && <div className="admin-auth-error">{authError}</div>}
-            
+
             <form onSubmit={handleLogin}>
               <div className="admin-form-group">
                 <label>Username</label>
@@ -2895,7 +2910,7 @@ export default function AdminPanel({ onNavigate }) {
                 LOG IN
               </button>
             </form>
-            
+
             <button
               onClick={() => onNavigate('Home')}
               className="admin-btn-secondary"
@@ -2912,7 +2927,7 @@ export default function AdminPanel({ onNavigate }) {
   // Filter items helper
   const filterList = (list, keys) => {
     if (!searchQuery) return list;
-    return list.filter(item => 
+    return list.filter(item =>
       keys.some(key => {
         const val = item[key];
         return val && String(val).toLowerCase().includes(searchQuery.toLowerCase());
@@ -2924,9 +2939,9 @@ export default function AdminPanel({ onNavigate }) {
     <div className="admin-panel-root">
       {/* Mobile Sidebar Backdrop Overlay */}
       {isMobileSidebarOpen && (
-        <div 
-          className="admin-sidebar-backdrop" 
-          onClick={() => setIsMobileSidebarOpen(false)} 
+        <div
+          className="admin-sidebar-backdrop"
+          onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}
 
@@ -2934,8 +2949,8 @@ export default function AdminPanel({ onNavigate }) {
       <aside className={`admin-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="admin-sidebar-logo-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0', marginBottom: '20px' }}>
           <img src={logoBlueImg} alt="Blue Crescent Engineering" className="admin-sidebar-logo-img" style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }} />
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="admin-sidebar-mobile-close"
             onClick={() => setIsMobileSidebarOpen(false)}
             aria-label="Close Mobile Navigation Menu"
@@ -2944,297 +2959,308 @@ export default function AdminPanel({ onNavigate }) {
           </button>
         </div>
 
-          <div className="admin-sidebar-nav">
-            {/* Dashboard Item */}
-            <button 
-              className={`admin-nav-item ${activeTab === '/admin/dashboard' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/admin/dashboard')}
-            >
-              <div className="admin-nav-item-left">
-                <LayoutDashboard size={20} /> Dashboard
-              </div>
-              {activeTab === '/admin/dashboard' && <div className="admin-nav-indicator" />}
-            </button>
-
-            {/* Users & Roles Item */}
-            <button 
-              className={`admin-nav-item ${activeTab === '/admin/users' ? 'active' : ''}`}
-              style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-              onClick={() => {
-                if (currentUser?.role === 'super_admin') {
-                  handleNavClick('/admin/users');
-                }
-              }}
-            >
-              <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Shield size={20} />
-                <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Access Control</span>
-              </div>
-              {currentUser?.role !== 'super_admin' ? (
-                <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-              ) : (
-                activeTab === '/admin/users' && <div className="admin-nav-indicator" />
-              )}
-            </button>
-
-            {/* Content Management Section */}
-            <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('content')}>
-              <span className="admin-sidebar-header">Content Management</span>
-              {sectionsExpanded.content ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        <div className="admin-sidebar-nav">
+          {/* Dashboard Item */}
+          <button
+            className={`admin-nav-item ${activeTab === '/admin/dashboard' ? 'active' : ''}`}
+            onClick={() => handleNavClick('/admin/dashboard')}
+          >
+            <div className="admin-nav-item-left">
+              <LayoutDashboard size={20} /> Dashboard
             </div>
-            {sectionsExpanded.content && (
-              <>
+            {activeTab === '/admin/dashboard' && <div className="admin-nav-indicator" />}
+          </button>
 
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/projects' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/projects')}
-                >
-                  <div className="admin-nav-item-left">
-                    <Briefcase size={20} /> Projects
-                  </div>
-                  {activeTab === '/admin/projects' && <div className="admin-nav-indicator" />}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab.startsWith('/admin/services') ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/services')}
-                >
-                  <div className="admin-nav-item-left">
-                    <Wrench size={20} /> Services
-                  </div>
-                  {activeTab.startsWith('/admin/services') && <div className="admin-nav-indicator" />}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/certificates' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/certificates')}
-                >
-                  <div className="admin-nav-item-left">
-                    <Award size={20} /> Certificates
-                  </div>
-                  {activeTab === '/admin/certificates' && <div className="admin-nav-indicator" />}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/testimonials' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/testimonials')}
-                >
-                  <div className="admin-nav-item-left">
-                    <Star size={20} /> Testimonials
-                  </div>
-                  {activeTab === '/admin/testimonials' && <div className="admin-nav-indicator" />}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/partners' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/partners')}
-                >
-                  <div className="admin-nav-item-left">
-                    <Building size={20} /> Working Partners
-                  </div>
-                  {activeTab === '/admin/partners' && <div className="admin-nav-indicator" />}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/media' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/media')}
-                >
-                  <div className="admin-nav-item-left">
-                    <ImageIcon size={20} /> Media Library
-                  </div>
-                  {activeTab === '/admin/media' && <div className="admin-nav-indicator" />}
-                </button>
-              </>
-            )}
-
-            {/* Website Settings Section */}
-            <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('settings')}>
-              <span className="admin-sidebar-header">Website Settings</span>
-              {sectionsExpanded.settings ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          {/* Users & Roles Item */}
+          <button
+            className={`admin-nav-item ${activeTab === '/admin/users' ? 'active' : ''}`}
+            style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            onClick={() => {
+              if (currentUser?.role === 'super_admin') {
+                handleNavClick('/admin/users');
+              }
+            }}
+          >
+            <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Shield size={20} />
+              <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Access Control</span>
             </div>
-            {sectionsExpanded.settings && (
-              <>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/settings/company' ? 'active' : ''}`}
-                  style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                  onClick={() => {
-                    if (currentUser?.role === 'super_admin') {
-                      handleNavClick('/admin/settings/company');
-                    }
-                  }}
-                >
-                  <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Sliders size={20} />
-                    <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Company Information</span>
-                  </div>
-                  {currentUser?.role !== 'super_admin' ? (
-                    <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                  ) : (
-                    activeTab === '/admin/settings/company' && <div className="admin-nav-indicator" />
-                  )}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/settings/contact' ? 'active' : ''}`}
-                  style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                  onClick={() => {
-                    if (currentUser?.role === 'super_admin') {
-                      handleNavClick('/admin/settings/contact');
-                    }
-                  }}
-                >
-                  <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Mail size={20} />
-                    <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Contact Information</span>
-                  </div>
-                  {currentUser?.role !== 'super_admin' ? (
-                    <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                  ) : (
-                    activeTab === '/admin/settings/contact' && <div className="admin-nav-indicator" />
-                  )}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/settings/footer' ? 'active' : ''}`}
-                  style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                  onClick={() => {
-                    if (currentUser?.role === 'super_admin') {
-                      handleNavClick('/admin/settings/footer');
-                    }
-                  }}
-                >
-                  <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Settings size={20} />
-                    <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Footer Management</span>
-                  </div>
-                  {currentUser?.role !== 'super_admin' ? (
-                    <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                  ) : (
-                    activeTab === '/admin/settings/footer' && <div className="admin-nav-indicator" />
-                  )}
-                </button>
-                {/* SEO Management Item */}
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/seo' ? 'active' : ''}`}
-                  style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                  onClick={() => {
-                    if (currentUser?.role === 'super_admin') {
-                      handleNavClick('/admin/seo');
-                    }
-                  }}
-                >
-                  <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Search size={20} />
-                    <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>SEO Management</span>
-                  </div>
-                  {currentUser?.role !== 'super_admin' ? (
-                    <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                  ) : (
-                    activeTab === '/admin/seo' && <div className="admin-nav-indicator" />
-                  )}
-                </button>
-
-                {/* Maintenance Mode Item (Super Admin Only) */}
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/settings/maintenance' ? 'active' : ''}`}
-                  style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                  onClick={() => {
-                    if (currentUser?.role === 'super_admin') {
-                      handleNavClick('/admin/settings/maintenance');
-                    }
-                  }}
-                >
-                  <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Wrench size={20} />
-                    <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Maintenance Mode</span>
-                  </div>
-                  {currentUser?.role !== 'super_admin' ? (
-                    <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                  ) : (
-                    activeTab === '/admin/settings/maintenance' && <div className="admin-nav-indicator" />
-                  )}
-                </button>
-              </>
+            {currentUser?.role !== 'super_admin' ? (
+              <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
+            ) : (
+              activeTab === '/admin/users' && <div className="admin-nav-indicator" />
             )}
+          </button>
 
-            {/* System Section */}
-            <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('system')}>
-              <span className="admin-sidebar-header">System</span>
-              {sectionsExpanded.system ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </div>
-            {sectionsExpanded.system && (
-              <>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/backup' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/backup')}
-                >
-                  <div className="admin-nav-item-left">
-                    <Database size={20} /> Backup & Restore
-                  </div>
-                  {activeTab === '/admin/backup' && <div className="admin-nav-indicator" />}
-                </button>
-                <button 
-                  className={`admin-nav-item ${activeTab === '/admin/activity-logs' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('/admin/activity-logs')}
-                >
-                  <div className="admin-nav-item-left">
-                    <History size={20} /> Activity Logs
-                  </div>
-                  {activeTab === '/admin/activity-logs' && <div className="admin-nav-indicator" />}
-                </button>
-              </>
-            )}
-
-            {/* Logout Item */}
-            <button 
-              className="admin-nav-item admin-logout-btn" 
-              onClick={handleLogout}
-              style={{ marginTop: '24px' }}
-            >
-              <div className="admin-nav-item-left">
-                <LogOut size={20} /> Logout
-              </div>
-            </button>
+          {/* Content Management Section */}
+          <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('content')}>
+            <span className="admin-sidebar-header">Content Management</span>
+            {sectionsExpanded.content ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </div>
-        </aside>
+          {sectionsExpanded.content && (
+            <>
 
-        {/* Right Main Pane Wrapper */}
-        <div className="admin-main-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          {/* Top Main Header */}
-          <header className="admin-header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', padding: '0 24px', borderBottom: '1px solid #E2E8F0', background: '#FFFFFF', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <button 
-                type="button" 
-                className="admin-hamburger-btn"
-                onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                aria-label="Toggle Navigation Menu"
-                title="Toggle Sidebar Menu"
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/projects' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/projects')}
               >
-                <Menu size={20} />
-                <span className="admin-menu-btn-label" style={{ fontSize: '13px', fontWeight: '700' }}>Menu</span>
+                <div className="admin-nav-item-left">
+                  <Briefcase size={20} /> Projects
+                </div>
+                {activeTab === '/admin/projects' && <div className="admin-nav-indicator" />}
               </button>
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {(activeTab || '/admin/dashboard').split('/').pop().replace(/-/g, ' ')}
-              </h2>
+              <button
+                className={`admin-nav-item ${activeTab.startsWith('/admin/services') ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/services')}
+              >
+                <div className="admin-nav-item-left">
+                  <Wrench size={20} /> Services
+                </div>
+                {activeTab.startsWith('/admin/services') && <div className="admin-nav-indicator" />}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/certificates' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/certificates')}
+              >
+                <div className="admin-nav-item-left">
+                  <Award size={20} /> Certificates
+                </div>
+                {activeTab === '/admin/certificates' && <div className="admin-nav-indicator" />}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/testimonials' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/testimonials')}
+              >
+                <div className="admin-nav-item-left">
+                  <Star size={20} /> Testimonials
+                </div>
+                {activeTab === '/admin/testimonials' && <div className="admin-nav-indicator" />}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/partners' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/partners')}
+              >
+                <div className="admin-nav-item-left">
+                  <Building size={20} /> Working Partners
+                </div>
+                {activeTab === '/admin/partners' && <div className="admin-nav-indicator" />}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/media' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/media')}
+              >
+                <div className="admin-nav-item-left">
+                  <ImageIcon size={20} /> Media Library
+                </div>
+                {activeTab === '/admin/media' && <div className="admin-nav-indicator" />}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/team' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/team')}
+              >
+                <div className="admin-nav-item-left">
+                  <Users size={20} /> Our Team
+                </div>
+                {activeTab === '/admin/team' && <div className="admin-nav-indicator" />}
+              </button>
+            </>
+          )}
+
+          {/* Website Settings Section */}
+          <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('settings')}>
+            <span className="admin-sidebar-header">Website Settings</span>
+            {sectionsExpanded.settings ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </div>
+          {sectionsExpanded.settings && (
+            <>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/settings/company' ? 'active' : ''}`}
+                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                onClick={() => {
+                  if (currentUser?.role === 'super_admin') {
+                    handleNavClick('/admin/settings/company');
+                  }
+                }}
+              >
+                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Sliders size={20} />
+                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Company Information</span>
+                </div>
+                {currentUser?.role !== 'super_admin' ? (
+                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
+                ) : (
+                  activeTab === '/admin/settings/company' && <div className="admin-nav-indicator" />
+                )}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/settings/contact' ? 'active' : ''}`}
+                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                onClick={() => {
+                  if (currentUser?.role === 'super_admin') {
+                    handleNavClick('/admin/settings/contact');
+                  }
+                }}
+              >
+                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Mail size={20} />
+                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Contact Information</span>
+                </div>
+                {currentUser?.role !== 'super_admin' ? (
+                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
+                ) : (
+                  activeTab === '/admin/settings/contact' && <div className="admin-nav-indicator" />
+                )}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/settings/footer' ? 'active' : ''}`}
+                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                onClick={() => {
+                  if (currentUser?.role === 'super_admin') {
+                    handleNavClick('/admin/settings/footer');
+                  }
+                }}
+              >
+                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Settings size={20} />
+                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Footer Management</span>
+                </div>
+                {currentUser?.role !== 'super_admin' ? (
+                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
+                ) : (
+                  activeTab === '/admin/settings/footer' && <div className="admin-nav-indicator" />
+                )}
+              </button>
+              {/* SEO Management Item */}
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/seo' ? 'active' : ''}`}
+                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                onClick={() => {
+                  if (currentUser?.role === 'super_admin') {
+                    handleNavClick('/admin/seo');
+                  }
+                }}
+              >
+                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Search size={20} />
+                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>SEO Management</span>
+                </div>
+                {currentUser?.role !== 'super_admin' ? (
+                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
+                ) : (
+                  activeTab === '/admin/seo' && <div className="admin-nav-indicator" />
+                )}
+              </button>
+
+              {/* Maintenance Mode Item (Super Admin Only) */}
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/settings/maintenance' ? 'active' : ''}`}
+                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                onClick={() => {
+                  if (currentUser?.role === 'super_admin') {
+                    handleNavClick('/admin/settings/maintenance');
+                  }
+                }}
+              >
+                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Wrench size={20} />
+                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Maintenance Mode</span>
+                </div>
+                {currentUser?.role !== 'super_admin' ? (
+                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
+                ) : (
+                  activeTab === '/admin/settings/maintenance' && <div className="admin-nav-indicator" />
+                )}
+              </button>
+            </>
+          )}
+
+          {/* System Section */}
+          <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('system')}>
+            <span className="admin-sidebar-header">System</span>
+            {sectionsExpanded.system ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </div>
+          {sectionsExpanded.system && (
+            <>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/backup' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/backup')}
+              >
+                <div className="admin-nav-item-left">
+                  <Database size={20} /> Backup & Restore
+                </div>
+                {activeTab === '/admin/backup' && <div className="admin-nav-indicator" />}
+              </button>
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/activity-logs' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/activity-logs')}
+              >
+                <div className="admin-nav-item-left">
+                  <History size={20} /> Activity Logs
+                </div>
+                {activeTab === '/admin/activity-logs' && <div className="admin-nav-indicator" />}
+              </button>
+            </>
+          )}
+
+          {/* Logout Item */}
+          <button
+            className="admin-nav-item admin-logout-btn"
+            onClick={handleLogout}
+            style={{ marginTop: '24px' }}
+          >
+            <div className="admin-nav-item-left">
+              <LogOut size={20} /> Logout
             </div>
+          </button>
+        </div>
+      </aside>
 
-            <div className="admin-header-right" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      {/* Right Main Pane Wrapper */}
+      <div className="admin-main-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Top Main Header */}
+        <header className="admin-header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', padding: '0 24px', borderBottom: '1px solid #E2E8F0', background: '#FFFFFF', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button
+              type="button"
+              className="admin-hamburger-btn"
+              onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+              aria-label="Toggle Navigation Menu"
+              title="Toggle Sidebar Menu"
+            >
+              <Menu size={20} />
+              <span className="admin-menu-btn-label" style={{ fontSize: '13px', fontWeight: '700' }}>Menu</span>
+            </button>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {(activeTab || '/admin/dashboard').split('/').pop().replace(/-/g, ' ')}
+            </h2>
+          </div>
+
+          <div className="admin-header-right" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
 
 
-              <div className="admin-header-profile" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                <div className="admin-profile-avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00A198', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px' }}>
-                  {(currentUser?.username || 'Admin').substring(0, 2).toUpperCase()}
-                </div>
-                <div className="admin-profile-meta" style={{ display: 'flex', flexDirection: 'column' }}>
-                  <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: 'var(--text-dark)', textTransform: 'capitalize' }}>{currentUser?.username || 'Super Admin'}</h4>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>{currentUser?.role === 'super_admin' ? 'Super Admin' : 'Administrator'}</span>
-                </div>
+            <div className="admin-header-profile" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <div className="admin-profile-avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00A198', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px' }}>
+                {(currentUser?.username || 'Admin').substring(0, 2).toUpperCase()}
+              </div>
+              <div className="admin-profile-meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: 'var(--text-dark)', textTransform: 'capitalize' }}>{currentUser?.username || 'Super Admin'}</h4>
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>{currentUser?.role === 'super_admin' ? 'Super Admin' : 'Administrator'}</span>
               </div>
             </div>
-          </header>
+          </div>
+        </header>
 
-          {/* Right Main Pane */}
-          <main className="admin-content-pane">
+        {/* Right Main Pane */}
+        <main className="admin-content-pane">
           {/* Conditional Add Button Header */}
-          {['/admin/news', '/admin/services', '/admin/certificates', '/admin/testimonials', '/admin/users', '/admin/projects', '/admin/partners', '/admin/media'].includes(activeTab) && (
+          {['/admin/news', '/admin/services', '/admin/certificates', '/admin/testimonials', '/admin/users', '/admin/projects', '/admin/partners', '/admin/media', '/admin/team'].includes(activeTab) && (
             <div className="admin-pane-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-              <button 
-                className="admin-add-btn" 
+              <button
+                className="admin-add-btn"
                 onClick={() => {
-                  if (activeTab === '/admin/projects') {
+                  if (activeTab === '/admin/team') {
+                    openCrudModal('teamMember', null, { name: '', role: '', department: '', image: null });
+                  } else if (activeTab === '/admin/projects') {
                     resetForms();
                     setEditingProjectId(null);
                     setShowAddModal(true);
@@ -3244,7 +3270,7 @@ export default function AdminPanel({ onNavigate }) {
                   }
                 }}
               >
-                <Plus size={16} /> 
+                <Plus size={16} />
                 {activeTab === '/admin/news' && 'Compose News'}
                 {activeTab === '/admin/services' && 'Add New Service'}
                 {activeTab === '/admin/certificates' && 'Add Certificate'}
@@ -3253,6 +3279,7 @@ export default function AdminPanel({ onNavigate }) {
                 {activeTab === '/admin/projects' && 'Add New Project'}
                 {activeTab === '/admin/partners' && 'Add Partner'}
                 {activeTab === '/admin/media' && 'Add Media'}
+                {activeTab === '/admin/team' && 'Add Team Member'}
               </button>
             </div>
           )}
@@ -3262,7 +3289,7 @@ export default function AdminPanel({ onNavigate }) {
 
           {/* MAIN TABLES & SECTIONS */}
           <div className="admin-table-card">
-            
+
             {/* PLACEHOLDER PAGES */}
             {['/admin/categories/service', '/admin/categories/project', '/admin/categories/news', '/admin/settings/social', '/admin/settings/seo', '/admin/documents', '/admin/system-logs'].includes(activeTab) && (
               renderPlaceholder(
@@ -3274,7 +3301,7 @@ export default function AdminPanel({ onNavigate }) {
             {/* MAINTENANCE MODE SETTINGS VIEW (SUPER ADMIN) */}
             {activeTab === '/admin/settings/maintenance' && (
               <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
-                
+
                 {/* Page Header */}
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                   <div>
@@ -3288,14 +3315,14 @@ export default function AdminPanel({ onNavigate }) {
 
                 {/* Feedback Toast Banner */}
                 {maintenanceFeedback && (
-                  <div style={{ 
-                    padding: '14px 18px', 
-                    borderRadius: '8px', 
-                    marginBottom: '20px', 
-                    fontSize: '14px', 
-                    fontWeight: '600', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <div style={{
+                    padding: '14px 18px',
+                    borderRadius: '8px',
+                    marginBottom: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
                     justify: 'space-between',
                     background: maintenanceFeedback.type === 'success' ? '#ECFDF5' : '#FEF2F2',
                     color: maintenanceFeedback.type === 'success' ? '#065F46' : '#991B1B',
@@ -3312,30 +3339,30 @@ export default function AdminPanel({ onNavigate }) {
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  
+
                   {/* WEBSITE STATUS SUMMARY CARD */}
                   <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                       <div>
                         <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#64748B', letterSpacing: '0.8px' }}>WEBSITE STATUS</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                          <span style={{ 
-                            display: 'inline-flex', 
-                            alignItems: 'center', 
-                            gap: '8px', 
-                            padding: '8px 16px', 
-                            borderRadius: '30px', 
-                            fontSize: '13px', 
-                            fontWeight: '800', 
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 16px',
+                            borderRadius: '30px',
+                            fontSize: '13px',
+                            fontWeight: '800',
                             letterSpacing: '0.5px',
                             background: maintenanceMode ? '#FEF3C7' : '#D1FAE5',
                             color: maintenanceMode ? '#92400E' : '#065F46',
                             border: `1px solid ${maintenanceMode ? '#FCD34D' : '#6EE7B7'}`
                           }}>
-                            <span style={{ 
-                              width: '10px', 
-                              height: '10px', 
-                              borderRadius: '50%', 
+                            <span style={{
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '50%',
                               background: maintenanceMode ? '#F59E0B' : '#10B981',
                               boxShadow: `0 0 8px ${maintenanceMode ? '#F59E0B' : '#10B981'}`
                             }} />
@@ -3358,20 +3385,20 @@ export default function AdminPanel({ onNavigate }) {
                       Use the switch below to toggle public access. When Maintenance Mode is ON, all public website visitors see the Maintenance Page while administrators retain full access to the Admin Panel.
                     </p>
 
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justify: 'space-between', 
-                      padding: '20px 24px', 
-                      background: maintenanceMode ? '#FFFBEB' : '#F8FAFC', 
-                      border: `1px solid ${maintenanceMode ? '#FDE68A' : '#E2E8F0'}`, 
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justify: 'space-between',
+                      padding: '20px 24px',
+                      background: maintenanceMode ? '#FFFBEB' : '#F8FAFC',
+                      border: `1px solid ${maintenanceMode ? '#FDE68A' : '#E2E8F0'}`,
                       borderRadius: '12px',
                       flexWrap: 'wrap',
                       gap: '16px'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         {/* Accessible Switch Control */}
-                        <div 
+                        <div
                           role="switch"
                           aria-checked={maintenanceMode}
                           aria-label="Maintenance Mode Toggle Switch"
@@ -3441,15 +3468,15 @@ export default function AdminPanel({ onNavigate }) {
                   {/* EDITABLE CONTENT CARD (Requirement 18) */}
                   <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px' }}>
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Maintenance Page Content</h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>
                           Maintenance Title
                         </label>
-                        <input 
-                          type="text" 
-                          value={maintenanceTitle} 
+                        <input
+                          type="text"
+                          value={maintenanceTitle}
                           onChange={(e) => setMaintenanceTitle(e.target.value)}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
@@ -3459,17 +3486,17 @@ export default function AdminPanel({ onNavigate }) {
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>
                           Maintenance Message / Notice
                         </label>
-                        <textarea 
+                        <textarea
                           rows={4}
-                          value={maintenanceMessage} 
+                          value={maintenanceMessage}
                           onChange={(e) => setMaintenanceMessage(e.target.value)}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={handleSaveMaintenanceContent}
                           disabled={isUpdatingMaintenance}
                           style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
@@ -3553,7 +3580,7 @@ export default function AdminPanel({ onNavigate }) {
                 </div>
               </div>
             )}
-            
+
             {/* COMPANY INFORMATION SETTINGS */}
             {activeTab === '/admin/settings/company' && (
               <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '12px' }}>
@@ -3660,7 +3687,7 @@ export default function AdminPanel({ onNavigate }) {
                                 </span>
                               </div>
                               <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#64748B', lineHeight: '1.4' }}>{item.description}</p>
-                              
+
                               {/* Preview Box */}
                               <div style={{
                                 width: '100%',
@@ -3746,11 +3773,11 @@ export default function AdminPanel({ onNavigate }) {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="admin-hero-media-grid" style={{ padding: '24px' }}>
                       {/* Left Side: Type and Upload */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        
+
                         {/* Selector */}
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Media Type</label>
@@ -3872,6 +3899,140 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                   </div>
 
+                  {/* HERO SLIDER STAT CARDS MANAGEMENT */}
+                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#087CFF' }}><BarChart3 size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Home — Hero Stat Cards (4 Dynamic Cards)</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize values & labels for the 4 floating stat cards on the Home Page Hero section.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                      {/* Card 1 */}
+                      <div style={{ padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#087CFF', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>CARD 1: EXPERIENCE</span>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Value</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat1Value || '13+'}
+                            onChange={(e) => updateCompanyField('heroStat1Value', e.target.value)}
+                            placeholder="e.g. 13+"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Label</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat1Label || 'YEARS OF EXPERIENCE'}
+                            onChange={(e) => updateCompanyField('heroStat1Label', e.target.value)}
+                            placeholder="e.g. YEARS OF EXPERIENCE"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Card 2 */}
+                      <div style={{ padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#087CFF', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>CARD 2: PROJECTS</span>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Value</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat2Value || '50+'}
+                            onChange={(e) => updateCompanyField('heroStat2Value', e.target.value)}
+                            placeholder="e.g. 50+"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Label</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat2Label || 'COMPLETED PROJECTS'}
+                            onChange={(e) => updateCompanyField('heroStat2Label', e.target.value)}
+                            placeholder="e.g. COMPLETED PROJECTS"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Card 3 */}
+                      <div style={{ padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#087CFF', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>CARD 3: EXPERTS</span>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Value</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat3Value || '150+'}
+                            onChange={(e) => updateCompanyField('heroStat3Value', e.target.value)}
+                            placeholder="e.g. 150+"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Label</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat3Label || 'TECHNICAL EXPERTS'}
+                            onChange={(e) => updateCompanyField('heroStat3Label', e.target.value)}
+                            placeholder="e.g. TECHNICAL EXPERTS"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Card 4 */}
+                      <div style={{ padding: '16px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#087CFF', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>CARD 4: MARKETS</span>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Value</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat4Value || '5'}
+                            onChange={(e) => updateCompanyField('heroStat4Value', e.target.value)}
+                            placeholder="e.g. 5"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Label</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat4Label || 'REGIONAL MARKETS'}
+                            onChange={(e) => updateCompanyField('heroStat4Label', e.target.value)}
+                            placeholder="e.g. REGIONAL MARKETS"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>Sublabel / Countries List</label>
+                          <input
+                            type="text"
+                            className="admin-input"
+                            value={companySettings.heroStat4Sublabel || 'Qatar • UAE • Kuwait • Saudi Arabia • India'}
+                            onChange={(e) => updateCompanyField('heroStat4Sublabel', e.target.value)}
+                            placeholder="e.g. Qatar • UAE • Kuwait • Saudi Arabia • India"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* SECTION 2: About Us — Who We Are */}
                   <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
                     <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -3989,9 +4150,9 @@ export default function AdminPanel({ onNavigate }) {
                               )}
                             </div>
 
-                              <div style={{ padding: '10px 14px', background: '#FFFBEB', borderRadius: '8px', border: '1px solid #FDE68A', fontSize: '12px', color: '#92400E', lineHeight: '1.5' }}>
+                            <div style={{ padding: '10px 14px', background: '#FFFBEB', borderRadius: '8px', border: '1px solid #FDE68A', fontSize: '12px', color: '#92400E', lineHeight: '1.5' }}>
                               [!] <strong>Note:</strong> The video plays automatically (muted, looped) in portrait frame beside the "Who We Are" text on the About Us page. Keep it under 60 seconds for best performance.
-                             </div>
+                            </div>
                           </div>
 
                           {/* Right: Live Video Preview */}
@@ -4125,7 +4286,7 @@ export default function AdminPanel({ onNavigate }) {
                       </div>
                     </div>
                     <div className="admin-form-grid-2col" style={{ padding: '24px' }}>
-                      
+
                       {/* Geographical Presence Map Image */}
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Geographical Presence Map Image</label>
@@ -4193,16 +4354,16 @@ export default function AdminPanel({ onNavigate }) {
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Flowchart Container Background Color</label>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                          <input 
-                            type="color" 
-                            value={companySettings.aboutUsFlowchartBg || '#F1F7FF'} 
-                            onChange={e => updateCompanyField('aboutUsFlowchartBg', e.target.value)} 
+                          <input
+                            type="color"
+                            value={companySettings.aboutUsFlowchartBg || '#F1F7FF'}
+                            onChange={e => updateCompanyField('aboutUsFlowchartBg', e.target.value)}
                             style={{ width: '48px', height: '38px', padding: '0', border: '1px solid #CBD5E1', borderRadius: '6px', cursor: 'pointer' }}
                           />
-                          <input 
-                            type="text" 
-                            value={companySettings.aboutUsFlowchartBg || '#F1F7FF'} 
-                            onChange={e => updateCompanyField('aboutUsFlowchartBg', e.target.value)} 
+                          <input
+                            type="text"
+                            value={companySettings.aboutUsFlowchartBg || '#F1F7FF'}
+                            onChange={e => updateCompanyField('aboutUsFlowchartBg', e.target.value)}
                             style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
                           />
                         </div>
@@ -4229,7 +4390,7 @@ export default function AdminPanel({ onNavigate }) {
                           if (!Array.isArray(list) || list.length === 0) {
                             list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCountriesJson);
                           }
-                        } catch(e) {
+                        } catch (e) {
                           list = JSON.parse(DEFAULT_COMPANY_SETTINGS.aboutUsCountriesJson);
                         }
                         return list.map((item, idx) => (
@@ -4282,8 +4443,8 @@ export default function AdminPanel({ onNavigate }) {
                           <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Add, edit, or remove discipline cards displayed under "Our Capacity" section</p>
                         </div>
                       </div>
-                      <button 
-                        style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)' }} 
+                      <button
+                        style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)' }}
                         onClick={() => openCrudModal('discipline', null, { name: '', icon: 'Building2' })}
                       >
                         <Plus size={15} /> + Add Card
@@ -4301,16 +4462,16 @@ export default function AdminPanel({ onNavigate }) {
                               <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#1E293B' }}>{item.name}</span>
                             </div>
                             <div style={{ display: 'flex', gap: '6px' }}>
-                              <button 
+                              <button
                                 title="Edit Discipline"
-                                style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 onClick={() => openCrudModal('discipline', idx, item)}
                               >
                                 <Edit size={14} />
                               </button>
-                              <button 
+                              <button
                                 title="Delete Discipline"
-                                style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 onClick={() => {
                                   const copy = [...list];
                                   copy.splice(idx, 1);
@@ -4392,8 +4553,8 @@ export default function AdminPanel({ onNavigate }) {
                           <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize the capability cards shown inside the Digital Twin section</p>
                         </div>
                       </div>
-                      <button 
-                        style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(234, 88, 12, 0.2)' }} 
+                      <button
+                        style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(234, 88, 12, 0.2)' }}
                         onClick={() => openCrudModal('digitalTwin', null, { title: '', desc: '', icon: 'Cloud' })}
                       >
                         <Plus size={15} /> + Add Card
@@ -4412,16 +4573,16 @@ export default function AdminPanel({ onNavigate }) {
                                 <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#1E293B' }}>{item.title}</h4>
                               </div>
                               <div style={{ display: 'flex', gap: '6px' }}>
-                                <button 
+                                <button
                                   title="Edit Capability"
-                                  style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                  style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   onClick={() => openCrudModal('digitalTwin', idx, item)}
                                 >
                                   <Edit size={14} />
                                 </button>
-                                <button 
+                                <button
                                   title="Delete Capability"
-                                  style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                  style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   onClick={() => {
                                     const copy = [...list];
                                     copy.splice(idx, 1);
@@ -4453,7 +4614,7 @@ export default function AdminPanel({ onNavigate }) {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div className="admin-form-grid-2col">
                         <div>
@@ -4500,8 +4661,8 @@ export default function AdminPanel({ onNavigate }) {
                       <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '16px', border: '1px solid #E2E8F0' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                           <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase' }}>Core Capabilities Chips (CRUD)</h4>
-                          <button 
-                            style={{ background: '#10B981', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(16, 185, 129, 0.2)' }} 
+                          <button
+                            style={{ background: '#10B981', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(16, 185, 129, 0.2)' }}
                             onClick={() => openCrudModal('capabilityChip', null, { name: '', icon: 'Award', slug: 'Sustainability Services', desc: '' })}
                           >
                             <Plus size={15} /> + Add Capability Chip
@@ -4523,16 +4684,16 @@ export default function AdminPanel({ onNavigate }) {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '6px' }}>
-                                  <button 
+                                  <button
                                     title="Edit Chip"
-                                    style={{ background: '#10B981', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                    style={{ background: '#10B981', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onClick={() => openCrudModal('capabilityChip', idx, item)}
                                   >
                                     <Edit size={14} />
                                   </button>
-                                  <button 
+                                  <button
                                     title="Delete Chip"
-                                    style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                    style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onClick={() => {
                                       const copy = [...list];
                                       copy.splice(idx, 1);
@@ -4603,8 +4764,8 @@ export default function AdminPanel({ onNavigate }) {
                       <div style={{ background: '#F8FAFC', borderRadius: '8px', padding: '16px', border: '1px solid #E2E8F0' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                           <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase' }}>Remote Solutions Pillars (CRUD)</h4>
-                          <button 
-                            style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)' }} 
+                          <button
+                            style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)' }}
                             onClick={() => openCrudModal('remotePillar', null, { title: '', desc: '', icon: 'Radio', slug: 'Construction Technology' })}
                           >
                             <Plus size={15} /> + Add Solution Pillar Card
@@ -4628,16 +4789,16 @@ export default function AdminPanel({ onNavigate }) {
                                   </div>
 
                                   <div style={{ display: 'flex', gap: '6px' }}>
-                                    <button 
+                                    <button
                                       title="Edit Pillar"
-                                      style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                      style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                       onClick={() => openCrudModal('remotePillar', idx, pillar)}
                                     >
                                       <Edit size={14} />
                                     </button>
-                                    <button 
+                                    <button
                                       title="Delete Pillar"
-                                      style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                                      style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                       onClick={() => {
                                         const copy = [...list];
                                         copy.splice(idx, 1);
@@ -4660,68 +4821,7 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                   </div>
 
-                  {/* SECTION 13: Our Team Members CRUD Manager */}
-                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', marginBottom: '24px' }}>
-                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}><Users size={16} /></div>
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>OUR TEAM MEMBERS (ABOUT US CRUD)</h3>
-                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Manage team member photos, names, roles and order saved live in MySQL database</p>
-                        </div>
-                      </div>
-                      <button 
-                        style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)' }} 
-                        onClick={() => openCrudModal('teamMember', null, { name: '', role: 'Team Member', image: null })}
-                      >
-                        <Plus size={15} /> + Add Team Member
-                      </button>
-                    </div>
 
-                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                      {(Array.isArray(teamMembers) ? teamMembers : []).map((member, idx) => (
-                        <div key={member.id || idx} style={{ background: '#FFFFFF', borderRadius: '10px', border: '1px solid #CBD5E1', padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <div style={{ width: '56px', height: '56px', borderRadius: '10px', overflow: 'hidden', background: 'linear-gradient(135deg, #071C3B, #00A198)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: '800', fontSize: '18px' }}>
-                              {member.image ? (
-                                <img src={member.image} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                (member.name ? member.name.charAt(0) : 'T')
-                              )}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <h4 style={{ margin: '0 0 2px 0', fontSize: '15px', fontWeight: '700', color: '#1E293B' }}>{member.name}</h4>
-                              <span style={{ fontSize: '12.5px', color: '#00A198', fontWeight: '700', display: 'block' }}>{member.role || 'Team Member'}</span>
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end', borderTop: '1px solid #F1F5F9', paddingTop: '10px' }}>
-                            <button 
-                              style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }} 
-                              onClick={() => openCrudModal('teamMember', idx, member)}
-                            >
-                              <Edit size={13} /> Edit
-                            </button>
-
-                            <button 
-                              style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }} 
-                              onClick={async () => {
-                                if (!confirm(`Delete ${member.name}?`)) return;
-                                try {
-                                  const res = await fetch(`/api/team/${member.id}`, { method: 'DELETE' });
-                                  if (res.ok) {
-                                    setTeamMembers(prev => (Array.isArray(prev) ? prev : []).filter(m => m.id !== member.id));
-                                  }
-                                } catch(e){}
-                              }}
-                            >
-                              <Trash2 size={13} /> Delete
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Bottom Save */}
                   <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '12px' }}>
@@ -5033,8 +5133,8 @@ export default function AdminPanel({ onNavigate }) {
                     <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0', textTransform: 'lowercase' }}>seo management</h2>
                   </div>
                   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <button 
-                      className="admin-action-btn-secondary" 
+                    <button
+                      className="admin-action-btn-secondary"
                       style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}
                       onClick={() => {
                         if (confirm('Reset all page SEO fields to factory defaults?')) {
@@ -5044,12 +5144,12 @@ export default function AdminPanel({ onNavigate }) {
                     >
                       Reset All
                     </button>
-                    <button 
-                      className="admin-action-btn-secondary" 
+                    <button
+                      className="admin-action-btn-secondary"
                       style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                       onClick={() => {
-                        const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` + 
-                          Object.keys(seoPages).map(p => `  <url>\n    <loc>${seoPages[p].canonical}</loc>\n    <changefreq>${seoPages[p].changeFrequency.split(' ')[0].toLowerCase()}</changefreq>\n    <priority>${seoPages[p].sitemapPriority}</priority>\n  </url>`).join('\n') + 
+                        const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+                          Object.keys(seoPages).map(p => `  <url>\n    <loc>${seoPages[p].canonical}</loc>\n    <changefreq>${seoPages[p].changeFrequency.split(' ')[0].toLowerCase()}</changefreq>\n    <priority>${seoPages[p].sitemapPriority}</priority>\n  </url>`).join('\n') +
                           `\n</urlset>`;
                         const blob = new Blob([sitemapContent], { type: 'text/xml' });
                         const url = URL.createObjectURL(blob);
@@ -5061,8 +5161,8 @@ export default function AdminPanel({ onNavigate }) {
                     >
                       <FileText size={14} /> Download Sitemap
                     </button>
-                    <button 
-                      className="admin-add-btn" 
+                    <button
+                      className="admin-add-btn"
                       style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                       onClick={() => alert(`Success: SEO Metadata settings for "${selectedSeoPage}" saved and synced successfully!`)}
                     >
@@ -5086,8 +5186,8 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-settings-page-header" style={{ background: '#FFFFFF', padding: '16px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                     <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Select Website Page</label>
-                    <select 
-                      value={selectedSeoPage} 
+                    <select
+                      value={selectedSeoPage}
                       onChange={(e) => setSelectedSeoPage(e.target.value)}
                       style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', color: '#334155', outline: 'none', background: '#F8FAFC', maxWidth: '100%', minWidth: '200px' }}
                     >
@@ -5096,8 +5196,8 @@ export default function AdminPanel({ onNavigate }) {
                       ))}
                     </select>
                   </div>
-                  <button 
-                    className="admin-action-btn-secondary" 
+                  <button
+                    className="admin-action-btn-secondary"
                     style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                     onClick={() => {
                       updateSeoField('keywords', `${selectedSeoPage}, Blue Crescent, Technical Design Qatar`);
@@ -5153,7 +5253,7 @@ export default function AdminPanel({ onNavigate }) {
                                 {seoPages[selectedSeoPage].title.length} / 60 chars
                               </span>
                             </div>
-                            <input 
+                            <input
                               type="text"
                               value={seoPages[selectedSeoPage].title}
                               onChange={(e) => updateSeoField('title', e.target.value)}
@@ -5168,7 +5268,7 @@ export default function AdminPanel({ onNavigate }) {
                                 {seoPages[selectedSeoPage].description.length} / 160 chars
                               </span>
                             </div>
-                            <textarea 
+                            <textarea
                               rows="3"
                               value={seoPages[selectedSeoPage].description}
                               onChange={(e) => updateSeoField('description', e.target.value)}
@@ -5178,7 +5278,7 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Meta Keywords</label>
-                            <input 
+                            <input
                               type="text"
                               value={seoPages[selectedSeoPage].keywords}
                               onChange={(e) => updateSeoField('keywords', e.target.value)}
@@ -5190,7 +5290,7 @@ export default function AdminPanel({ onNavigate }) {
                           <div className="admin-form-grid-2col">
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Canonical URL</label>
-                              <input 
+                              <input
                                 type="text"
                                 value={seoPages[selectedSeoPage].canonical}
                                 onChange={(e) => updateSeoField('canonical', e.target.value)}
@@ -5199,7 +5299,7 @@ export default function AdminPanel({ onNavigate }) {
                             </div>
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>SEO Slug (URL Path)</label>
-                              <input 
+                              <input
                                 type="text"
                                 value={seoPages[selectedSeoPage].slug}
                                 onChange={(e) => updateSeoField('slug', e.target.value)}
@@ -5211,7 +5311,7 @@ export default function AdminPanel({ onNavigate }) {
                           <div className="admin-form-grid-2col">
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Robots Indexing</label>
-                              <select 
+                              <select
                                 value={seoPages[selectedSeoPage].robotsIndex}
                                 onChange={(e) => updateSeoField('robotsIndex', e.target.value)}
                                 style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', background: '#FFFFFF' }}
@@ -5222,7 +5322,7 @@ export default function AdminPanel({ onNavigate }) {
                             </div>
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Robots Links Follow</label>
-                              <select 
+                              <select
                                 value={seoPages[selectedSeoPage].robotsFollow}
                                 onChange={(e) => updateSeoField('robotsFollow', e.target.value)}
                                 style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', background: '#FFFFFF' }}
@@ -5246,7 +5346,7 @@ export default function AdminPanel({ onNavigate }) {
                             <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>OG Title</label>
-                                <input 
+                                <input
                                   type="text"
                                   value={seoPages[selectedSeoPage].ogTitle}
                                   onChange={(e) => updateSeoField('ogTitle', e.target.value)}
@@ -5255,7 +5355,7 @@ export default function AdminPanel({ onNavigate }) {
                               </div>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>OG Image URL</label>
-                                <input 
+                                <input
                                   type="text"
                                   value={seoPages[selectedSeoPage].ogImage}
                                   onChange={(e) => updateSeoField('ogImage', e.target.value)}
@@ -5266,7 +5366,7 @@ export default function AdminPanel({ onNavigate }) {
                             <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>OG Page URL</label>
-                                <input 
+                                <input
                                   type="text"
                                   value={seoPages[selectedSeoPage].ogUrl}
                                   onChange={(e) => updateSeoField('ogUrl', e.target.value)}
@@ -5275,7 +5375,7 @@ export default function AdminPanel({ onNavigate }) {
                               </div>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>OG Content Type</label>
-                                <input 
+                                <input
                                   type="text"
                                   value={seoPages[selectedSeoPage].ogType}
                                   onChange={(e) => updateSeoField('ogType', e.target.value)}
@@ -5285,7 +5385,7 @@ export default function AdminPanel({ onNavigate }) {
                             </div>
                             <div>
                               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>OG Description</label>
-                              <textarea 
+                              <textarea
                                 rows="2"
                                 value={seoPages[selectedSeoPage].ogDescription}
                                 onChange={(e) => updateSeoField('ogDescription', e.target.value)}
@@ -5302,7 +5402,7 @@ export default function AdminPanel({ onNavigate }) {
                             <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>Twitter Card Title</label>
-                                <input 
+                                <input
                                   type="text"
                                   value={seoPages[selectedSeoPage].twitterTitle}
                                   onChange={(e) => updateSeoField('twitterTitle', e.target.value)}
@@ -5311,7 +5411,7 @@ export default function AdminPanel({ onNavigate }) {
                               </div>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>Twitter Preview Image URL</label>
-                                <input 
+                                <input
                                   type="text"
                                   value={seoPages[selectedSeoPage].twitterImage}
                                   onChange={(e) => updateSeoField('twitterImage', e.target.value)}
@@ -5322,7 +5422,7 @@ export default function AdminPanel({ onNavigate }) {
                             <div className="admin-form-grid-2col" style={{ marginBottom: '16px' }}>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>Twitter Card Type</label>
-                                <select 
+                                <select
                                   value={seoPages[selectedSeoPage].twitterType}
                                   onChange={(e) => updateSeoField('twitterType', e.target.value)}
                                   style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', background: '#FFFFFF' }}
@@ -5333,7 +5433,7 @@ export default function AdminPanel({ onNavigate }) {
                               </div>
                               <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#64748B', marginBottom: '6px' }}>Twitter Card Description</label>
-                                <input 
+                                <input
                                   type="text"
                                   value={seoPages[selectedSeoPage].twitterDescription}
                                   onChange={(e) => updateSeoField('twitterDescription', e.target.value)}
@@ -5354,7 +5454,7 @@ export default function AdminPanel({ onNavigate }) {
                           <div className="admin-form-grid-2col">
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Global Image Alt Attribute</label>
-                              <input 
+                              <input
                                 type="text"
                                 value={seoPages[selectedSeoPage].imgAlt}
                                 onChange={(e) => updateSeoField('imgAlt', e.target.value)}
@@ -5363,7 +5463,7 @@ export default function AdminPanel({ onNavigate }) {
                             </div>
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Global Image Title Attribute</label>
-                              <input 
+                              <input
                                 type="text"
                                 value={seoPages[selectedSeoPage].imgTitle}
                                 onChange={(e) => updateSeoField('imgTitle', e.target.value)}
@@ -5373,7 +5473,7 @@ export default function AdminPanel({ onNavigate }) {
                           </div>
                           <div>
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Global Image Caption / Tooltip</label>
-                            <textarea 
+                            <textarea
                               rows="3"
                               value={seoPages[selectedSeoPage].imgCaption}
                               onChange={(e) => updateSeoField('imgCaption', e.target.value)}
@@ -5398,7 +5498,7 @@ export default function AdminPanel({ onNavigate }) {
                           <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Select Schema Template</label>
-                              <select 
+                              <select
                                 value={seoPages[selectedSeoPage].schemaTemplate}
                                 onChange={(e) => updateSeoField('schemaTemplate', e.target.value)}
                                 style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', color: '#475569', outline: 'none', background: '#FFFFFF' }}
@@ -5436,7 +5536,7 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Custom JSON-LD Payload Editor</label>
-                            <textarea 
+                            <textarea
                               rows="8"
                               value={seoPages[selectedSeoPage].schemaPayload}
                               onChange={(e) => updateSeoField('schemaPayload', e.target.value)}
@@ -5452,13 +5552,13 @@ export default function AdminPanel({ onNavigate }) {
                           <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', borderBottom: '1px solid #F1F5F9', paddingBottom: '6px' }}>
                             Sitemap XML & Crawler Settings
                           </h4>
-                          
+
                           <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div>
                               <strong style={{ fontSize: '14px', color: '#1E293B' }}>Include in Sitemap.xml</strong>
                               <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748B' }}>Toggle whether search bots are directed to this page in sitemaps.</p>
                             </div>
-                            <input 
+                            <input
                               type="checkbox"
                               checked={seoPages[selectedSeoPage].sitemapInclude}
                               onChange={(e) => updateSeoField('sitemapInclude', e.target.checked)}
@@ -5472,7 +5572,7 @@ export default function AdminPanel({ onNavigate }) {
                                 <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Sitemap Priority Score</label>
                                 <span style={{ fontSize: '13px', fontWeight: '800', color: '#2563EB' }}>{seoPages[selectedSeoPage].sitemapPriority}</span>
                               </div>
-                              <input 
+                              <input
                                 type="range"
                                 min="0.1"
                                 max="1.0"
@@ -5489,7 +5589,7 @@ export default function AdminPanel({ onNavigate }) {
                             </div>
                             <div>
                               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Change Frequency</label>
-                              <select 
+                              <select
                                 value={seoPages[selectedSeoPage].changeFrequency}
                                 onChange={(e) => updateSeoField('changeFrequency', e.target.value)}
                                 style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13px', color: '#334155', outline: 'none', background: '#FFFFFF' }}
@@ -5526,19 +5626,18 @@ export default function AdminPanel({ onNavigate }) {
                             fill="none"
                             stroke="#10B981"
                             strokeWidth="3.2"
-                            strokeDasharray={`${
-                              100 - 
+                            strokeDasharray={`${100 -
                               (seoPages[selectedSeoPage].title.length > 60 ? 10 : 0) -
                               (seoPages[selectedSeoPage].description.length < 120 ? 10 : 0) -
                               (!seoPages[selectedSeoPage].keywords ? 5 : 0) -
                               (!seoPages[selectedSeoPage].twitterImage ? 5 : 0)
-                            }, 100`}
+                              }, 100`}
                           />
                         </svg>
                         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                           <span style={{ fontSize: '28px', fontWeight: '800', color: '#1E293B', display: 'block' }}>
                             {
-                              100 - 
+                              100 -
                               (seoPages[selectedSeoPage].title.length > 60 ? 10 : 0) -
                               (seoPages[selectedSeoPage].description.length < 120 ? 10 : 0) -
                               (!seoPages[selectedSeoPage].keywords ? 5 : 0) -
@@ -5723,7 +5822,7 @@ export default function AdminPanel({ onNavigate }) {
                         <span className="executive-tagline">CONSOLE OPERATOR</span>
                         <h4 className="executive-name">{currentUser?.username || 'Super Admin'}</h4>
                         <p className="executive-post">
-                          {currentUser?.role === 'super_admin' ? 'Chief Operations Administrator' : 'Systems Control Operator'}<br/>
+                          {currentUser?.role === 'super_admin' ? 'Chief Operations Administrator' : 'Systems Control Operator'}<br />
                           Blue Crescent Engineering Corp.
                         </p>
                         <button className="admin-executive-btn" onClick={() => setActiveTab('/admin/users')}>
@@ -5790,7 +5889,7 @@ export default function AdminPanel({ onNavigate }) {
 
                       return (
                         <div key={cat.id || cat.name} style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                          
+
                           {/* Category Header Bar */}
                           <div style={{ padding: '16px 20px', background: isActiveCat ? '#F8FAFC' : '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -5886,7 +5985,7 @@ export default function AdminPanel({ onNavigate }) {
                                     {categoryServices.map((subSvc, subIdx) => {
                                       const isActiveSub = subSvc.status !== 'Inactive';
                                       let bullets = [];
-                                      try { bullets = typeof subSvc.bullets === 'string' ? JSON.parse(subSvc.bullets) : (subSvc.bullets || []); } catch(e) {}
+                                      try { bullets = typeof subSvc.bullets === 'string' ? JSON.parse(subSvc.bullets) : (subSvc.bullets || []); } catch (e) { }
 
                                       return (
                                         <tr key={subSvc.id || subSvc.title} style={{ opacity: isActiveSub ? 1 : 0.65 }}>
@@ -6008,22 +6107,22 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Leaf size={18} style={{ color: '#00A198' }} /> Page Header & Introduction
                     </h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
-                        <input 
-                          type="text" 
-                          value={gsasForm.page_title || ''} 
+                        <input
+                          type="text"
+                          value={gsasForm.page_title || ''}
                           onChange={e => setGsasForm(p => ({ ...p, page_title: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
-                        <textarea 
-                          rows={3} 
-                          value={gsasForm.introduction || ''} 
+                        <textarea
+                          rows={3}
+                          value={gsasForm.introduction || ''}
                           onChange={e => setGsasForm(p => ({ ...p, introduction: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
@@ -6052,9 +6151,9 @@ export default function AdminPanel({ onNavigate }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
-                            <input 
-                              type="text" 
-                              value={gsasForm[sec.titleKey] || ''} 
+                            <input
+                              type="text"
+                              value={gsasForm[sec.titleKey] || ''}
                               onChange={e => setGsasForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                             />
@@ -6062,9 +6161,9 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
-                            <textarea 
-                              rows={4} 
-                              value={gsasForm[sec.descKey] || ''} 
+                            <textarea
+                              rows={4}
+                              value={gsasForm[sec.descKey] || ''}
                               onChange={e => setGsasForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                             />
@@ -6122,8 +6221,8 @@ export default function AdminPanel({ onNavigate }) {
                                         </span>
                                       </div>
 
-                                      <input 
-                                        type="text" 
+                                      <input
+                                        type="text"
                                         placeholder="Image Alt Text..."
                                         value={imgAlt}
                                         onChange={e => handleUpdateGsasImageAlt(sec.imagesKey, idx, e.target.value)}
@@ -6236,22 +6335,22 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Leaf size={18} style={{ color: '#0057B8' }} /> Page Header & Introduction
                     </h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
-                        <input 
-                          type="text" 
-                          value={leedForm.page_title || ''} 
+                        <input
+                          type="text"
+                          value={leedForm.page_title || ''}
                           onChange={e => setLeedForm(p => ({ ...p, page_title: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
-                        <textarea 
-                          rows={3} 
-                          value={leedForm.introduction || ''} 
+                        <textarea
+                          rows={3}
+                          value={leedForm.introduction || ''}
                           onChange={e => setLeedForm(p => ({ ...p, introduction: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
@@ -6280,9 +6379,9 @@ export default function AdminPanel({ onNavigate }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
-                            <input 
-                              type="text" 
-                              value={leedForm[sec.titleKey] || ''} 
+                            <input
+                              type="text"
+                              value={leedForm[sec.titleKey] || ''}
                               onChange={e => setLeedForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                             />
@@ -6290,9 +6389,9 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
-                            <textarea 
-                              rows={4} 
-                              value={leedForm[sec.descKey] || ''} 
+                            <textarea
+                              rows={4}
+                              value={leedForm[sec.descKey] || ''}
                               onChange={e => setLeedForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                             />
@@ -6317,9 +6416,9 @@ export default function AdminPanel({ onNavigate }) {
                                 gap: '6px'
                               }}>
                                 <Plus size={14} /> + Upload Image
-                                <input 
-                                  type="file" 
-                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/jpg"
                                   disabled={images.length >= 6}
                                   style={{ display: 'none' }}
                                   onChange={e => {
@@ -6350,8 +6449,8 @@ export default function AdminPanel({ onNavigate }) {
                                         </span>
                                       </div>
 
-                                      <input 
-                                        type="text" 
+                                      <input
+                                        type="text"
                                         placeholder="Image Alt Text..."
                                         value={imgAlt}
                                         onChange={e => handleUpdateLeedImageAlt(sec.imagesKey, idx, e.target.value)}
@@ -6464,22 +6563,22 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Zap size={18} style={{ color: '#0057B8' }} /> Page Header & Introduction
                     </h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
-                        <input 
-                          type="text" 
-                          value={energyAuditForm.page_title || ''} 
+                        <input
+                          type="text"
+                          value={energyAuditForm.page_title || ''}
                           onChange={e => setEnergyAuditForm(p => ({ ...p, page_title: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
-                        <textarea 
-                          rows={3} 
-                          value={energyAuditForm.introduction || ''} 
+                        <textarea
+                          rows={3}
+                          value={energyAuditForm.introduction || ''}
                           onChange={e => setEnergyAuditForm(p => ({ ...p, introduction: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
@@ -6507,9 +6606,9 @@ export default function AdminPanel({ onNavigate }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
-                            <input 
-                              type="text" 
-                              value={energyAuditForm[sec.titleKey] || ''} 
+                            <input
+                              type="text"
+                              value={energyAuditForm[sec.titleKey] || ''}
                               onChange={e => setEnergyAuditForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                             />
@@ -6517,9 +6616,9 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
-                            <textarea 
-                              rows={4} 
-                              value={energyAuditForm[sec.descKey] || ''} 
+                            <textarea
+                              rows={4}
+                              value={energyAuditForm[sec.descKey] || ''}
                               onChange={e => setEnergyAuditForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                             />
@@ -6544,9 +6643,9 @@ export default function AdminPanel({ onNavigate }) {
                                 gap: '6px'
                               }}>
                                 <Plus size={14} /> + Upload Image
-                                <input 
-                                  type="file" 
-                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/jpg"
                                   disabled={images.length >= 6}
                                   style={{ display: 'none' }}
                                   onChange={e => {
@@ -6577,8 +6676,8 @@ export default function AdminPanel({ onNavigate }) {
                                         </span>
                                       </div>
 
-                                      <input 
-                                        type="text" 
+                                      <input
+                                        type="text"
                                         placeholder="Image Alt Text..."
                                         value={imgAlt}
                                         onChange={e => handleUpdateEnergyAuditImageAlt(sec.imagesKey, idx, e.target.value)}
@@ -6691,22 +6790,22 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Leaf size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
                     </h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
-                        <input 
-                          type="text" 
-                          value={environmentalForm.page_title || ''} 
+                        <input
+                          type="text"
+                          value={environmentalForm.page_title || ''}
                           onChange={e => setEnvironmentalForm(p => ({ ...p, page_title: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
-                        <textarea 
-                          rows={3} 
-                          value={environmentalForm.introduction || ''} 
+                        <textarea
+                          rows={3}
+                          value={environmentalForm.introduction || ''}
                           onChange={e => setEnvironmentalForm(p => ({ ...p, introduction: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
@@ -6734,9 +6833,9 @@ export default function AdminPanel({ onNavigate }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
-                            <input 
-                              type="text" 
-                              value={environmentalForm[sec.titleKey] || ''} 
+                            <input
+                              type="text"
+                              value={environmentalForm[sec.titleKey] || ''}
                               onChange={e => setEnvironmentalForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                             />
@@ -6744,9 +6843,9 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
-                            <textarea 
-                              rows={4} 
-                              value={environmentalForm[sec.descKey] || ''} 
+                            <textarea
+                              rows={4}
+                              value={environmentalForm[sec.descKey] || ''}
                               onChange={e => setEnvironmentalForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                             />
@@ -6771,9 +6870,9 @@ export default function AdminPanel({ onNavigate }) {
                                 gap: '6px'
                               }}>
                                 <Plus size={14} /> + Upload Image
-                                <input 
-                                  type="file" 
-                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/jpg"
                                   disabled={images.length >= 6}
                                   style={{ display: 'none' }}
                                   onChange={e => {
@@ -6804,8 +6903,8 @@ export default function AdminPanel({ onNavigate }) {
                                         </span>
                                       </div>
 
-                                      <input 
-                                        type="text" 
+                                      <input
+                                        type="text"
                                         placeholder="Image Alt Text..."
                                         value={imgAlt}
                                         onChange={e => handleUpdateEnvironmentalImageAlt(sec.imagesKey, idx, e.target.value)}
@@ -6918,22 +7017,22 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Wrench size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
                     </h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
-                        <input 
-                          type="text" 
-                          value={laserScanningForm.page_title || ''} 
+                        <input
+                          type="text"
+                          value={laserScanningForm.page_title || ''}
                           onChange={e => setLaserScanningForm(p => ({ ...p, page_title: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
-                        <textarea 
-                          rows={3} 
-                          value={laserScanningForm.introduction || ''} 
+                        <textarea
+                          rows={3}
+                          value={laserScanningForm.introduction || ''}
                           onChange={e => setLaserScanningForm(p => ({ ...p, introduction: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
@@ -6963,9 +7062,9 @@ export default function AdminPanel({ onNavigate }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Section Title</label>
-                            <input 
-                              type="text" 
-                              value={laserScanningForm[sec.titleKey] || ''} 
+                            <input
+                              type="text"
+                              value={laserScanningForm[sec.titleKey] || ''}
                               onChange={e => setLaserScanningForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                             />
@@ -6973,9 +7072,9 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
-                            <textarea 
-                              rows={4} 
-                              value={laserScanningForm[sec.descKey] || ''} 
+                            <textarea
+                              rows={4}
+                              value={laserScanningForm[sec.descKey] || ''}
                               onChange={e => setLaserScanningForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                             />
@@ -7000,9 +7099,9 @@ export default function AdminPanel({ onNavigate }) {
                                 gap: '6px'
                               }}>
                                 <Plus size={14} /> + Upload Image
-                                <input 
-                                  type="file" 
-                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/jpg"
                                   disabled={images.length >= 6}
                                   style={{ display: 'none' }}
                                   onChange={e => {
@@ -7033,8 +7132,8 @@ export default function AdminPanel({ onNavigate }) {
                                         </span>
                                       </div>
 
-                                      <input 
-                                        type="text" 
+                                      <input
+                                        type="text"
                                         placeholder="Image Alt Text..."
                                         value={imgAlt}
                                         onChange={e => handleUpdateLaserScanningImageAlt(sec.imagesKey, idx, e.target.value)}
@@ -7147,22 +7246,22 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Wrench size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
                     </h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
-                        <input 
-                          type="text" 
-                          value={cadForm.page_title || ''} 
+                        <input
+                          type="text"
+                          value={cadForm.page_title || ''}
                           onChange={e => setCadForm(p => ({ ...p, page_title: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
-                        <textarea 
-                          rows={3} 
-                          value={cadForm.introduction || ''} 
+                        <textarea
+                          rows={3}
+                          value={cadForm.introduction || ''}
                           onChange={e => setCadForm(p => ({ ...p, introduction: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
@@ -7197,9 +7296,9 @@ export default function AdminPanel({ onNavigate }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Sub-Topic Title</label>
-                            <input 
-                              type="text" 
-                              value={cadForm[sec.titleKey] || ''} 
+                            <input
+                              type="text"
+                              value={cadForm[sec.titleKey] || ''}
                               onChange={e => setCadForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                             />
@@ -7207,9 +7306,9 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
-                            <textarea 
-                              rows={3} 
-                              value={cadForm[sec.descKey] || ''} 
+                            <textarea
+                              rows={3}
+                              value={cadForm[sec.descKey] || ''}
                               onChange={e => setCadForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                             />
@@ -7234,9 +7333,9 @@ export default function AdminPanel({ onNavigate }) {
                                 gap: '6px'
                               }}>
                                 <Plus size={14} /> + Upload Image
-                                <input 
-                                  type="file" 
-                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/jpg"
                                   disabled={images.length >= 6}
                                   style={{ display: 'none' }}
                                   onChange={e => {
@@ -7267,8 +7366,8 @@ export default function AdminPanel({ onNavigate }) {
                                         </span>
                                       </div>
 
-                                      <input 
-                                        type="text" 
+                                      <input
+                                        type="text"
                                         placeholder="Image Alt Text..."
                                         value={imgAlt}
                                         onChange={e => handleUpdateCadImageAlt(sec.imagesKey, idx, e.target.value)}
@@ -7381,22 +7480,22 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <Wrench size={18} style={{ color: '#00A896' }} /> Page Header & Introduction
                     </h3>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Page Title</label>
-                        <input 
-                          type="text" 
-                          value={bimForm.page_title || ''} 
+                        <input
+                          type="text"
+                          value={bimForm.page_title || ''}
                           onChange={e => setBimForm(p => ({ ...p, page_title: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                         />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Introduction Subtitle Paragraph</label>
-                        <textarea 
-                          rows={3} 
-                          value={bimForm.introduction || ''} 
+                        <textarea
+                          rows={3}
+                          value={bimForm.introduction || ''}
                           onChange={e => setBimForm(p => ({ ...p, introduction: e.target.value }))}
                           style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                         />
@@ -7409,7 +7508,7 @@ export default function AdminPanel({ onNavigate }) {
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#063B73' }}>
                       Main Section Category Headers (Building, Infrastructure, 4D, 5D, Rendering, Reporting)
                     </h3>
-                    
+
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
                       {[
                         { titleKey: 'building_main_title', descKey: 'building_main_desc', label: '1. BUILDING SECTION' },
@@ -7421,19 +7520,19 @@ export default function AdminPanel({ onNavigate }) {
                       ].map((item, idx) => (
                         <div key={idx} style={{ background: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
                           <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase', marginBottom: '8px' }}>{item.label}</label>
-                          
-                          <input 
-                            type="text" 
+
+                          <input
+                            type="text"
                             placeholder="Section Title..."
-                            value={bimForm[item.titleKey] || ''} 
+                            value={bimForm[item.titleKey] || ''}
                             onChange={e => setBimForm(p => ({ ...p, [item.titleKey]: e.target.value }))}
                             style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', fontWeight: '700', marginBottom: '8px', boxSizing: 'border-box' }}
                           />
 
-                          <textarea 
-                            rows={2} 
+                          <textarea
+                            rows={2}
                             placeholder="Section Description..."
-                            value={bimForm[item.descKey] || ''} 
+                            value={bimForm[item.descKey] || ''}
                             onChange={e => setBimForm(p => ({ ...p, [item.descKey]: e.target.value }))}
                             style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                           />
@@ -7474,9 +7573,9 @@ export default function AdminPanel({ onNavigate }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Sub-Topic Title</label>
-                            <input 
-                              type="text" 
-                              value={bimForm[sec.titleKey] || ''} 
+                            <input
+                              type="text"
+                              value={bimForm[sec.titleKey] || ''}
                               onChange={e => setBimForm(p => ({ ...p, [sec.titleKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box' }}
                             />
@@ -7484,9 +7583,9 @@ export default function AdminPanel({ onNavigate }) {
 
                           <div>
                             <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '6px' }}>Description Paragraph</label>
-                            <textarea 
-                              rows={3} 
-                              value={bimForm[sec.descKey] || ''} 
+                            <textarea
+                              rows={3}
+                              value={bimForm[sec.descKey] || ''}
                               onChange={e => setBimForm(p => ({ ...p, [sec.descKey]: e.target.value }))}
                               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', boxSizing: 'border-box', fontFamily: 'inherit' }}
                             />
@@ -7511,9 +7610,9 @@ export default function AdminPanel({ onNavigate }) {
                                 gap: '6px'
                               }}>
                                 <Plus size={14} /> + Upload Image
-                                <input 
-                                  type="file" 
-                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/jpg"
                                   disabled={images.length >= 6}
                                   style={{ display: 'none' }}
                                   onChange={e => {
@@ -7544,8 +7643,8 @@ export default function AdminPanel({ onNavigate }) {
                                         </span>
                                       </div>
 
-                                      <input 
-                                        type="text" 
+                                      <input
+                                        type="text"
                                         placeholder="Image Alt Text..."
                                         value={imgAlt}
                                         onChange={e => handleUpdateBimImageAlt(sec.imagesKey, idx, e.target.value)}
@@ -7614,10 +7713,10 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-table-card-header">
                   <h3>Accreditation Certificates</h3>
                   <div className="admin-search-bar">
-                    <input 
-                      type="text" 
-                      className="admin-input" 
-                      placeholder="Search certs..." 
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search certs..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -7672,10 +7771,10 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-table-card-header">
                   <h3>Client Reviews & Testimonials</h3>
                   <div className="admin-search-bar">
-                    <input 
-                      type="text" 
-                      className="admin-input" 
-                      placeholder="Search reviews..." 
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search reviews..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -7713,8 +7812,8 @@ export default function AdminPanel({ onNavigate }) {
                           <td>
                             <div className="admin-actions">
                               {item.status === 'pending' && (
-                                <button 
-                                  className="admin-action-btn approve" 
+                                <button
+                                  className="admin-action-btn approve"
                                   title="Approve Testimonial"
                                   onClick={() => handleApproveTestimonial(item)}
                                 >
@@ -7739,10 +7838,10 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-table-card-header">
                   <h3>Navigation Menus</h3>
                   <div className="admin-search-bar">
-                    <input 
-                      type="text" 
-                      className="admin-input" 
-                      placeholder="Search menus..." 
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search menus..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -7763,28 +7862,28 @@ export default function AdminPanel({ onNavigate }) {
                     </thead>
                     <tbody>
                       {filterList(menus, ['name', 'url']).map((item, idx) => {
-                      const parent = menus.find(m => m.id === item.parent_id);
-                      return (
-                        <tr key={item.id}>
-                          <td>{idx + 1}</td>
-                          <td style={{ fontWeight: '600' }}>{item.name}</td>
-                          <td><code>{item.url}</code></td>
-                          <td>{parent ? parent.name : <em style={{ color: 'var(--text-muted)' }}>Root Menu</em>}</td>
-                          <td>{item.order_num}</td>
-                          <td>
-                            <div className="admin-actions">
-                              <button className="admin-action-btn" onClick={() => startEdit('menus', item)}><Edit size={13} /></button>
-                              <button className="admin-action-btn delete" onClick={() => handleDelete('menus', item.id)}><Trash size={13} /></button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        const parent = menus.find(m => m.id === item.parent_id);
+                        return (
+                          <tr key={item.id}>
+                            <td>{idx + 1}</td>
+                            <td style={{ fontWeight: '600' }}>{item.name}</td>
+                            <td><code>{item.url}</code></td>
+                            <td>{parent ? parent.name : <em style={{ color: 'var(--text-muted)' }}>Root Menu</em>}</td>
+                            <td>{item.order_num}</td>
+                            <td>
+                              <div className="admin-actions">
+                                <button className="admin-action-btn" onClick={() => startEdit('menus', item)}><Edit size={13} /></button>
+                                <button className="admin-action-btn delete" onClick={() => handleDelete('menus', item.id)}><Trash size={13} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
             {/* FOOTER SETTINGS (SUPERADMIN EXCLUSIVE) */}
             {activeTab === '/admin/settings/footer' && currentUser?.role === 'super_admin' && footer && (
@@ -7796,8 +7895,8 @@ export default function AdminPanel({ onNavigate }) {
                 <form onSubmit={handleFooterSave} className="admin-form-grid" style={{ padding: '0 10px' }}>
                   <div className="admin-form-group admin-span-2">
                     <label>Footer Brand Bio Summary</label>
-                    <textarea 
-                      rows="3" 
+                    <textarea
+                      rows="3"
                       className="admin-input"
                       value={footerForm.brand_desc}
                       onChange={(e) => setFooterForm({ ...footerForm, brand_desc: e.target.value })}
@@ -7806,8 +7905,8 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div className="admin-form-group">
                     <label>Office physical Address</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="admin-input"
                       value={footerForm.address}
                       onChange={(e) => setFooterForm({ ...footerForm, address: e.target.value })}
@@ -7816,8 +7915,8 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div className="admin-form-group">
                     <label>Support Email Address</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       className="admin-input"
                       value={footerForm.email}
                       onChange={(e) => setFooterForm({ ...footerForm, email: e.target.value })}
@@ -7826,8 +7925,8 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div className="admin-form-group">
                     <label>Office Phone Line</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="admin-input"
                       value={footerForm.phone}
                       onChange={(e) => setFooterForm({ ...footerForm, phone: e.target.value })}
@@ -7836,8 +7935,8 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div className="admin-form-group">
                     <label>Fax Contact</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="admin-input"
                       value={footerForm.fax}
                       onChange={(e) => setFooterForm({ ...footerForm, fax: e.target.value })}
@@ -7846,8 +7945,8 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div className="admin-form-group">
                     <label>Corporate website URL</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="admin-input"
                       value={footerForm.website}
                       onChange={(e) => setFooterForm({ ...footerForm, website: e.target.value })}
@@ -7856,8 +7955,8 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div className="admin-form-group">
                     <label>Facebook Page Link</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="admin-input"
                       value={footerForm.facebook_url}
                       onChange={(e) => setFooterForm({ ...footerForm, facebook_url: e.target.value })}
@@ -7866,8 +7965,8 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div className="admin-form-group admin-span-2">
                     <label>Copyright text</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="admin-input"
                       value={footerForm.copyright}
                       onChange={(e) => setFooterForm({ ...footerForm, copyright: e.target.value })}
@@ -7889,10 +7988,10 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-table-card-header">
                   <h3>Admin Accounts</h3>
                   <div className="admin-search-bar">
-                    <input 
-                      type="text" 
-                      className="admin-input" 
-                      placeholder="Search accounts..." 
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search accounts..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -7924,8 +8023,8 @@ export default function AdminPanel({ onNavigate }) {
                           <td>
                             <div className="admin-actions">
                               <button className="admin-action-btn" onClick={() => startEdit('users', item)}><Edit size={13} /></button>
-                              <button 
-                                className="admin-action-btn delete" 
+                              <button
+                                className="admin-action-btn delete"
                                 onClick={() => handleDelete('users', item.id)}
                                 disabled={item.username === currentUser?.username} // Cannot delete self
                               >
@@ -7947,10 +8046,10 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-table-card-header">
                   <h3>Client Contact Inquiries</h3>
                   <div className="admin-search-bar">
-                    <input 
-                      type="text" 
-                      className="admin-input" 
-                      placeholder="Search inquiries..." 
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search inquiries..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -8005,10 +8104,10 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-table-card-header">
                   <h3>Newsletter Subscribers</h3>
                   <div className="admin-search-bar">
-                    <input 
-                      type="text" 
-                      className="admin-input" 
-                      placeholder="Search emails..." 
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Search emails..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -8062,8 +8161,8 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-form-grid" style={{ padding: '10px' }}>
                   <div className="admin-form-group admin-span-2">
                     <label>Vision Statement</label>
-                    <textarea 
-                      rows="2" 
+                    <textarea
+                      rows="2"
                       className="admin-input"
                       value={aboutSettings.vision}
                       onChange={(e) => setAboutSettings({ ...aboutSettings, vision: e.target.value })}
@@ -8071,8 +8170,8 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                   <div className="admin-form-group admin-span-2">
                     <label>Mission Statement</label>
-                    <textarea 
-                      rows="2" 
+                    <textarea
+                      rows="2"
                       className="admin-input"
                       value={aboutSettings.mission}
                       onChange={(e) => setAboutSettings({ ...aboutSettings, mission: e.target.value })}
@@ -8080,8 +8179,8 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                   <div className="admin-form-group admin-span-2">
                     <label>Company History Introduction</label>
-                    <textarea 
-                      rows="3" 
+                    <textarea
+                      rows="3"
                       className="admin-input"
                       value={aboutSettings.history}
                       onChange={(e) => setAboutSettings({ ...aboutSettings, history: e.target.value })}
@@ -8107,14 +8206,31 @@ export default function AdminPanel({ onNavigate }) {
                   marginBottom: '28px'
                 }}>
                   {[
-                    { name: 'BIM Projects', label: 'BIM Projects', icon: Layers, bg: '#F0FDFA', color: '#0D9488', border: '#99F6E4' },
-                    { name: 'CAD Projects', label: 'CAD Projects', icon: FileCode, bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
-                    { name: 'Laser Scanning Projects', label: 'Laser Scanning', icon: Radio, bg: '#FFF7ED', color: '#EA580C', border: '#FFEDD5' },
-                    { name: 'Digital Twin Projects', label: 'Digital Twin', icon: Cpu, bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
-                    { name: 'Sustainability Projects', label: 'Sustainability', icon: Leaf, bg: '#ECFDF5', color: '#059669', border: '#A7F3D0' }
+                    { name: 'Engineering Services', label: 'Engineering Services', icon: Layers, bg: '#F0FDFA', color: '#0D9488', border: '#99F6E4' },
+                    { name: 'Sustainability Services', label: 'Sustainability Services', icon: Leaf, bg: '#ECFDF5', color: '#059669', border: '#A7F3D0' },
+                    { name: 'Digital Twin', label: 'Digital Twin', icon: Cpu, bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
+                    { name: 'Digital Construction Technology', label: 'Digital Construction Tech', icon: Radio, bg: '#FFF7ED', color: '#EA580C', border: '#FFEDD5' }
                   ].map(item => {
                     const IconComp = item.icon;
-                    const count = projects.filter(p => (p.division_type || p.category) === item.name).length;
+                    const count = projects.filter(p => {
+                      const pDiv = (p.division_type || p.category || '').toLowerCase();
+                      const k = item.name.toLowerCase();
+                      if (k.includes('engineering')) {
+                        return pDiv.includes('engineering') || pDiv.includes('bim') || pDiv.includes('cad') || pDiv.includes('laser');
+                      }
+                      if (k.includes('sustainability')) {
+                        return pDiv.includes('sustainab') || pDiv.includes('gsas') || pDiv.includes('leed') || pDiv.includes('energy') || pDiv.includes('environment');
+                      }
+                      if (k.includes('twin')) {
+                        return pDiv.includes('twin') || pDiv.includes('asset') || pDiv.includes('system');
+                      }
+                      if (k.includes('construction')) {
+                        return pDiv.includes('construction') || pDiv.includes('360') || pDiv.includes('ar') || pDiv.includes('collaboration') || pDiv.includes('technology');
+                      }
+                      const pClean = pDiv.replace(/[^a-z0-9]/g, '');
+                      const itemClean = k.replace(/[^a-z0-9]/g, '');
+                      return pClean.includes(itemClean) || itemClean.includes(pClean);
+                    }).length;
                     return (
                       <div
                         key={item.name}
@@ -8338,7 +8454,7 @@ export default function AdminPanel({ onNavigate }) {
                       {partners.length === 0 && (
                         <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No partners yet. Click "Add Partner" to get started.</td></tr>
                       )}
-                  </tbody>
+                    </tbody>
                   </table>
                 </div>
               </div>
@@ -8366,7 +8482,7 @@ export default function AdminPanel({ onNavigate }) {
                     {filterList(mediaItems.filter(m => m.type === 'gallery'), ['title']).map((item) => (
                       <div key={item.id} style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--card-bg)' }}>
                         <div style={{ position: 'relative', paddingBottom: '70%', overflow: 'hidden', background: '#0F172A' }}>
-                          <img src={item.url} alt={item.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display='none'; }} />
+                          <img src={item.url} alt={item.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
                         </div>
                         <div style={{ padding: '8px' }}>
                           <span className="admin-badge" style={{ fontSize: '9px', marginBottom: '4px', display: 'inline-block' }}>{item.category || 'Site'}</span>
@@ -8431,6 +8547,209 @@ export default function AdminPanel({ onNavigate }) {
               </div>
             )}
 
+            {/* OUR TEAM WORKSPACE */}
+            {activeTab === '/admin/team' && (
+              <div>
+                {/* Stats strip for Team Members */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '16px',
+                  marginBottom: '28px'
+                }}>
+                  <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '20px 22px', border: '1px solid #BFDBFE', boxShadow: '0 4px 16px rgba(6, 59, 115, 0.04)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '700', color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Team</span>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D4ED8' }}><Users size={18} /></div>
+                    </div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1E293B', fontFamily: 'Space Grotesk, sans-serif' }}>{(Array.isArray(teamMembers) ? teamMembers : []).length}</div>
+                    <span style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>Active Professionals</span>
+                  </div>
+
+                  <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '20px 22px', border: '1px solid #BBF7D0', boxShadow: '0 4px 16px rgba(6, 59, 115, 0.04)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '700', color: '#15803D', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Leadership & Leads</span>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#15803D' }}><Award size={18} /></div>
+                    </div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1E293B', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {(Array.isArray(teamMembers) ? teamMembers : []).filter(m => (m.role || '').toLowerCase().match(/lead|director|head|manager|chief|founder/)).length}
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>Executive & Department Heads</span>
+                  </div>
+
+                  <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '20px 22px', border: '1px solid #DDD6FE', boxShadow: '0 4px 16px rgba(6, 59, 115, 0.04)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '700', color: '#6D28D9', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Technical Experts</span>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6D28D9' }}><Briefcase size={18} /></div>
+                    </div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1E293B', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {(Array.isArray(teamMembers) ? teamMembers : []).filter(m => (m.role || '').toLowerCase().match(/engineer|specialist|bim|cad|consultant/)).length}
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>Engineers & BIM Specialists</span>
+                  </div>
+                </div>
+
+                {/* Team Members Header Bar */}
+                <div className="admin-table-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#063B73' }}>Our Team Members</h3>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748B' }}>Manage leadership, engineers, and technical staff profiles displayed on the website.</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="admin-search-bar" style={{ margin: 0 }}>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="Search team members..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid of Team Member Cards (Single Line Layout) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+                  {filterList((Array.isArray(teamMembers) ? teamMembers : []), ['name', 'role', 'department']).map((member, idx) => (
+                    <div
+                      key={member.id || idx}
+                      style={{
+                        background: '#FFFFFF',
+                        borderRadius: '14px',
+                        border: '1px solid #E2E8F0',
+                        padding: '14px 18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '14px',
+                        boxShadow: '0 2px 8px rgba(6, 59, 115, 0.04)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#BFDBFE';
+                        e.currentTarget.style.boxShadow = '0 6px 18px rgba(6, 59, 115, 0.08)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#E2E8F0';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(6, 59, 115, 0.04)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          width: '52px',
+                          height: '52px',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          background: 'linear-gradient(135deg, #071C3B, #00A198)',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#FFFFFF',
+                          fontWeight: '800',
+                          fontSize: '20px',
+                          boxShadow: '0 3px 8px rgba(0, 161, 152, 0.2)'
+                        }}>
+                          {member.image ? (
+                            <img src={member.image} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            (member.name ? member.name.charAt(0) : 'T')
+                          )}
+                        </div>
+
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <h4 style={{ margin: '0 0 2px 0', fontSize: '15px', fontWeight: '800', color: '#063B73', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {member.name}
+                          </h4>
+                          <span style={{ fontSize: '12.5px', color: '#087CFF', fontWeight: '700', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {member.role || 'Team Member'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Single Line Action Icon Buttons */}
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                        <button
+                          title="Edit Team Member"
+                          onClick={() => openCrudModal('teamMember', idx, member)}
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '10px',
+                            background: '#EFF6FF',
+                            color: '#2563EB',
+                            border: '1px solid #DBEAFE',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#2563EB';
+                            e.currentTarget.style.color = '#FFFFFF';
+                            e.currentTarget.style.borderColor = '#2563EB';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#EFF6FF';
+                            e.currentTarget.style.color = '#2563EB';
+                            e.currentTarget.style.borderColor = '#DBEAFE';
+                          }}
+                        >
+                          <Edit size={16} />
+                        </button>
+
+                        <button
+                          title="Delete Team Member"
+                          onClick={async () => {
+                            if (!confirm(`Delete ${member.name}?`)) return;
+                            try {
+                              const res = await fetch(`/api/team/${member.id}`, { method: 'DELETE' });
+                              if (res.ok) {
+                                setTeamMembers(prev => (Array.isArray(prev) ? prev : []).filter(m => m.id !== member.id));
+                              }
+                            } catch (e) { }
+                          }}
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '10px',
+                            background: '#FEF2F2',
+                            color: '#EF4444',
+                            border: '1px solid #FEE2E2',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#EF4444';
+                            e.currentTarget.style.color = '#FFFFFF';
+                            e.currentTarget.style.borderColor = '#EF4444';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#FEF2F2';
+                            e.currentTarget.style.color = '#EF4444';
+                            e.currentTarget.style.borderColor = '#FEE2E2';
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {(Array.isArray(teamMembers) ? teamMembers : []).length === 0 && (
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: '16px', color: '#64748B' }}>
+                      No team members added yet. Click "+ Add Team Member" to create one.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* CATEGORY MANAGEMENT (MOCK) */}
             {activeTab === 'categories' && (
               <div>
@@ -8490,45 +8809,45 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-form-grid" style={{ padding: '10px' }}>
                   <div className="admin-form-group">
                     <label>Website Title</label>
-                    <input 
-                      type="text" 
-                      className="admin-input" 
+                    <input
+                      type="text"
+                      className="admin-input"
                       value={generalSettings.siteTitle}
                       onChange={(e) => setGeneralSettings({ ...generalSettings, siteTitle: e.target.value })}
                     />
                   </div>
                   <div className="admin-form-group">
                     <label>Main Corporate Email</label>
-                    <input 
-                      type="email" 
-                      className="admin-input" 
+                    <input
+                      type="email"
+                      className="admin-input"
                       value={generalSettings.companyEmail}
                       onChange={(e) => setGeneralSettings({ ...generalSettings, companyEmail: e.target.value })}
                     />
                   </div>
                   <div className="admin-form-group">
                     <label>Contact Phone</label>
-                    <input 
-                      type="text" 
-                      className="admin-input" 
+                    <input
+                      type="text"
+                      className="admin-input"
                       value={generalSettings.companyPhone}
                       onChange={(e) => setGeneralSettings({ ...generalSettings, companyPhone: e.target.value })}
                     />
                   </div>
                   <div className="admin-form-group">
                     <label>Contact Fax</label>
-                    <input 
-                      type="text" 
-                      className="admin-input" 
+                    <input
+                      type="text"
+                      className="admin-input"
                       value={generalSettings.companyFax}
                       onChange={(e) => setGeneralSettings({ ...generalSettings, companyFax: e.target.value })}
                     />
                   </div>
                   <div className="admin-form-group admin-span-2">
                     <label>Office physical Address</label>
-                    <input 
-                      type="text" 
-                      className="admin-input" 
+                    <input
+                      type="text"
+                      className="admin-input"
                       value={generalSettings.officeAddress}
                       onChange={(e) => setGeneralSettings({ ...generalSettings, officeAddress: e.target.value })}
                     />
@@ -8554,12 +8873,12 @@ export default function AdminPanel({ onNavigate }) {
                   <p style={{ fontSize: '13px', color: '#78350F', lineHeight: '1.6', margin: '0 0 20px 0' }}>
                     It is highly recommended to perform SQL database backups regularly before running schema adjustments. Clicking below compiles current configurations into a text SQL download sheet.
                   </p>
-                  <button 
-                    className="admin-add-btn" 
+                  <button
+                    className="admin-add-btn"
                     onClick={() => {
                       // Simulates schema backup download
                       const element = document.createElement("a");
-                      const file = new Blob(["-- BLUE CRESCENT DATABASE BACKUP SCHEMA\n-- Generated in Admin Panel\n\nSELECT * FROM users;\nSELECT * FROM hero_slides;\nSELECT * FROM services;"], {type: 'text/plain'});
+                      const file = new Blob(["-- BLUE CRESCENT DATABASE BACKUP SCHEMA\n-- Generated in Admin Panel\n\nSELECT * FROM users;\nSELECT * FROM hero_slides;\nSELECT * FROM services;"], { type: 'text/plain' });
                       element.href = URL.createObjectURL(file);
                       element.download = "blue_crescent_backup.sql";
                       document.body.appendChild(element);
@@ -8591,26 +8910,26 @@ export default function AdminPanel({ onNavigate }) {
             </div>
 
             <div className="admin-modal-body">
-              
+
               {/* hero form */}
               {activeTab === 'hero' && (
                 <div>
                   <div className="admin-form-group">
                     <label>Slide Title Header</label>
-                    <input 
-                      type="text" 
-                      className="admin-input" 
+                    <input
+                      type="text"
+                      className="admin-input"
                       placeholder="e.g. Engineering Excellence, Building a Better Tomorrow."
                       value={heroForm.title}
                       onChange={(e) => setHeroForm({ ...heroForm, title: e.target.value })}
                     />
                   </div>
-                  
+
                   <div className="admin-form-group">
                     <label>Subtitle description</label>
-                    <textarea 
+                    <textarea
                       rows="3"
-                      className="admin-input" 
+                      className="admin-input"
                       placeholder="Enter subtitle content..."
                       value={heroForm.subtitle}
                       onChange={(e) => setHeroForm({ ...heroForm, subtitle: e.target.value })}
@@ -8620,9 +8939,9 @@ export default function AdminPanel({ onNavigate }) {
                   <div className="admin-form-grid">
                     <div className="admin-form-group">
                       <label>Primary Button label</label>
-                      <input 
-                        type="text" 
-                        className="admin-input" 
+                      <input
+                        type="text"
+                        className="admin-input"
                         placeholder="e.g. Explore Our Services"
                         value={heroForm.btn1_text}
                         onChange={(e) => setHeroForm({ ...heroForm, btn1_text: e.target.value })}
@@ -8630,9 +8949,9 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                     <div className="admin-form-group">
                       <label>Secondary Button label</label>
-                      <input 
-                        type="text" 
-                        className="admin-input" 
+                      <input
+                        type="text"
+                        className="admin-input"
                         placeholder="e.g. Get a Consultation"
                         value={heroForm.btn2_text}
                         onChange={(e) => setHeroForm({ ...heroForm, btn2_text: e.target.value })}
@@ -8643,7 +8962,7 @@ export default function AdminPanel({ onNavigate }) {
                   <div className="admin-form-grid">
                     <div className="admin-form-group">
                       <label>Status</label>
-                      <select 
+                      <select
                         className="admin-input"
                         value={heroForm.status}
                         onChange={(e) => setHeroForm({ ...heroForm, status: e.target.value })}
@@ -8655,9 +8974,9 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                     <div className="admin-form-group">
                       <label>Display Order index</label>
-                      <input 
-                        type="number" 
-                        className="admin-input" 
+                      <input
+                        type="number"
+                        className="admin-input"
                         value={heroForm.order_num}
                         onChange={(e) => setHeroForm({ ...heroForm, order_num: parseInt(e.target.value) || 1 })}
                       />
@@ -8925,11 +9244,13 @@ export default function AdminPanel({ onNavigate }) {
                         value={projectForm.division_type}
                         onChange={e => setProjectForm(prev => ({ ...prev, division_type: e.target.value }))}
                       >
-                        <option value="BIM Projects">BIM Projects</option>
-                        <option value="CAD Projects">CAD Projects</option>
-                        <option value="Laser Scanning Projects">Laser Scanning Projects</option>
-                        <option value="Digital Twin Projects">Digital Twin Projects</option>
-                        <option value="Sustainability Projects">Sustainability Projects</option>
+                        {!['Engineering Services', 'Sustainability Services', 'Digital Twin', 'Digital Construction Technology'].includes(projectForm.division_type) && projectForm.division_type && (
+                          <option value={projectForm.division_type}>{projectForm.division_type}</option>
+                        )}
+                        <option value="Engineering Services">Engineering Services</option>
+                        <option value="Sustainability Services">Sustainability Services</option>
+                        <option value="Digital Twin">Digital Twin</option>
+                        <option value="Digital Construction Technology">Digital Construction Technology</option>
                       </select>
                     </div>
 
@@ -9713,7 +10034,7 @@ export default function AdminPanel({ onNavigate }) {
                   {crudModal.type === 'teamMember' && (crudModal.editIndex !== null ? 'Edit Team Member Profile' : 'Add New Team Member')}
                 </h3>
               </div>
-              <button 
+              <button
                 onClick={closeCrudModal}
                 style={{
                   background: 'rgba(255, 255, 255, 0.15)',
@@ -9738,12 +10059,12 @@ export default function AdminPanel({ onNavigate }) {
               {crudModal.type === 'discipline' && (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Discipline Name *</label>
-                  <input 
-                    type="text" 
-                    value={crudModal.data.name || ''} 
+                  <input
+                    type="text"
+                    value={crudModal.data.name || ''}
                     onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
                     placeholder="e.g. BIM Modeling & Coordination"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
                   />
                 </div>
               )}
@@ -9751,12 +10072,12 @@ export default function AdminPanel({ onNavigate }) {
               {(crudModal.type === 'digitalTwin' || crudModal.type === 'remotePillar') && (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Card Title *</label>
-                  <input 
-                    type="text" 
-                    value={crudModal.data.title || ''} 
+                  <input
+                    type="text"
+                    value={crudModal.data.title || ''}
                     onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, title: e.target.value } }))}
                     placeholder="e.g. Common Data Environment"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
                   />
                 </div>
               )}
@@ -9764,12 +10085,12 @@ export default function AdminPanel({ onNavigate }) {
               {crudModal.type === 'capabilityChip' && (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Capability Chip Name *</label>
-                  <input 
-                    type="text" 
-                    value={crudModal.data.name || ''} 
+                  <input
+                    type="text"
+                    value={crudModal.data.name || ''}
                     onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
                     placeholder="e.g. GSAS or LEED"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
                   />
                 </div>
               )}
@@ -9778,24 +10099,41 @@ export default function AdminPanel({ onNavigate }) {
                 <>
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Team Member Name *</label>
-                    <input 
-                      type="text" 
-                      value={crudModal.data.name || ''} 
+                    <input
+                      type="text"
+                      value={crudModal.data.name || ''}
                       onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
                       placeholder="e.g. Praveen Kumar"
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
                     />
                   </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Role / Designation *</label>
-                    <input 
-                      type="text" 
-                      value={crudModal.data.role || ''} 
+                    <input
+                      type="text"
+                      value={crudModal.data.role || ''}
                       onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, role: e.target.value } }))}
                       placeholder="e.g. Technical Director"
-                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
                     />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Department / Service Tag</label>
+                    <select
+                      value={crudModal.data.department || ''}
+                      onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, department: e.target.value } }))}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', background: '#FFFFFF' }}
+                    >
+                      <option value="">-- Select Department (Optional) --</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="BIM & CAD">BIM & CAD</option>
+                      <option value="Digital Twin">Digital Twin</option>
+                      <option value="Sustainability">Sustainability</option>
+                      <option value="Digital Construction Technology">Digital Construction Technology</option>
+                      <option value="Management">Management</option>
+                    </select>
                   </div>
 
                   <div>
@@ -9808,9 +10146,9 @@ export default function AdminPanel({ onNavigate }) {
                           (crudModal.data.name ? crudModal.data.name.charAt(0) : 'T')
                         )}
                       </div>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
+                      <input
+                        type="file"
+                        accept="image/*"
                         onChange={e => {
                           const file = e.target.files[0];
                           if (file) {
@@ -9820,8 +10158,8 @@ export default function AdminPanel({ onNavigate }) {
                             };
                             reader.readAsDataURL(file);
                           }
-                        }} 
-                        style={{ fontSize: '13px' }} 
+                        }}
+                        style={{ fontSize: '13px' }}
                       />
                     </div>
                   </div>
@@ -9832,16 +10170,16 @@ export default function AdminPanel({ onNavigate }) {
               {crudModal.type !== 'teamMember' && (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Card Display Icon</label>
-                  <select 
-                    value={crudModal.data.icon || ''} 
+                  <select
+                    value={crudModal.data.icon || ''}
                     onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, icon: e.target.value } }))}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', background: '#FFFFFF' }}
                   >
                     {[
-                      'Building2', 'Layers', 'Radio', 'Wrench', 'Wind', 'Volume2', 'Droplet', 
-                      'Activity', 'Zap', 'Leaf', 'Users', 'Cpu', 'Award', 'ShieldCheck', 
-                      'BarChart3', 'SearchCheck', 'FileCheck2', 'TreePine', 'Cloud', 'Monitor', 
-                      'Settings', 'TrendingUp', 'Share2', 'ClipboardCheck', 'Heart', 'RefreshCw', 
+                      'Building2', 'Layers', 'Radio', 'Wrench', 'Wind', 'Volume2', 'Droplet',
+                      'Activity', 'Zap', 'Leaf', 'Users', 'Cpu', 'Award', 'ShieldCheck',
+                      'BarChart3', 'SearchCheck', 'FileCheck2', 'TreePine', 'Cloud', 'Monitor',
+                      'Settings', 'TrendingUp', 'Share2', 'ClipboardCheck', 'Heart', 'RefreshCw',
                       'Eye', 'Camera', 'Bot'
                     ].map(i => (
                       <option key={i} value={i}>{i}</option>
@@ -9854,12 +10192,12 @@ export default function AdminPanel({ onNavigate }) {
               {(crudModal.type === 'capabilityChip' || crudModal.type === 'remotePillar') && (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Service Route / Slug</label>
-                  <input 
-                    type="text" 
-                    value={crudModal.data.slug || ''} 
+                  <input
+                    type="text"
+                    value={crudModal.data.slug || ''}
                     onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, slug: e.target.value } }))}
                     placeholder="e.g. Sustainability Services or Construction Technology"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }} 
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
                   />
                 </div>
               )}
@@ -9868,12 +10206,12 @@ export default function AdminPanel({ onNavigate }) {
               {(crudModal.type === 'digitalTwin' || crudModal.type === 'remotePillar' || crudModal.type === 'capabilityChip') && (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Card Description</label>
-                  <textarea 
-                    rows={3} 
-                    value={crudModal.data.desc || ''} 
+                  <textarea
+                    rows={3}
+                    value={crudModal.data.desc || ''}
                     onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, desc: e.target.value } }))}
                     placeholder="Write a short summary of this card..."
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13.5px', outline: 'none', resize: 'vertical' }} 
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13.5px', outline: 'none', resize: 'vertical' }}
                   />
                 </div>
               )}
@@ -9930,7 +10268,7 @@ export default function AdminPanel({ onNavigate }) {
 
       {/* MAINTENANCE MODE CONFIRMATION MODAL (Requirements 3 & 4) */}
       {maintenanceModalOpen && (
-        <div 
+        <div
           style={{
             position: 'fixed',
             top: 0,
@@ -9947,7 +10285,7 @@ export default function AdminPanel({ onNavigate }) {
           }}
           onClick={() => setMaintenanceModalOpen(false)}
         >
-          <div 
+          <div
             style={{
               background: '#FFFFFF',
               borderRadius: '16px',
@@ -9987,8 +10325,8 @@ export default function AdminPanel({ onNavigate }) {
             </p>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setMaintenanceModalOpen(false)}
                 style={{
                   background: '#FFFFFF',
@@ -10004,8 +10342,8 @@ export default function AdminPanel({ onNavigate }) {
                 CANCEL
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleConfirmMaintenanceChange}
                 style={{
                   background: targetMaintenanceState ? '#D97706' : '#0057B8',

@@ -304,13 +304,17 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                               >
                                 <div 
                                   className="category-title"
-                                  style={{ cursor: 'pointer' }}
+                                  style={{ cursor: hasSubItems ? 'default' : 'pointer' }}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setServicesDropdownOpen(false);
-                                    setActiveCategory(null);
-                                    if (onNavigate) onNavigate('Services', cat.slug || cat.name);
+                                    if (hasSubItems) {
+                                      setActiveCategory(activeCategory === cat.name ? null : cat.name);
+                                    } else {
+                                      setServicesDropdownOpen(false);
+                                      setActiveCategory(null);
+                                      if (onNavigate) onNavigate('Services', cat.slug || cat.name);
+                                    }
                                   }}
                                 >
                                   {cat.name} {hasSubItems && <span className="sub-arrow">▸</span>}

@@ -174,7 +174,13 @@ export default function ServicesList({ onNavigate }) {
 
   const handleExplore = (slug) => {
     if (onNavigate) {
-      onNavigate('Services', slug);
+      if (slug === 'engineering-services') {
+        onNavigate('Services', 'bim');
+      } else if (slug === 'sustainability-services') {
+        onNavigate('Services', 'gsas');
+      } else {
+        onNavigate('Services', slug);
+      }
     }
   };
 
@@ -223,7 +229,7 @@ export default function ServicesList({ onNavigate }) {
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
-                    cursor: 'pointer',
+                    cursor: 'default',
                     position: 'relative',
                     overflow: 'hidden',
                     boxShadow: '0 4px 20px rgba(6, 59, 115, 0.05)',
@@ -237,7 +243,6 @@ export default function ServicesList({ onNavigate }) {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 59, 115, 0.05)';
                   }}
-                  onClick={() => handleExplore(cat.slug)}
                 >
                   {/* Decorative Background Accent Shape */}
                   <div

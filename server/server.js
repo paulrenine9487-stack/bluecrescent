@@ -2589,7 +2589,7 @@ app.post('/api/projects', async (req, res) => {
   if (!name) return res.status(400).json({ error: 'Project name is required.' });
 
   const finalSlug = slug ? safeSlug(slug) : safeSlug(name);
-  const divType = division_type || category || 'BIM Projects';
+  const divType = division_type || category || 'Engineering Services';
   const servicesJson = typeof services === 'string' ? services : JSON.stringify(services || []);
   const disciplinesJson = typeof disciplines === 'string' ? disciplines : JSON.stringify(disciplines || []);
   const deliverablesJson = typeof deliverables === 'string' ? deliverables : JSON.stringify(deliverables || []);
@@ -2656,7 +2656,7 @@ app.put('/api/projects/:id', async (req, res) => {
   } = req.body;
 
   const finalSlug = slug ? safeSlug(slug) : (name ? safeSlug(name) : 'project');
-  const divType = division_type || category || 'BIM Projects';
+  const divType = division_type || category || 'Engineering Services';
   const servicesJson = typeof services === 'string' ? services : JSON.stringify(services || []);
   const disciplinesJson = typeof disciplines === 'string' ? disciplines : JSON.stringify(disciplines || []);
   const deliverablesJson = typeof deliverables === 'string' ? deliverables : JSON.stringify(deliverables || []);

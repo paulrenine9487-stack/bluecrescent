@@ -349,7 +349,7 @@ body,
 .hs-right {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 14px;
   flex-shrink: 0;
   animation: hsSlideLeft 0.9s 0.2s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
@@ -370,8 +370,10 @@ body,
   display: flex;
   align-items: center;
   gap: 16px;
-  width: 240px;
-  padding: 16px 20px;
+  width: 250px;
+  height: 92px;
+  box-sizing: border-box;
+  padding: 12px 18px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.15);

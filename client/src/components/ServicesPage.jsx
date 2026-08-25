@@ -459,8 +459,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
                       {getCategoryIcon(catName)}
                       <h3 
                         className="service-category-title" 
-                        style={{ fontSize: '18px', color: '#0B3D91', marginBottom: '12px', cursor: 'pointer' }}
-                        onClick={() => onNavigate('Services', catName)}
+                        style={{ fontSize: '18px', color: '#0B3D91', marginBottom: '12px', cursor: 'default' }}
                       >
                         {catName}
                       </h3>
