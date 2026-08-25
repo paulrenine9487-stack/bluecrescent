@@ -60,8 +60,14 @@ export default function AdminPanel({ onNavigate }) {
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
 
-  // Sidebar tab state
-  const [activeTab, setActiveTab] = useState('/admin/dashboard');
+  // Sidebar tab state (initialized from current URL pathname if on an admin route)
+  const [activeTab, setActiveTab] = useState(() => {
+    const path = window.location.pathname;
+    if (path && path.startsWith('/admin/') && path !== '/admin/' && path !== '/admin') {
+      return path;
+    }
+    return '/admin/dashboard';
+  });
 
   // Sidebar collapsible sections state
   const [sectionsExpanded, setSectionsExpanded] = useState({
@@ -1813,7 +1819,24 @@ export default function AdminPanel({ onNavigate }) {
   const handleNavClick = (tabRoute) => {
     setActiveTab(tabRoute);
     setIsMobileSidebarOpen(false);
+    if (window.location.pathname !== tabRoute) {
+      window.history.pushState({}, '', tabRoute);
+    }
   };
+
+  // Keep active tab in sync with browser forward/back buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path && path.startsWith('/admin/') && path !== '/admin/' && path !== '/admin') {
+        setActiveTab(path);
+      } else if (path === '/admin' || path === '/manager') {
+        setActiveTab('/admin/dashboard');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Pagination mocks
   const [currentPage, setCurrentPage] = useState(1);
@@ -1836,7 +1859,8 @@ export default function AdminPanel({ onNavigate }) {
         '/admin/settings/company',
         '/admin/settings/contact',
         '/admin/settings/footer',
-        '/admin/seo'
+        '/admin/seo',
+        '/admin/settings/maintenance'
       ];
       if (currentUser.role !== 'super_admin' && restrictedTabs.includes(activeTab)) {
         setActiveTab('/admin/dashboard');
@@ -2077,6 +2101,9 @@ export default function AdminPanel({ onNavigate }) {
     setIsLoggedIn(false);
     setCurrentUser(null);
     sessionStorage.removeItem('admin_user');
+    if (window.location.pathname !== '/manager' && window.location.pathname !== '/admin') {
+      window.history.pushState({}, '', '/manager');
+    }
   };
 
   // Convert File to Base64
@@ -2972,25 +2999,18 @@ export default function AdminPanel({ onNavigate }) {
           </button>
 
           {/* Users & Roles Item */}
-          <button
-            className={`admin-nav-item ${activeTab === '/admin/users' ? 'active' : ''}`}
-            style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-            onClick={() => {
-              if (currentUser?.role === 'super_admin') {
-                handleNavClick('/admin/users');
-              }
-            }}
-          >
-            <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Shield size={20} />
-              <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Access Control</span>
-            </div>
-            {currentUser?.role !== 'super_admin' ? (
-              <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-            ) : (
-              activeTab === '/admin/users' && <div className="admin-nav-indicator" />
-            )}
-          </button>
+          {currentUser?.role === 'super_admin' && (
+            <button
+              className={`admin-nav-item ${activeTab === '/admin/users' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/admin/users')}
+            >
+              <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Shield size={20} />
+                <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Access Control</span>
+              </div>
+              {activeTab === '/admin/users' && <div className="admin-nav-indicator" />}
+            </button>
+          )}
 
           {/* Content Management Section */}
           <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('content')}>
@@ -3067,110 +3087,69 @@ export default function AdminPanel({ onNavigate }) {
           )}
 
           {/* Website Settings Section */}
-          <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('settings')}>
-            <span className="admin-sidebar-header">Website Settings</span>
-            {sectionsExpanded.settings ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </div>
-          {sectionsExpanded.settings && (
+          {currentUser?.role === 'super_admin' && (
             <>
-              <button
-                className={`admin-nav-item ${activeTab === '/admin/settings/company' ? 'active' : ''}`}
-                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                onClick={() => {
-                  if (currentUser?.role === 'super_admin') {
-                    handleNavClick('/admin/settings/company');
-                  }
-                }}
-              >
-                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Sliders size={20} />
-                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Company Information</span>
-                </div>
-                {currentUser?.role !== 'super_admin' ? (
-                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                ) : (
-                  activeTab === '/admin/settings/company' && <div className="admin-nav-indicator" />
-                )}
-              </button>
-              <button
-                className={`admin-nav-item ${activeTab === '/admin/settings/contact' ? 'active' : ''}`}
-                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                onClick={() => {
-                  if (currentUser?.role === 'super_admin') {
-                    handleNavClick('/admin/settings/contact');
-                  }
-                }}
-              >
-                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Mail size={20} />
-                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Contact Information</span>
-                </div>
-                {currentUser?.role !== 'super_admin' ? (
-                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                ) : (
-                  activeTab === '/admin/settings/contact' && <div className="admin-nav-indicator" />
-                )}
-              </button>
-              <button
-                className={`admin-nav-item ${activeTab === '/admin/settings/footer' ? 'active' : ''}`}
-                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                onClick={() => {
-                  if (currentUser?.role === 'super_admin') {
-                    handleNavClick('/admin/settings/footer');
-                  }
-                }}
-              >
-                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Settings size={20} />
-                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Footer Management</span>
-                </div>
-                {currentUser?.role !== 'super_admin' ? (
-                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                ) : (
-                  activeTab === '/admin/settings/footer' && <div className="admin-nav-indicator" />
-                )}
-              </button>
-              {/* SEO Management Item */}
-              <button
-                className={`admin-nav-item ${activeTab === '/admin/seo' ? 'active' : ''}`}
-                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                onClick={() => {
-                  if (currentUser?.role === 'super_admin') {
-                    handleNavClick('/admin/seo');
-                  }
-                }}
-              >
-                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Search size={20} />
-                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>SEO Management</span>
-                </div>
-                {currentUser?.role !== 'super_admin' ? (
-                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                ) : (
-                  activeTab === '/admin/seo' && <div className="admin-nav-indicator" />
-                )}
-              </button>
+              <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('settings')}>
+                <span className="admin-sidebar-header">Website Settings</span>
+                {sectionsExpanded.settings ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </div>
+              {sectionsExpanded.settings && (
+                <>
+                  <button
+                    className={`admin-nav-item ${activeTab === '/admin/settings/company' ? 'active' : ''}`}
+                    onClick={() => handleNavClick('/admin/settings/company')}
+                  >
+                    <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Sliders size={20} />
+                      <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Company Information</span>
+                    </div>
+                    {activeTab === '/admin/settings/company' && <div className="admin-nav-indicator" />}
+                  </button>
+                  <button
+                    className={`admin-nav-item ${activeTab === '/admin/settings/contact' ? 'active' : ''}`}
+                    onClick={() => handleNavClick('/admin/settings/contact')}
+                  >
+                    <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Mail size={20} />
+                      <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Contact Information</span>
+                    </div>
+                    {activeTab === '/admin/settings/contact' && <div className="admin-nav-indicator" />}
+                  </button>
+                  <button
+                    className={`admin-nav-item ${activeTab === '/admin/settings/footer' ? 'active' : ''}`}
+                    onClick={() => handleNavClick('/admin/settings/footer')}
+                  >
+                    <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Settings size={20} />
+                      <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Footer Management</span>
+                    </div>
+                    {activeTab === '/admin/settings/footer' && <div className="admin-nav-indicator" />}
+                  </button>
+                  {/* SEO Management Item */}
+                  <button
+                    className={`admin-nav-item ${activeTab === '/admin/seo' ? 'active' : ''}`}
+                    onClick={() => handleNavClick('/admin/seo')}
+                  >
+                    <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Search size={20} />
+                      <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>SEO Management</span>
+                    </div>
+                    {activeTab === '/admin/seo' && <div className="admin-nav-indicator" />}
+                  </button>
 
-              {/* Maintenance Mode Item (Super Admin Only) */}
-              <button
-                className={`admin-nav-item ${activeTab === '/admin/settings/maintenance' ? 'active' : ''}`}
-                style={currentUser?.role !== 'super_admin' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                onClick={() => {
-                  if (currentUser?.role === 'super_admin') {
-                    handleNavClick('/admin/settings/maintenance');
-                  }
-                }}
-              >
-                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Wrench size={20} />
-                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Maintenance Mode</span>
-                </div>
-                {currentUser?.role !== 'super_admin' ? (
-                  <Lock size={14} style={{ opacity: 0.8, color: '#64748B' }} />
-                ) : (
-                  activeTab === '/admin/settings/maintenance' && <div className="admin-nav-indicator" />
-                )}
-              </button>
+                  {/* Maintenance Mode Item (Super Admin Only) */}
+                  <button
+                    className={`admin-nav-item ${activeTab === '/admin/settings/maintenance' ? 'active' : ''}`}
+                    onClick={() => handleNavClick('/admin/settings/maintenance')}
+                  >
+                    <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Wrench size={20} />
+                      <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Maintenance Mode</span>
+                    </div>
+                    {activeTab === '/admin/settings/maintenance' && <div className="admin-nav-indicator" />}
+                  </button>
+                </>
+              )}
             </>
           )}
 
@@ -5789,14 +5768,18 @@ export default function AdminPanel({ onNavigate }) {
                           <div className="admin-action-icon purple"><Star size={20} /></div>
                           <h4>ADD REVIEW</h4>
                         </div>
-                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/users')}>
-                          <div className="admin-action-icon cyan"><Shield size={20} /></div>
-                          <h4>EDIT PROFILE</h4>
-                        </div>
-                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/settings/company')}>
-                          <div className="admin-action-icon yellow"><Sliders size={20} /></div>
-                          <h4>BRANDING</h4>
-                        </div>
+                        {currentUser?.role === 'super_admin' && (
+                          <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/users')}>
+                            <div className="admin-action-icon cyan"><Shield size={20} /></div>
+                            <h4>EDIT PROFILE</h4>
+                          </div>
+                        )}
+                        {currentUser?.role === 'super_admin' && (
+                          <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/settings/company')}>
+                            <div className="admin-action-icon yellow"><Sliders size={20} /></div>
+                            <h4>BRANDING</h4>
+                          </div>
+                        )}
                         <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/backup')}>
                           <div className="admin-action-icon indigo"><Database size={20} /></div>
                           <h4>BACKUP CONFIG</h4>

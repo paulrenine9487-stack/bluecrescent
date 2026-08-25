@@ -2386,3 +2386,180 @@
   transform: scale(1.1);
 }
 
+/* ==========================================================================
+   Comprehensive Admin Panel Responsive Layout & Mobile Drawer Rules
+   ========================================================================== */
+
+.admin-hamburger-btn {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #0F172A;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.admin-hamburger-btn:hover {
+  background: #E2E8F0;
+}
+
+.admin-sidebar-mobile-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #FFFFFF;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.admin-sidebar-mobile-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Tablets & Mobile Screens (<= 992px) */
+@media (max-width: 992px) {
+  .admin-panel-root {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 280px !important;
+    max-width: 85vw !important;
+    box-shadow: 6px 0 28px rgba(0, 0, 0, 0.35);
+    height: 100vh !important;
+  }
+
+  .admin-sidebar.mobile-open {
+    transform: translateX(0) !important;
+  }
+
+  .admin-sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999;
+    animation: adminFadeIn 0.2s ease forwards;
+  }
+
+  @keyframes adminFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .admin-hamburger-btn {
+    display: inline-flex !important;
+  }
+
+  .admin-sidebar-mobile-close {
+    display: flex !important;
+  }
+
+  .admin-main-wrapper {
+    width: 100% !important;
+    margin-left: 0 !important;
+    min-width: 0;
+  }
+
+  .admin-header-main {
+    padding: 0 16px !important;
+  }
+
+  .admin-header-profile .admin-profile-meta {
+    display: none !important;
+  }
+
+  .admin-content-pane {
+    padding: 16px !important;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .admin-banners-grid {
+    grid-template-columns: 1fr !important;
+    padding: 12px !important;
+  }
+
+  .admin-table-card {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .admin-table-card table {
+    min-width: 650px;
+  }
+
+  .admin-pane-header,
+  .admin-settings-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+
+  .admin-form-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .admin-modal-card {
+    width: 95% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 20px !important;
+  }
+}
+
+/* Extra Small Phones (<= 576px) */
+@media (max-width: 576px) {
+  .admin-header-main h2 {
+    font-size: 15px !important;
+  }
+
+  .admin-menu-btn-label {
+    display: none !important;
+  }
+
+  .admin-hamburger-btn {
+    padding: 6px 10px !important;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-toast-banner {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    top: auto !important;
+    transform: none !important;
+    width: auto !important;
+  }
+}
+
