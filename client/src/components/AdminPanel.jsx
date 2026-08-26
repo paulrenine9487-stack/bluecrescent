@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import './AdminPanel.css';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
+import logoWhiteImg from '../assets/logo1_transparent_white.png';
 
 export default function AdminPanel({ onNavigate }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -1824,6 +1825,29 @@ export default function AdminPanel({ onNavigate }) {
     }
   };
 
+  // Close mobile sidebar on window resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 992) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Prevent background scrolling when mobile sidebar drawer is open
+  useEffect(() => {
+    if (isMobileSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileSidebarOpen]);
+
   // Keep active tab in sync with browser forward/back buttons
   useEffect(() => {
     const handlePopState = () => {
@@ -2969,6 +2993,10 @@ export default function AdminPanel({ onNavigate }) {
         <div
           className="admin-sidebar-backdrop"
           onClick={() => setIsMobileSidebarOpen(false)}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            setIsMobileSidebarOpen(false);
+          }}
         />
       )}
 
@@ -2980,6 +3008,10 @@ export default function AdminPanel({ onNavigate }) {
             type="button"
             className="admin-sidebar-mobile-close"
             onClick={() => setIsMobileSidebarOpen(false)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setIsMobileSidebarOpen(false);
+            }}
             aria-label="Close Mobile Navigation Menu"
           >
             <X size={20} />
@@ -3202,7 +3234,15 @@ export default function AdminPanel({ onNavigate }) {
             <button
               type="button"
               className="admin-hamburger-btn"
-              onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileSidebarOpen(prev => !prev);
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setIsMobileSidebarOpen(prev => !prev);
+              }}
               aria-label="Toggle Navigation Menu"
               title="Toggle Sidebar Menu"
             >

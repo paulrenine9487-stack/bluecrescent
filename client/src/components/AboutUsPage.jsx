@@ -443,6 +443,10 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
           fetchPriority="high"
           loading="eager"
           decoding="async"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = aboutBanner;
+          }}
         />
       </section>
 
@@ -2611,14 +2615,15 @@ function OurJourneySection({ windowWidth }) {
 ───────────────────────────────────────────────────────────── */
 function OurTeamSection({ windowWidth }) {
   const [team, setTeam] = useState([
-    { id: 1, name: 'Praveen', role: 'Team Member', image: '/uploads/team_1786560739404.jpg' },
-    { id: 2, name: 'Nancy', role: 'Team Member', image: '/uploads/team_1786562045607.jpg' },
-    { id: 3, name: 'Raghul', role: 'Team Member', image: '/uploads/team_1786562084689.jpg' },
-    { id: 4, name: 'Zubariya', role: 'Team Member', image: '/uploads/team_1786562368113.jpg' },
-    { id: 5, name: 'Mohammed', role: 'BIM Specialist', image: '/uploads/team_1786562504613.jpg' },
-    { id: 6, name: 'Ananya', role: 'CAD Engineer', image: '' },
-    { id: 7, name: 'Karthik', role: 'Project Lead', image: '' },
-    { id: 8, name: 'Divya', role: 'Sustainability Specialist', image: '' }
+    { id: 1, name: 'Dijo Daniel', role: 'Admin / Manager', image: '/Dijo Daniel-Admin.png' },
+    { id: 2, name: 'Hamza Maroof', role: 'Sales Executive', image: '/Hamza Maroof - Sales Executive.png' },
+    { id: 3, name: 'Hanuman Pandey', role: 'Lidar Specialist', image: '/Hanuman Pandey - Lidar Specialist.png' },
+    { id: 4, name: 'Pandiarajan Nattathi', role: 'Sr. BIM Coordinator', image: '/Pandiarajan Nattathi - Sr. BIM Coordinator.png' },
+    { id: 5, name: 'Ranjithkumar', role: 'Sustainability Manager', image: '/Ranjithkumar - Sustainability Manager.png' },
+    { id: 6, name: 'Riyas Abdul Rasheed', role: 'Branch Office Manager', image: '/Riyas Abdul Rasheed - Branch Office Manager.png' },
+    { id: 7, name: 'Sudharsan Shanmugam', role: 'Sr. BIM Coordinator', image: '/Sudharsan Shanmugam - Sr. BIM Coordinator.png' },
+    { id: 8, name: 'Sulaiman Siddique', role: 'Sustainablity Engineer', image: '/Sulaiman Siddique  - Sustainablity Engineer.png' },
+    { id: 9, name: 'Vasanth Subburam', role: 'BIM Coordinator', image: '/Vasanth Subburam - BIM Coordinator.png' }
   ]);
 
   const [teamIndex, setTeamIndex] = useState(0);
@@ -2644,11 +2649,6 @@ function OurTeamSection({ windowWidth }) {
   };
 
   useEffect(() => {
-    ['/uploads/team_1786560739404.jpg', '/uploads/team_1786562045607.jpg', '/uploads/team_1786562084689.jpg', '/uploads/team_1786562368113.jpg', '/uploads/team_1786562504613.jpg'].forEach(url => {
-      const img = new Image();
-      img.src = url;
-    });
-
     fetchTeamData();
     window.addEventListener('dataUpdated', fetchTeamData);
     window.addEventListener('menuUpdated', fetchTeamData);
@@ -2871,7 +2871,17 @@ function OurTeamSection({ windowWidth }) {
                         transition: 'transform 0.3s ease'
                       }}
                       onError={(e) => {
-                        e.target.style.display = 'none';
+                        const nameLower = (member.name || '').toLowerCase();
+                        if (nameLower.includes('dijo')) e.target.src = '/Dijo Daniel-Admin.png';
+                        else if (nameLower.includes('hamza')) e.target.src = '/Hamza Maroof - Sales Executive.png';
+                        else if (nameLower.includes('hanuman')) e.target.src = '/Hanuman Pandey - Lidar Specialist.png';
+                        else if (nameLower.includes('pandiarajan')) e.target.src = '/Pandiarajan Nattathi - Sr. BIM Coordinator.png';
+                        else if (nameLower.includes('ranjith')) e.target.src = '/Ranjithkumar - Sustainability Manager.png';
+                        else if (nameLower.includes('riyas')) e.target.src = '/Riyas Abdul Rasheed - Branch Office Manager.png';
+                        else if (nameLower.includes('sudharsan')) e.target.src = '/Sudharsan Shanmugam - Sr. BIM Coordinator.png';
+                        else if (nameLower.includes('sulaiman')) e.target.src = '/Sulaiman Siddique  - Sustainablity Engineer.png';
+                        else if (nameLower.includes('vasanth')) e.target.src = '/Vasanth Subburam - BIM Coordinator.png';
+                        else e.target.style.display = 'none';
                       }}
                     />
                   ) : null}

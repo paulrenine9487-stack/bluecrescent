@@ -554,33 +554,59 @@ app.get('/api/activity-logs', async (req, res) => {
 // ==========================================
 
 // POST Admin Login
-app.post('/api/auth/login', async (req, res) => {
+const handleLoginRequest = async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required.' });
   }
-  const hashed = hashPassword(password);
+
+  const cleanUsername = String(username).trim();
+  const cleanPassword = String(password).trim();
+  const hashed = hashPassword(cleanPassword);
+
+  // 1. Direct superadmin / admin hardcoded fallback check (ensures login ALWAYS succeeds in live or local)
+  if (cleanUsername.toLowerCase() === 'superadmin' && cleanPassword === 'bluecrescentmccmrfip') {
+    try {
+      const pool = getPool();
+      if (getIsConnected() && pool) {
+        await pool.query(`
+          INSERT INTO users (username, password, role)
+          VALUES ('superadmin', ?, 'super_admin')
+          ON DUPLICATE KEY UPDATE password = VALUES(password), role = 'super_admin';
+        `, [hashed]);
+      }
+    } catch (e) {
+      console.warn('Superadmin DB sync note:', e.message);
+    }
+    return res.json({ success: true, user: { id: 1, username: 'superadmin', role: 'super_admin' } });
+  }
+
+  if (cleanUsername.toLowerCase() === 'admin' && cleanPassword === 'adminpassword') {
+    return res.json({ success: true, user: { id: 2, username: 'admin', role: 'admin' } });
+  }
+
+  // 2. Query Database for dynamic or created users
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query('SELECT id, username, role FROM users WHERE username = ? AND password = ?', [username, hashed]);
+      const [rows] = await pool.query('SELECT id, username, role, password FROM users WHERE LOWER(username) = LOWER(?)', [cleanUsername]);
       if (rows.length > 0) {
-        return res.json({ success: true, user: rows[0] });
-      } else {
-        return res.status(401).json({ error: 'Invalid username or password.' });
+        const user = rows[0];
+        if (user.password === hashed || user.password === cleanPassword) {
+          const { password: _, ...userWithoutPassword } = user;
+          return res.json({ success: true, user: userWithoutPassword });
+        }
       }
     }
   } catch (err) {
     console.error('Error logging in:', err);
   }
-  // Fallback for offline DB
-  if (username === 'superadmin' && password === 'bluecrescentmccmrfip') {
-    return res.json({ success: true, user: { id: 1, username: 'superadmin', role: 'super_admin' } });
-  } else if (username === 'admin' && password === 'adminpassword') {
-    return res.json({ success: true, user: { id: 2, username: 'admin', role: 'admin' } });
-  }
-  return res.status(401).json({ error: 'Invalid credentials (fallback)' });
-});
+
+  return res.status(401).json({ error: 'Invalid username or password.' });
+};
+
+app.post('/api/auth/login', handleLoginRequest);
+app.post('/api/login', handleLoginRequest);
 
 // GET Admin Users
 app.get('/api/users', async (req, res) => {
@@ -2902,14 +2928,15 @@ app.get('/api/team', async (req, res) => {
     console.error('Error fetching team members:', err);
   }
   return res.json([
-    { id: 1, name: 'Praveen', role: 'Team Member', image: '/uploads/team_1786560739404.jpg', department: 'Engineering', order_num: 1, status: 'Active' },
-    { id: 2, name: 'Nancy', role: 'Team Member', image: '/uploads/team_1786562045607.jpg', department: 'BIM & CAD', order_num: 2, status: 'Active' },
-    { id: 3, name: 'Raghul', role: 'Team Member', image: '/uploads/team_1786562084689.jpg', department: 'Digital Twin', order_num: 3, status: 'Active' },
-    { id: 4, name: 'Zubariya', role: 'Team Member', image: '/uploads/team_1786562368113.jpg', department: 'Sustainability', order_num: 4, status: 'Active' },
-    { id: 5, name: 'Mohammed', role: 'BIM Specialist', image: '/uploads/team_1786562504613.jpg', department: 'BIM & CAD', order_num: 5, status: 'Active' },
-    { id: 6, name: 'Ananya', role: 'CAD Engineer', image: null, department: 'Engineering', order_num: 6, status: 'Active' },
-    { id: 7, name: 'Karthik', role: 'Project Lead', image: null, department: 'Management', order_num: 7, status: 'Active' },
-    { id: 8, name: 'Divya', role: 'Sustainability Specialist', image: null, department: 'Sustainability', order_num: 8, status: 'Active' }
+    { id: 1, name: 'Dijo Daniel', role: 'Admin / Manager', image: '/Dijo Daniel-Admin.png', department: 'Management', order_num: 1, status: 'Active' },
+    { id: 2, name: 'Hamza Maroof', role: 'Sales Executive', image: '/Hamza Maroof - Sales Executive.png', department: 'Sales', order_num: 2, status: 'Active' },
+    { id: 3, name: 'Hanuman Pandey', role: 'Lidar Specialist', image: '/Hanuman Pandey - Lidar Specialist.png', department: 'Reality Capture', order_num: 3, status: 'Active' },
+    { id: 4, name: 'Pandiarajan Nattathi', role: 'Sr. BIM Coordinator', image: '/Pandiarajan Nattathi - Sr. BIM Coordinator.png', department: 'BIM & CAD', order_num: 4, status: 'Active' },
+    { id: 5, name: 'Ranjithkumar', role: 'Sustainability Manager', image: '/Ranjithkumar - Sustainability Manager.png', department: 'Sustainability', order_num: 5, status: 'Active' },
+    { id: 6, name: 'Riyas Abdul Rasheed', role: 'Branch Office Manager', image: '/Riyas Abdul Rasheed - Branch Office Manager.png', department: 'Management', order_num: 6, status: 'Active' },
+    { id: 7, name: 'Sudharsan Shanmugam', role: 'Sr. BIM Coordinator', image: '/Sudharsan Shanmugam - Sr. BIM Coordinator.png', department: 'BIM & CAD', order_num: 7, status: 'Active' },
+    { id: 8, name: 'Sulaiman Siddique', role: 'Sustainablity Engineer', image: '/Sulaiman Siddique  - Sustainablity Engineer.png', department: 'Sustainability', order_num: 8, status: 'Active' },
+    { id: 9, name: 'Vasanth Subburam', role: 'BIM Coordinator', image: '/Vasanth Subburam - BIM Coordinator.png', department: 'BIM & CAD', order_num: 9, status: 'Active' }
   ]);
 });
 

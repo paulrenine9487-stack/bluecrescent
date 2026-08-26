@@ -222,19 +222,25 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   }
 
   // Derive project categories with sub-items matching the service categories structure
-  let projectCategories = serviceCategories.map(cat => ({
-    name: cat.name,
-    slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    items: (cat.items || []).map(subItem => {
-      const title = typeof subItem === 'string' ? subItem : subItem.title;
-      const slug = typeof subItem === 'string' ? subItem : (subItem.slug || subItem.title);
-      const projectTitle = (title || '').toLowerCase().includes('project') ? title : `${title} Projects`;
-      return {
-        title: projectTitle,
-        slug: slug || projectTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-      };
-    })
-  }));
+  let projectCategories = serviceCategories.map(cat => {
+    const rawName = cat.name || '';
+    const projName = rawName.toLowerCase().includes('project')
+      ? rawName
+      : rawName.replace(/Services$/i, '').trim() + ' Projects';
+    return {
+      name: projName,
+      slug: cat.slug || rawName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      items: (cat.items || []).map(subItem => {
+        const title = typeof subItem === 'string' ? subItem : subItem.title;
+        const slug = typeof subItem === 'string' ? subItem : (subItem.slug || subItem.title);
+        const projectTitle = (title || '').toLowerCase().includes('project') ? title : `${title} Projects`;
+        return {
+          title: projectTitle,
+          slug: slug || projectTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        };
+      })
+    };
+  });
 
   const isProjectsActive = currentView === 'Projects' || projectSubItems.includes(currentView);
   const isServicesActive = currentView === 'Services';
