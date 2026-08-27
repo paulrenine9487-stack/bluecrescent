@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import TestimonialsSection from './TestimonialsSection';
+import MajorClientsSection from './MajorClientsSection';
 import {
   Building2,
   Compass,
@@ -51,7 +52,7 @@ import bimmodelImg from '../assets/bimmodel.png';
 import './AboutUsPage.css';
 
 const getLucideIcon = (name, size = 22, color = '#0057B8') => {
-  switch(name) {
+  switch (name) {
     case 'Cloud': return <Cloud size={size} color={color} />;
     case 'Monitor': return <Monitor size={size} color={color} />;
     case 'Settings': return <Settings size={size} color={color} />;
@@ -305,15 +306,24 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       })
       .catch(err => console.warn('Company settings DB fetch warning:', err));
 
-    fetch('/api/partners')
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if (data && data.length > 0) setPartners(data);
-      })
-      .catch(err => console.warn('Partners fetch warning:', err));
+    const fetchPartnersData = () => {
+      fetch('/api/partners')
+        .then(res => res.ok ? res.json() : [])
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            data.sort((a, b) => (Number(a.order_num) || 0) - (Number(b.order_num) || 0) || a.id - b.id);
+            setPartners(data);
+          }
+        })
+        .catch(err => console.warn('Partners fetch warning:', err));
+    };
+
+    fetchPartnersData();
+    window.addEventListener('dataUpdated', fetchPartnersData);
 
     return () => {
       window.removeEventListener('companySettingsUpdated', handleSettingsUpdated);
+      window.removeEventListener('dataUpdated', fetchPartnersData);
     };
   }, []);
 
@@ -336,37 +346,21 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
   }, [companySettings.aboutUsCountriesJson]);
 
   const disciplines = React.useMemo(() => {
-    const DEFAULT_DISCIPLINES = [
-      { name: 'BIM Modeling & Coordination', image: '/uploads/bimmodel.png' },
-      { name: 'CAD Documentation', image: '/our capacity/cad.png' },
-      { name: 'Reality Capture & Laser Scanning', image: '/our capacity/reality.png' },
-      { name: 'Specialized Engineering support', image: '/our capacity/special.png' },
-      { name: 'Energy Auditing & Commissioning', image: '/our capacity/energy.png' },
-      { name: 'Green Building Facilitation', image: '/our capacity/green.png' },
-      { name: 'Technical experts outsourcing', image: '/our capacity/technical.png' }
-    ];
-    const EXCLUDED_DISCIPLINES = [
-      'computational fluid dynamics',
-      'acoustic & vibration',
-      'hydraulic analysis',
-      'stress analysis'
-    ];
     try {
-      if (companySettings.aboutUsDisciplinesJson) {
+      if (companySettings.aboutUsDisciplinesJson !== undefined && companySettings.aboutUsDisciplinesJson !== null && companySettings.aboutUsDisciplinesJson !== '') {
         const parsed = JSON.parse(companySettings.aboutUsDisciplinesJson);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed
-            .filter(item => !EXCLUDED_DISCIPLINES.some(ex => (item.name || '').toLowerCase().includes(ex)))
-            .map((item, idx) => ({
-              ...item,
-              image: (item.name && item.name.toLowerCase().includes('bim')) ? '/uploads/bimmodel.png' : (item.image || DEFAULT_DISCIPLINES[idx]?.image || (item.name && item.name.toLowerCase().includes('cad') ? '/our capacity/cad.png' : null))
-            }));
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => ({
+            ...item,
+            icon: item.icon || 'Building2',
+            image: item.image || (item.name && item.name.toLowerCase().includes('bim') ? '/uploads/bimmodel.png' : '')
+          }));
         }
       }
     } catch (e) {
       console.warn('Disciplines parsing error', e);
     }
-    return DEFAULT_DISCIPLINES;
+    return [];
   }, [companySettings.aboutUsDisciplinesJson]);
 
   const flowchartSteps = React.useMemo(() => {
@@ -437,7 +431,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       {/* ── SECTION 1: ABOUT US HERO ────────────────────────────────── */}
       <section className="about-hero-banner-wrap">
         <img
-          src={companySettings?.aboutUsPageBannerUrl || companySettings?.aboutUsHeroUrl || aboutUsHeroUrl || localStorage.getItem('aboutUsPageBannerUrl') || localStorage.getItem('aboutUsHeroUrl') || aboutBanner}
+          src={companySettings?.aboutUsPageBannerUrl || companySettings?.aboutUsHeroUrl || aboutBanner}
           alt="About Us Banner - Blue Crescent Engineering"
           className="about-hero-banner-img"
           fetchPriority="high"
@@ -453,17 +447,15 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       <div className="bce-container">
 
         {/* ── SECTION 2: WHO WE ARE (REPLACED CONTENT) ───────────────── */}
-        <section className="who-we-are-section" style={{ marginBottom: '90px' }}>
+        <section className="who-we-are-section" style={{ marginBottom: '28px' }}>
           <div className="who-we-are-grid">
             {/* Left: Text content */}
             <div className="who-we-are-content-box">
-              <h2 className="bce-heading-primary" style={{ fontSize: '38px', color: '#063B73' }}>WHO WE ARE</h2>
+              <h2 className="bce-heading-primary" style={{ fontSize: '32px', fontWeight: '800', color: '#063B73', marginBottom: '12px', lineHeight: 1.3 }}>
+                Engineering Experience. Digital Innovation.
+              </h2>
               {/* Subtle Blue Accent Line */}
               <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', marginBottom: '24px' }}></div>
-
-              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '700', color: '#0F2747', marginBottom: '20px', lineHeight: 1.35 }}>
-                Engineering Experience. Digital Innovation.
-              </h3>
 
               <p className="who-we-are-paragraph" style={{ color: '#475569', fontSize: '15.5px', lineHeight: 1.7, marginBottom: '16px' }}>
                 {companySettings.whoWeArePara1 || "Founded in Qatar in 2013, Blue Crescent Engineering has grown from a CAD technical-resource provider into a multidisciplinary engineering and digital transformation organization."}
@@ -525,8 +517,8 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         {/* ── SECTION 3: VISION & MISSION (REDESIGNED) ──────────────── */}
         <section
           style={{
-            marginBottom: '90px',
-            padding: windowWidth >= 768 ? '60px 40px' : '40px 20px',
+            marginBottom: '28px',
+            padding: windowWidth >= 768 ? '36px 28px' : '24px 16px',
             background: '#F8FBFF',
             borderRadius: '24px',
             border: '1px solid #D8E7F5',
@@ -558,7 +550,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
           </div>
 
           {/* Section Header */}
-          <div style={{ textAlign: 'center', marginBottom: '56px', position: 'relative', zIndex: 3 }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative', zIndex: 3 }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '38px', fontWeight: '800', color: '#063B73', margin: '8px 0 0 0' }}>
               Vision & Mission
             </h2>
@@ -576,7 +568,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
               gap: '32px',
               position: 'relative',
               zIndex: 3,
-              marginBottom: '56px'
+              marginBottom: '24px'
             }}
           >
             {/* CARD 1: VISION */}
@@ -826,8 +818,8 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         <OurTeamSection windowWidth={windowWidth} />
 
         {/* ── SECTION 6: OUR APPROACH (NEW SECTION) ──────────────────── */}
-        <section style={{ marginBottom: '90px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+        <section style={{ marginBottom: '24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               OUR APPROACH
             </h2>
@@ -886,11 +878,11 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       {/* ── SECTION 7: INDUSTRIES WE SERVE (NEW SECTION - FULL WIDTH) ───────────── */}
       <section
         style={{
-          marginBottom: '90px',
+          marginBottom: '0px',
           background: `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.8) 55%, rgba(255, 255, 255, 0.25) 100%), url(${aboutus5})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center bottom',
-          padding: '80px 0',
+          padding: '20px 0',
           width: '100%',
           borderTop: '1.5px solid #E2EAF3',
           borderBottom: '1.5px solid #E2EAF3',
@@ -898,7 +890,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         }}
       >
         <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               Industries We Serve
             </h2>
@@ -922,8 +914,8 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       <div className="bce-container"> {/* Reopen bce-container */}
 
         {/* ── SECTION 8: OUR GEOGRAPHICAL PRESENCE (NEW SECTION) ───────── */}
-        <section style={{ marginBottom: '90px', padding: '20px 0' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+        <section style={{ marginBottom: '28px', padding: '10px 0' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               Our Geographical Presence
             </h2>
@@ -936,43 +928,40 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         </section>
 
         {/* ── SECTION 9: OUR CAPACITY (NEW SECTION) ──────────────────── */}
-        <section style={{ marginBottom: '90px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+        <section style={{ marginBottom: '28px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               Our Capacity
             </h2>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
-              150+ Experts. One Integrated Team.
-            </p>
             <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
             <p style={{ fontSize: '16px', color: '#475569', maxWidth: '650px', margin: '0 auto', lineHeight: 1.7 }}>
               Our strength is not limited to software capability. It comes from the combination of people, engineering knowledge, technology and scalable delivery resources.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: windowWidth >= 1024 ? '340px 1fr' : '1fr', gap: '40px', alignItems: 'stretch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: windowWidth >= 1024 ? '300px 1fr' : '1fr', gap: '28px', alignItems: 'stretch' }}>
             {/* Left: Large 150+ statistic with Capa Background */}
             <div
               style={{
                 background: `#0057B8 url(${companySettings.aboutUsCapaImg || '/capa.png'}) no-repeat center center / cover`,
-                borderRadius: '24px',
-                padding: '60px 40px',
+                borderRadius: '16px',
+                padding: '30px 20px',
                 textAlign: 'center',
                 color: '#FFFFFF',
-                boxShadow: '0 12px 40px rgba(0, 87, 184, 0.12)',
+                boxShadow: '0 8px 24px rgba(0, 87, 184, 0.10)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 position: 'relative',
                 overflow: 'hidden',
-                minHeight: '360px'
+                minHeight: '260px'
               }}
             >
-              <div style={{ fontSize: '84px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif', marginBottom: '8px', lineHeight: 1, zIndex: 2 }}>
+              <div style={{ fontSize: '60px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif', marginBottom: '4px', lineHeight: 1, zIndex: 2 }}>
                 150+
               </div>
-              <div style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '3px', color: '#FFFFFF', opacity: 0.95, textTransform: 'uppercase', zIndex: 2 }}>
+              <div style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '2px', color: '#FFFFFF', opacity: 0.95, textTransform: 'uppercase', zIndex: 2 }}>
                 TECHNICAL EXPERTS
               </div>
             </div>
@@ -980,17 +969,17 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
             {/* Right: Capability description & interactive tag cards */}
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               {/* Title Area */}
-              <div style={{ marginBottom: '28px' }}>
-                <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#0F2747', margin: '0', lineHeight: 1.25 }}>
+              <div style={{ marginBottom: '14px' }}>
+                <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '800', color: '#0F2747', margin: '0', lineHeight: 1.25 }}>
                   Multidisciplinary Capability
                 </h3>
               </div>
 
-              {/* Grid of Icon Cards - 2 Rows Layout with Larger Cards */}
+              {/* Grid of Icon Cards - 2 Rows Layout with Compact Cards */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: windowWidth >= 1200 ? 'repeat(4, 1fr)' : windowWidth >= 768 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
-                gap: '18px',
+                gap: '12px',
                 width: '100%'
               }}>
                 {disciplines.map(item => (
@@ -999,23 +988,23 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                     style={{
                       background: '#FFFFFF',
                       border: '1.5px solid #E2E8F0',
-                      borderRadius: '18px',
-                      padding: '22px 12px',
+                      borderRadius: '14px',
+                      padding: '12px 8px',
                       width: '100%',
-                      height: '195px',
+                      height: '135px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      boxShadow: '0 6px 16px rgba(6, 59, 115, 0.05)',
+                      boxShadow: '0 4px 12px rgba(6, 59, 115, 0.04)',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       boxSizing: 'border-box'
                     }}
                     className="strength-card-hover"
                   >
                     <div style={{
-                      width: '64px',
-                      height: '64px',
+                      width: '46px',
+                      height: '46px',
                       borderRadius: '50%',
                       background: '#F2F7FD',
                       display: 'flex',
@@ -1023,43 +1012,32 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                       justifyContent: 'center',
                       flexShrink: 0,
                       overflow: 'hidden',
-                      boxShadow: '0 2px 8px rgba(0, 87, 184, 0.08)'
+                      boxShadow: '0 2px 6px rgba(0, 87, 184, 0.06)'
                     }}>
                       {(() => {
-                        const nameLower = (item.name || '').toLowerCase();
-                        const imagePath = nameLower.includes('bim') ? (item.image || '/uploads/bimmodel.png' || bimmodelImg) : (
-                          item.image || (
-                            nameLower.includes('cad') ? '/our capacity/cad.png' :
-                            nameLower.includes('reality') ? '/our capacity/reality.png' :
-                            nameLower.includes('special') ? '/our capacity/special.png' :
-                            nameLower.includes('cfd') ? '/our capacity/cfd.png' :
-                            nameLower.includes('vibration') ? '/our capacity/vibration.png' :
-                            nameLower.includes('hydraul') ? '/our capacity/hydralic.png' :
-                            nameLower.includes('stress') ? '/our capacity/stress.png' :
-                            nameLower.includes('energy') ? '/our capacity/energy.png' :
-                            nameLower.includes('green') ? '/our capacity/green.png' :
-                            nameLower.includes('outsourcing') ? '/our capacity/technical.png' : null
-                          )
-                        );
-                        return imagePath ? (
-                          <img
-                            src={imagePath}
-                            alt={item.name}
-                            style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-                          />
-                        ) : (
-                          getLucideIcon(item.icon, 30, '#0057B8')
-                        );
+                        if (item.image && typeof item.image === 'string' && item.image.trim() !== '') {
+                          return (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              style={{ width: '32px', height: '32px', objectFit: 'contain' }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          );
+                        }
+                        return getLucideIcon(item.icon || 'Building2', 22, '#0057B8');
                       })()}
                     </div>
-                    <div style={{ width: '28px', height: '3px', background: 'linear-gradient(90deg, #0057B8, #00A896)', margin: '6px 0', borderRadius: '2px' }} />
+                    <div style={{ width: '20px', height: '2.5px', background: 'linear-gradient(90deg, #0057B8, #00A896)', margin: '4px 0', borderRadius: '2px' }} />
                     <span style={{
                       fontFamily: 'Space Grotesk, sans-serif',
-                      fontSize: '13.5px',
+                      fontSize: '11.5px',
                       fontWeight: '800',
                       color: '#0F2747',
                       textAlign: 'center',
-                      lineHeight: 1.3,
+                      lineHeight: 1.25,
                       display: 'block'
                     }}>
                       {item.name}
@@ -1076,24 +1054,21 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       {/* ── SECTION 10: DIGITAL TWIN (NEW SECTION) ────────────────── */}
       <section style={{
         background: `linear-gradient(180deg, rgba(244, 248, 255, 0.92) 0%, rgba(240, 246, 255, 0.95) 100%), url(${companySettings.aboutUsDigitalImg || '/digital.png'}) no-repeat center center / cover`,
-        padding: '80px 0',
-        marginBottom: '90px',
+        padding: '40px 0',
+        marginBottom: '0px',
         borderTop: '1px solid #E2EAF3',
         borderBottom: '1px solid #E2EAF3',
         boxShadow: '0 10px 30px rgba(0, 87, 184, 0.02)'
       }}>
         <div className="bce-container"> {/* Inner container to keep content centered */}
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               Digital Twin
             </h2>
             <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
               From BIM Model to Intelligent Asset
             </p>
-            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
-            <p style={{ fontSize: '16px', color: '#475569', maxWidth: '650px', margin: '0 auto', lineHeight: 1.7 }}>
-              We transform engineering information into connected Digital Twin environments that support the entire operational lifecycle of an asset.
-            </p>
+            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto' }} />
           </div>
 
           {/* Visual Lifecycle Flow chart */}
@@ -1105,56 +1080,56 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
               justifyContent: 'space-between',
               background: companySettings.aboutUsFlowchartBg || '#F1F7FF',
               border: '1.5px solid #E2EAF3',
-              borderRadius: '24px',
-              padding: '48px 30px',
-              marginBottom: '56px',
-              boxShadow: '0 12px 40px rgba(6, 59, 115, 0.04)',
-              gap: '20px'
+              borderRadius: '20px',
+              padding: '20px 20px 16px 20px',
+              marginBottom: '24px',
+              boxShadow: '0 8px 30px rgba(6, 59, 115, 0.03)',
+              gap: '16px'
             }}
           >
             {flowchartSteps.map((step, sIdx) => (
               <React.Fragment key={step.title}>
-                <div style={{ flex: 1, textAlign: 'center', padding: '10px' }}>
+                <div style={{ flex: 1, textAlign: 'center', padding: '4px 6px' }}>
                   {/* Badge */}
                   <div style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '4px 12px',
-                    borderRadius: '20px',
+                    padding: '3px 10px',
+                    borderRadius: '16px',
                     background: '#E2F0FF',
                     border: '1.5px solid #0057B8',
                     color: '#0057B8',
-                    fontSize: '11px',
+                    fontSize: '10.5px',
                     fontWeight: '800',
                     fontFamily: 'Space Grotesk, sans-serif',
-                    marginBottom: '12px',
+                    marginBottom: '8px',
                     boxShadow: '0 2px 6px rgba(0, 87, 184, 0.08)'
                   }}>
                     {step.num}
                   </div>
                   {/* Circle Icon */}
                   <div style={{
-                    width: '64px',
-                    height: '64px',
+                    width: '52px',
+                    height: '52px',
                     borderRadius: '50%',
                     background: '#FFFFFF',
                     border: '1.5px solid #E2EAF3',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 16px auto',
-                    boxShadow: '0 4px 10px rgba(0, 87, 184, 0.05)'
+                    margin: '0 auto 10px auto',
+                    boxShadow: '0 3px 8px rgba(0, 87, 184, 0.05)'
                   }}>
-                    {getLucideIcon(step.icon, 24, '#0057B8')}
+                    {getLucideIcon(step.icon, 20, '#0057B8')}
                   </div>
-                  <h4 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '13.5px', fontWeight: '800', color: '#063B73', margin: '0 0 6px 0', letterSpacing: '0.5px' }}>{step.title}</h4>
-                  <p style={{ fontSize: '11.5px', color: '#64748B', lineHeight: 1.4, margin: '0 auto', maxWidth: '180px', fontWeight: '500' }}>{step.desc}</p>
+                  <h4 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '13px', fontWeight: '800', color: '#063B73', margin: '0 0 4px 0', letterSpacing: '0.5px' }}>{step.title}</h4>
+                  <p style={{ fontSize: '11px', color: '#64748B', lineHeight: 1.35, margin: '0 auto', maxWidth: '180px', fontWeight: '500' }}>{step.desc}</p>
                 </div>
                 {sIdx < 3 && windowWidth >= 1024 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 0.4, position: 'relative', minWidth: '80px', margin: '0 10px' }}>
                     {/* Dotted connecting line */}
-                              <div style={{
+                    <div style={{
                       background: '#FFFFFF',
                       borderRadius: '50%',
                       width: '28px',
@@ -1175,43 +1150,43 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
           </div>
 
           {/* Capability chips / cards below: Dynamic Grid */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
             {capabilities.map(cap => (
               <div
                 key={cap.title}
                 style={{
                   background: '#FFFFFF',
                   border: '1.5px solid #F0F4FA',
-                  borderRadius: '16px',
-                  padding: '24px 20px',
-                  boxShadow: '0 4px 12px rgba(6, 59, 115, 0.03)',
+                  borderRadius: '12px',
+                  padding: '12px 10px',
+                  boxShadow: '0 3px 10px rgba(6, 59, 115, 0.03)',
                   transition: 'all 0.25s ease',
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: '16px',
-                  width: windowWidth >= 1200 ? '220px' : windowWidth >= 768 ? '340px' : '100%',
-                  minHeight: '140px',
+                  gap: '10px',
+                  width: windowWidth >= 1200 ? '220px' : windowWidth >= 768 ? '300px' : '100%',
+                  minHeight: '95px',
                   boxSizing: 'border-box'
                 }}
                 className="strength-card-hover"
               >
                 <div style={{
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '12px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
                   background: '#F2F7FD',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  {getLucideIcon(cap.icon, 22, '#0057B8')}
+                  {getLucideIcon(cap.icon, 18, '#0057B8')}
                 </div>
                 <div>
-                  <h5 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '14.5px', fontWeight: '800', color: '#0F2747', margin: '0 0 6px 0', lineHeight: 1.2 }}>
+                  <h5 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '12.5px', fontWeight: '800', color: '#0F2747', margin: '0 0 3px 0', lineHeight: 1.2 }}>
                     {cap.title}
                   </h5>
-                  <p style={{ fontSize: '12px', color: '#64748B', margin: 0, lineHeight: 1.4, fontWeight: '500' }}>
+                  <p style={{ fontSize: '10.5px', color: '#64748B', margin: 0, lineHeight: 1.3, fontWeight: '500' }}>
                     {cap.desc}
                   </p>
                 </div>
@@ -1231,7 +1206,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
           const next = () => setPartnerIdx(i => Math.min(max, i + 1));
           return (
             <section className="working-partners-section">
-              <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                 <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
                   OUR WORKING PARTNERS
                 </h2>
@@ -1276,6 +1251,9 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
             </section>
           );
         })()}
+
+        {/* ── SECTION 12: OUR MAJOR CLIENTS (REUSABLE MARQUEE RAIL) ───── */}
+        <MajorClientsSection />
 
         {/* ── SECTION 13: TESTIMONIALS (SAME HOME PAGE DESIGN) ───────── */}
         <TestimonialsSection />
@@ -1455,14 +1433,14 @@ function CoreStrengthsCarousel({ windowWidth }) {
       style={{
         background: 'linear-gradient(180deg, #F4F8FD 0%, #EBF3FC 100%)',
         borderRadius: '24px',
-        padding: '60px 32px 50px 32px',
-        marginBottom: '90px',
+        padding: '36px 24px 28px 24px',
+        marginBottom: '28px',
         border: '1px solid #E1EDFA',
         boxShadow: '0 8px 30px rgba(0, 87, 184, 0.02)'
       }}
     >
       {/* ── Header ── */}
-      <div style={{ textAlign: 'center', marginBottom: '52px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
 
         {/* TITLE — large, bold, dark navy */}
         <h2 style={{
@@ -1522,7 +1500,7 @@ function CoreStrengthsCarousel({ windowWidth }) {
         </button>
 
         {/* Track container — clips overflow */}
-        <div 
+        <div
           style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}
           onMouseEnter={() => setHovering(true)}
           onMouseLeave={() => setHovering(false)}
@@ -1816,14 +1794,14 @@ function IndustriesArc({ windowWidth, activeIdx, setActiveIdx }) {
   const isDesktop = windowWidth >= 900;
   const current = INDUSTRIES_DATA[activeIdx];
 
-  // Positions on the 1000x480 desktop coordinate box
+  // Positions on the 1000x340 desktop coordinate box
   const positions = [
-    { left: '10%', top: '78%', label: 'BUILDINGS' },
-    { left: '22%', top: '44%', label: 'INFRASTRUCTURE' },
-    { left: '38%', top: '24%', label: 'TRANSPORTATION' },
-    { left: '62%', top: '24%', label: 'INDUSTRIAL' },
-    { left: '78%', top: '44%', label: 'GOVERNMENT' },
-    { left: '90%', top: '78%', label: 'MANAGEMENT' }
+    { left: '8%', top: '75%', label: 'BUILDINGS' },
+    { left: '22%', top: '35%', label: 'INFRASTRUCTURE' },
+    { left: '38%', top: '10%', label: 'TRANSPORTATION' },
+    { left: '62%', top: '10%', label: 'INDUSTRIAL' },
+    { left: '78%', top: '35%', label: 'GOVERNMENT' },
+    { left: '92%', top: '75%', label: 'MANAGEMENT' }
   ];
 
   if (!isDesktop) {
@@ -1923,13 +1901,13 @@ function IndustriesArc({ windowWidth, activeIdx, setActiveIdx }) {
       position: 'relative',
       width: '100%',
       maxWidth: '1060px',
-      height: '480px',
+      height: '340px',
       margin: '0 auto',
       overflow: 'visible',
       boxSizing: 'border-box'
     }}>
       {/* BACKGROUND: grid lines and dashed arch path */}
-      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox="0 0 1000 480" fill="none">
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox="0 0 1000 340" fill="none">
         {/* Subtle grid background */}
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -1939,13 +1917,13 @@ function IndustriesArc({ windowWidth, activeIdx, setActiveIdx }) {
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         {/* Dynamic Connecting dashed arch path */}
-        <path d="M 100 390 Q 500 60 900 390" fill="none" stroke="rgba(0, 87, 184, 0.32)" strokeWidth="4.5" strokeDasharray="6,6" />
+        <path d="M 80 290 Q 500 20 920 290" fill="none" stroke="rgba(0, 87, 184, 0.32)" strokeWidth="4.5" strokeDasharray="6,6" />
       </svg>
 
       {/* CENTER DETAILS CONTAINER */}
       <div style={{
         position: 'absolute',
-        top: '190px',
+        top: '120px',
         left: '50%',
         transform: 'translateX(-50%)',
         textAlign: 'center',
@@ -2274,37 +2252,29 @@ function OurJourneySection({ windowWidth }) {
   const isTablet = windowWidth >= 768 && windowWidth < 1200;
 
   return (
-    <section 
+    <section
       id="our-journey-section"
-      style={{ 
-        padding: '60px 0 80px 0', 
-        background: '#F8FBFF', 
+      style={{
+        padding: '36px 0 40px 0',
+        background: '#F8FBFF',
         borderRadius: '24px',
         border: '1px solid #D8E7F5',
         position: 'relative',
         overflow: 'hidden',
-        marginBottom: '80px'
+        marginBottom: '28px'
       }}
     >
-      {/* Background wave vectors */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.06, pointerEvents: 'none', zIndex: 0 }}>
-        <svg width="100%" height="100%" viewBox="0 0 1440 600" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M-100,200 C300,50 600,450 1000,100 C1200,-50 1400,150 1600,50" stroke="#087CFF" strokeWidth="4" />
-          <path d="M-50,250 C350,100 650,500 1050,150 C1250,0 1450,200 1650,100" stroke="#19B5FE" strokeWidth="2" strokeDasharray="5,5" />
-        </svg>
-      </div>
-
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
-        
+
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '45px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           {/* Line 1: Main Big Title */}
-          <h2 
-            style={{ 
-              fontFamily: 'Space Grotesk, sans-serif', 
-              fontSize: isDesktop ? '42px' : isTablet ? '36px' : '28px', 
-              fontWeight: '800', 
-              color: '#062F63', 
+          <h2
+            style={{
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: isDesktop ? '42px' : isTablet ? '36px' : '28px',
+              fontWeight: '800',
+              color: '#062F63',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
               margin: '0 0 10px 0',
@@ -2318,38 +2288,25 @@ function OurJourneySection({ windowWidth }) {
           <div style={{ width: '60px', height: '3.5px', background: '#087CFF', borderRadius: '4px', margin: '0 auto 12px auto' }} />
 
           {/* Line 2: Subtitle */}
-          <h3 
+          <h3
             style={{
               fontFamily: 'Space Grotesk, sans-serif',
-              fontSize: isTablet ? '24px' : '20px',
+              fontSize: isTablet ? '20px' : '18px',
               fontWeight: '700',
               color: '#087CFF',
-              margin: '0 0 14px 0'
+              margin: 0
             }}
           >
             Building Excellence Since 2013
           </h3>
-
-          {/* Line 3: Description */}
-          <p 
-            style={{ 
-              fontSize: '15px', 
-              color: '#64748B', 
-              lineHeight: 1.6, 
-              margin: '0 auto', 
-              maxWidth: '720px' 
-            }}
-          >
-            Our journey of growth, innovation and expansion across key markets and technologies to deliver value to our clients.
-          </p>
         </div>
 
         {/* DESKTOP TIMELINE: Flowing Blue Wave Timeline */}
         {isDesktop && (
           <div style={{ position: 'relative', margin: '40px 0', height: '560px' }}>
-            
+
             {/* Central SVG Curved Wave Line */}
-            <div 
+            <div
               style={{
                 position: 'absolute',
                 top: '0',
@@ -2369,10 +2326,10 @@ function OurJourneySection({ windowWidth }) {
                   </linearGradient>
                 </defs>
                 {/* Precise connecting dashed line passing directly from card bottom-centers to card top-centers */}
-                <path 
-                  d="M 20,240 Q 50,240 82.5,240 L 247.5,315 L 412.5,240 L 577.5,315 L 742.5,240 L 907.5,315 L 1072.5,240 L 1237.5,315 Q 1270,315 1300,315" 
-                  stroke="url(#waveGradJourney)" 
-                  strokeWidth="3.5" 
+                <path
+                  d="M 20,240 Q 50,240 82.5,240 L 247.5,315 L 412.5,240 L 577.5,315 L 742.5,240 L 907.5,315 L 1072.5,240 L 1237.5,315 Q 1270,315 1300,315"
+                  stroke="url(#waveGradJourney)"
+                  strokeWidth="3.5"
                   strokeLinecap="round"
                   strokeDasharray="8,8"
                 />
@@ -2380,7 +2337,7 @@ function OurJourneySection({ windowWidth }) {
             </div>
 
             {/* 8 Columns Grid */}
-            <div 
+            <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(8, 1fr)',
@@ -2392,11 +2349,11 @@ function OurJourneySection({ windowWidth }) {
             >
               {MILESTONES.map((m, idx) => {
                 const isTop = m.row === 'top';
-                
+
                 return (
-                  <div 
-                    key={m.year} 
-                    style={{ 
+                  <div
+                    key={m.year}
+                    style={{
                       position: 'relative',
                       height: '560px',
                       opacity: animate ? 1 : 0,
@@ -2405,7 +2362,7 @@ function OurJourneySection({ windowWidth }) {
                     }}
                   >
                     {/* Milestone Card (Fits 100% inside column width to prevent overflow) */}
-                    <div 
+                    <div
                       style={{
                         background: '#FFFFFF',
                         borderRadius: '16px',
@@ -2438,10 +2395,10 @@ function OurJourneySection({ windowWidth }) {
                       }}
                     >
                       {/* Floating Overlapping Circular Icon */}
-                      <div 
-                        style={{ 
-                          position: 'absolute', 
-                          top: '-22px', 
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '-22px',
                           left: '50%',
                           transform: 'translate(-50%, 0)',
                           width: '46px',
@@ -2460,13 +2417,13 @@ function OurJourneySection({ windowWidth }) {
                       </div>
 
                       {/* Line 1: Big Bold Title */}
-                      <h4 
-                        style={{ 
+                      <h4
+                        style={{
                           fontFamily: 'Space Grotesk, sans-serif',
-                          fontSize: '16.5px', 
-                          fontWeight: '800', 
-                          color: '#062F63', 
-                          margin: '0 0 3px 0', 
+                          fontSize: '16.5px',
+                          fontWeight: '800',
+                          color: '#062F63',
+                          margin: '0 0 3px 0',
                           lineHeight: 1.25,
                           textAlign: 'center'
                         }}
@@ -2475,7 +2432,7 @@ function OurJourneySection({ windowWidth }) {
                       </h4>
 
                       {/* Line 2: Proportional Subtitle Year */}
-                      <div 
+                      <div
                         style={{
                           color: '#087CFF',
                           fontSize: '14px',
@@ -2489,14 +2446,14 @@ function OurJourneySection({ windowWidth }) {
                       </div>
 
                       {/* Divider Line */}
-                      <div 
-                        style={{ 
-                          width: '32px', 
-                          height: '2.5px', 
-                          background: '#087CFF', 
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '2.5px',
+                          background: '#087CFF',
                           borderRadius: '2px',
                           marginBottom: '8px'
-                        }} 
+                        }}
                       />
 
                       {/* Line 3: Description */}
@@ -2513,7 +2470,7 @@ function OurJourneySection({ windowWidth }) {
 
         {/* TABLET / MOBILE LAYOUT: Responsive Grid */}
         {!isDesktop && (
-          <div 
+          <div
             style={{
               display: 'grid',
               gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : '1fr',
@@ -2524,7 +2481,7 @@ function OurJourneySection({ windowWidth }) {
             }}
           >
             {MILESTONES.map((m, idx) => (
-              <div 
+              <div
                 key={m.year}
                 style={{
                   background: '#FFFFFF',
@@ -2542,10 +2499,10 @@ function OurJourneySection({ windowWidth }) {
                 }}
               >
                 {/* Floating Overlapping Circular Icon */}
-                <div 
-                  style={{ 
-                    position: 'absolute', 
-                    top: '-22px', 
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '-22px',
                     left: '50%',
                     transform: 'translateX(-50%)',
                     width: '44px',
@@ -2563,7 +2520,7 @@ function OurJourneySection({ windowWidth }) {
                   {m.icon}
                 </div>
 
-                <div 
+                <div
                   style={{
                     color: '#087CFF',
                     fontSize: '22px',
@@ -2575,27 +2532,27 @@ function OurJourneySection({ windowWidth }) {
                   {m.year}
                 </div>
 
-                <h4 
-                  style={{ 
+                <h4
+                  style={{
                     fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: '16px', 
-                    fontWeight: '700', 
-                    color: '#062F63', 
-                    margin: '0 0 6px 0', 
-                    textAlign: 'center' 
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: '#062F63',
+                    margin: '0 0 6px 0',
+                    textAlign: 'center'
                   }}
                 >
                   {m.title}
                 </h4>
 
-                <div 
-                  style={{ 
-                    width: '32px', 
-                    height: '2.5px', 
-                    background: '#087CFF', 
+                <div
+                  style={{
+                    width: '32px',
+                    height: '2.5px',
+                    background: '#087CFF',
                     borderRadius: '2px',
                     marginBottom: '10px'
-                  }} 
+                  }}
                 />
 
                 <p style={{ fontSize: '13px', color: '#475569', margin: 0, lineHeight: 1.5, textAlign: 'center' }}>
@@ -2636,8 +2593,14 @@ function OurTeamSection({ windowWidth }) {
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          setTeam(data);
-          data.forEach(item => {
+          const sorted = data.sort((a, b) => {
+            const hA = parseInt(a.hierarchy_number ?? a.order_num ?? 999, 10);
+            const hB = parseInt(b.hierarchy_number ?? b.order_num ?? 999, 10);
+            if (hA !== hB) return hA - hB;
+            return (a.id || 0) - (b.id || 0);
+          });
+          setTeam(sorted);
+          sorted.forEach(item => {
             if (item.image) {
               const img = new Image();
               img.src = item.image;
@@ -2678,37 +2641,37 @@ function OurTeamSection({ windowWidth }) {
   }, [isTeamPaused, team.length, teamCardsToShow]);
 
   return (
-    <section 
-      style={{ 
-        marginBottom: '90px', 
+    <section
+      style={{
+        marginBottom: '28px',
         position: 'relative',
         background: '#F8FBFF',
         borderRadius: '24px',
         border: '1px solid #D8E7F5',
-        padding: windowWidth >= 768 ? '48px 24px' : '36px 16px',
+        padding: '28px 20px',
         overflow: 'hidden'
       }}
     >
       <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 40px auto' }}>
-        <h2 
-          style={{ 
-            fontFamily: 'Space Grotesk, sans-serif', 
-            fontSize: windowWidth >= 992 ? '36px' : windowWidth >= 768 ? '30px' : '26px', 
-            fontWeight: '800', 
-            color: '#063B73', 
-            margin: '0 0 8px 0', 
-            letterSpacing: '-0.5px' 
+        <h2
+          style={{
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontSize: windowWidth >= 992 ? '36px' : windowWidth >= 768 ? '30px' : '26px',
+            fontWeight: '800',
+            color: '#063B73',
+            margin: '0 0 8px 0',
+            letterSpacing: '-0.5px'
           }}
         >
           Our Team. Our Core Strength.
         </h2>
-        <h3 
-          style={{ 
-            fontFamily: 'Space Grotesk, sans-serif', 
-            fontSize: windowWidth >= 768 ? '22px' : '18px', 
-            fontWeight: '700', 
-            color: '#0F172A', 
-            margin: '0 0 12px 0' 
+        <h3
+          style={{
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontSize: windowWidth >= 768 ? '22px' : '18px',
+            fontWeight: '700',
+            color: '#0F172A',
+            margin: '0 0 12px 0'
           }}
         >
           Meet Our Engineering &amp; Technical Leadership.
@@ -2797,7 +2760,7 @@ function OurTeamSection({ windowWidth }) {
         </button>
 
         {/* Track Slider Container */}
-        <div 
+        <div
           style={{ width: '100%', overflow: 'hidden', padding: '12px 0 20px 0' }}
           onMouseEnter={() => setIsTeamPaused(true)}
           onMouseLeave={() => setIsTeamPaused(false)}
@@ -2836,6 +2799,30 @@ function OurTeamSection({ windowWidth }) {
                 }}
               >
                 <div style={{ position: 'relative', height: '280px', background: '#F1F5F9', overflow: 'hidden', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}>
+                  {/* Subtle Staff Hierarchy Badge */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      background: 'rgba(255, 255, 255, 0.92)',
+                      backdropFilter: 'blur(6px)',
+                      color: '#063B73',
+                      border: '1px solid rgba(6, 59, 115, 0.18)',
+                      borderRadius: '10px',
+                      padding: '3px 9px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      letterSpacing: '0.5px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      zIndex: 4,
+                      fontFamily: 'Space Grotesk, monospace'
+                    }}
+                    title={`Staff Hierarchy #${member.hierarchy_number ?? member.order_num ?? (idx + 1)}`}
+                  >
+                    {String(member.hierarchy_number ?? member.order_num ?? (idx + 1)).padStart(2, '0')}
+                  </div>
+
                   <div
                     style={{
                       position: 'absolute',
@@ -2866,11 +2853,11 @@ function OurTeamSection({ windowWidth }) {
                         height: '100%',
                         objectFit: 'cover',
                         objectPosition: 'center 20%',
-                        transform: 'scale(1.35)',
                         borderRadius: '0px',
                         transition: 'transform 0.3s ease'
                       }}
                       onError={(e) => {
+                        e.target.onerror = null;
                         const nameLower = (member.name || '').toLowerCase();
                         if (nameLower.includes('dijo')) e.target.src = '/Dijo Daniel-Admin.png';
                         else if (nameLower.includes('hamza')) e.target.src = '/Hamza Maroof - Sales Executive.png';
@@ -2881,10 +2868,23 @@ function OurTeamSection({ windowWidth }) {
                         else if (nameLower.includes('sudharsan')) e.target.src = '/Sudharsan Shanmugam - Sr. BIM Coordinator.png';
                         else if (nameLower.includes('sulaiman')) e.target.src = '/Sulaiman Siddique  - Sustainablity Engineer.png';
                         else if (nameLower.includes('vasanth')) e.target.src = '/Vasanth Subburam - BIM Coordinator.png';
-                        else e.target.style.display = 'none';
+                        else e.target.src = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80';
                       }}
                     />
-                  ) : null}
+                  ) : (
+                    <img
+                      src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80"
+                      alt={member.name}
+                      style={{
+                        position: 'relative',
+                        zIndex: 2,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center 20%'
+                      }}
+                    />
+                  )}
                 </div>
 
                 <div style={{ padding: '20px 16px', textAlign: 'center', background: '#FFFFFF' }}>

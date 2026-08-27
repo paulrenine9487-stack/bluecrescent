@@ -11,24 +11,7 @@ export function getCachedCompanySettings() {
         parsed = JSON.parse(saved) || {};
       } catch (e) {}
     }
-    // Cross-merge individual direct localStorage keys as fallbacks
-    const aboutUsPageBannerUrl = parsed.aboutUsPageBannerUrl || parsed.aboutUsHeroUrl || localStorage.getItem('aboutUsPageBannerUrl') || localStorage.getItem('aboutUsHeroUrl') || '';
-    const servicesPageBannerUrl = parsed.servicesPageBannerUrl || localStorage.getItem('servicesPageBannerUrl') || '';
-    const projectsPageBannerUrl = parsed.projectsPageBannerUrl || localStorage.getItem('projectsPageBannerUrl') || '';
-    const mediaPageBannerUrl = parsed.mediaPageBannerUrl || localStorage.getItem('mediaPageBannerUrl') || '';
-    const contactUsPageBannerUrl = parsed.contactUsPageBannerUrl || localStorage.getItem('contactUsPageBannerUrl') || '';
-    const homeBannerUrl = parsed.homeBannerUrl || localStorage.getItem('homeBannerUrl') || '';
-
-    return {
-      ...parsed,
-      aboutUsPageBannerUrl,
-      aboutUsHeroUrl: parsed.aboutUsHeroUrl || aboutUsPageBannerUrl,
-      servicesPageBannerUrl,
-      projectsPageBannerUrl,
-      mediaPageBannerUrl,
-      contactUsPageBannerUrl,
-      homeBannerUrl
-    };
+    return { ...parsed };
   } catch (e) {
     console.warn('Error reading cached company settings:', e);
   }
@@ -37,17 +20,33 @@ export function getCachedCompanySettings() {
 
 export function updateCachedCompanySettings(newSettings) {
   try {
-    const current = getCachedCompanySettings();
+    const saved = localStorage.getItem(CACHE_KEY);
+    let current = {};
+    if (saved) {
+      try {
+        current = JSON.parse(saved) || {};
+      } catch (e) {}
+    }
     const updated = { ...current, ...newSettings };
     
-    // Save direct localStorage fallback keys
-    if (updated.aboutUsPageBannerUrl) localStorage.setItem('aboutUsPageBannerUrl', updated.aboutUsPageBannerUrl);
-    if (updated.aboutUsHeroUrl) localStorage.setItem('aboutUsHeroUrl', updated.aboutUsHeroUrl);
-    if (updated.servicesPageBannerUrl) localStorage.setItem('servicesPageBannerUrl', updated.servicesPageBannerUrl);
-    if (updated.projectsPageBannerUrl) localStorage.setItem('projectsPageBannerUrl', updated.projectsPageBannerUrl);
-    if (updated.mediaPageBannerUrl) localStorage.setItem('mediaPageBannerUrl', updated.mediaPageBannerUrl);
-    if (updated.contactUsPageBannerUrl) localStorage.setItem('contactUsPageBannerUrl', updated.contactUsPageBannerUrl);
-    if (updated.homeBannerUrl) localStorage.setItem('homeBannerUrl', updated.homeBannerUrl);
+    // Explicitly update OR remove direct localStorage fallback keys
+    const bannerKeys = [
+      'aboutUsPageBannerUrl',
+      'aboutUsHeroUrl',
+      'servicesPageBannerUrl',
+      'projectsPageBannerUrl',
+      'mediaPageBannerUrl',
+      'contactUsPageBannerUrl',
+      'homeBannerUrl'
+    ];
+    bannerKeys.forEach(key => {
+      if (updated[key]) {
+        localStorage.setItem(key, updated[key]);
+      } else {
+        localStorage.removeItem(key);
+        delete updated[key];
+      }
+    });
 
     localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('companySettingsUpdated', { detail: updated }));

@@ -73,7 +73,7 @@ export default function WhoWeAreSection({ onNavigate }) {
       className="who-we-are-section"
       style={{
         background: '#F8FAFC',
-        padding: '80px 0',
+        padding: '44px 0',
         borderTop: '1px solid rgba(6, 59, 115, 0.06)',
         borderBottom: '1px solid rgba(6, 59, 115, 0.06)'
       }}
@@ -89,24 +89,11 @@ export default function WhoWeAreSection({ onNavigate }) {
         >
           {/* LEFT COLUMN: Content */}
           <div style={{ maxWidth: '580px' }}>
-            <h2 className="why-bce-main-heading" style={{ fontSize: '32px', margin: '0 0 14px 0' }}>
-              Who We Are
+            <h2 className="why-bce-main-heading" style={{ fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 12px 0', lineHeight: 1.3 }}>
+              Engineering Experience. Digital Innovation.
             </h2>
 
-            <div className="why-bce-divider-line"></div>
-
-            <h3 
-              style={{
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontSize: '24px',
-                fontWeight: '800',
-                color: '#087CFF',
-                margin: '0 0 20px 0',
-                lineHeight: 1.3
-              }}
-            >
-              Engineering Experience. Digital Innovation.
-            </h3>
+            <div className="why-bce-divider-line" style={{ marginBottom: '24px' }}></div>
 
             <p style={{ fontSize: '15px', color: '#334155', lineHeight: 1.7, margin: '0 0 16px 0', fontWeight: '500' }}>
               {companySettings.whoWeArePara1}

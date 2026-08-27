@@ -312,16 +312,13 @@
 }
 
 .admin-nav-item.active {
-  background: linear-gradient(135deg, #00A198 0%, #00C7BD 100%) !important;
+  background: linear-gradient(135deg, #00A198 0%, #007D76 100%) !important;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(0, 161, 152, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 161, 152, 0.3);
 }
 
-.admin-nav-item.active,
-.admin-nav-item.active *,
-.admin-nav-item.active span,
-.admin-nav-item.active div,
-.admin-nav-item.active svg {
+.admin-nav-item.active * {
+  background: transparent !important;
   color: #FFFFFF !important;
 }
 
@@ -1470,28 +1467,23 @@
 /* Active Nav Item */
 .admin-nav-item.active {
   position: relative !important;
+  background: linear-gradient(135deg, #00A198 0%, #007D76 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 161, 152, 0.3) !important;
 }
 
-.admin-nav-item.active,
 .admin-nav-item.active * {
-  background: #00A198 !important; /* Mint teal active state */
+  background: transparent !important;
   color: #FFFFFF !important;
 }
 
-.admin-nav-item.active svg,
-.admin-nav-item.active svg * {
+.admin-nav-item.active span,
+.admin-nav-item.active div,
+.admin-nav-item.active svg {
   color: #FFFFFF !important;
 }
 
 .admin-nav-item.active::after {
-  content: '' !important;
-  position: absolute !important;
-  right: 12px !important;
-  top: 30% !important;
-  height: 40% !important;
-  width: 4px !important;
-  background-color: var(--gold-accent, #D97706) !important;
-  border-radius: 2px !important;
+  content: none !important;
 }
 
 .admin-sidebar-header-wrapper {

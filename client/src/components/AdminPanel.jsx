@@ -10,7 +10,7 @@ import {
   Building, MapPin, Phone, Map, Clock, Cpu, ExternalLink,
   Radio, Leaf, Building2, Wind, Volume2, Droplet, Activity, Zap, Users,
   Monitor, Cloud, TrendingUp, Share2, ClipboardCheck, Heart, RefreshCw,
-  CheckCircle, AlertCircle, Info, BarChart3
+  CheckCircle, AlertCircle, Info, BarChart3, Video, Sparkles, Save
 } from 'lucide-react';
 import './AdminPanel.css';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
@@ -1138,6 +1138,328 @@ export default function AdminPanel({ onNavigate }) {
   });
   const [bannerUploadingKey, setBannerUploadingKey] = useState(null);
 
+  // Major Clients State & Handlers
+  const [majorClients, setMajorClients] = useState([]);
+  const [clientModalOpen, setClientModalOpen] = useState(false);
+  const [clientForm, setClientForm] = useState({
+    id: null,
+    name: '',
+    logo: '',
+    display_order: 1,
+    status: 'Active',
+    is_active: 1
+  });
+  const [clientFile, setClientFile] = useState(null);
+  const [clientFilePreview, setClientFilePreview] = useState('');
+  const [clientFileError, setClientFileError] = useState('');
+  const [clientSaving, setClientSaving] = useState(false);
+
+  const fetchMajorClientsAdmin = async () => {
+    try {
+      const res = await fetch('/api/company-information/major-clients?all=true');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setMajorClients(data);
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching major clients in admin:', err);
+    }
+  };
+
+  const fetchPartnersAdmin = async () => {
+    try {
+      const res = await fetch('/api/partners?all=true');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setPartners(data);
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching partners in admin:', err);
+    }
+  };
+
+  // Blogs State & Handlers
+  const [blogs, setBlogs] = useState([]);
+  const [blogModalOpen, setBlogModalOpen] = useState(false);
+  const [blogForm, setBlogForm] = useState({
+    id: null,
+    title: '',
+    category: 'Company News',
+    author: 'Blue Crescent Team',
+    date: '',
+    image: '',
+    summary: '',
+    content: '',
+    status: 'Active',
+    display_order: 1
+  });
+  const [blogFile, setBlogFile] = useState(null);
+  const [blogFilePreview, setBlogFilePreview] = useState('');
+  const [blogSaving, setBlogSaving] = useState(false);
+
+  const fetchBlogsAdmin = async () => {
+    try {
+      const res = await fetch('/api/blogs?all=true');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setBlogs(data);
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching blogs in admin:', err);
+    }
+  };
+
+  const openAddBlogModal = () => {
+    setBlogForm({
+      id: null,
+      title: '',
+      category: 'Company News',
+      author: 'Blue Crescent Team',
+      date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      image: '',
+      summary: '',
+      content: '',
+      status: 'Active',
+      display_order: (blogs.length + 1)
+    });
+    setBlogFile(null);
+    setBlogFilePreview('');
+    setBlogModalOpen(true);
+  };
+
+  const openEditBlogModal = (blog) => {
+    setBlogForm({
+      id: blog.id,
+      title: blog.title || '',
+      category: blog.category || 'Company News',
+      author: blog.author || 'Blue Crescent Team',
+      date: blog.date || '',
+      image: blog.image || '',
+      summary: blog.summary || '',
+      content: blog.content || '',
+      status: blog.status || 'Active',
+      display_order: blog.display_order || 1
+    });
+    setBlogFile(null);
+    setBlogFilePreview(blog.image || '');
+    setBlogModalOpen(true);
+  };
+
+  const handleBlogImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image size exceeds 10MB limit.');
+      return;
+    }
+    setBlogFile(file);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setBlogFilePreview(evt.target.result);
+      setBlogForm(prev => ({ ...prev, image: evt.target.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveBlog = async (e) => {
+    e.preventDefault();
+    if (!blogForm.title || !blogForm.title.trim()) {
+      alert('Blog title is required.');
+      return;
+    }
+    setBlogSaving(true);
+    try {
+      const isEdit = Boolean(blogForm.id);
+      const url = isEdit ? `/api/blogs/${blogForm.id}` : '/api/blogs';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blogForm)
+      });
+
+      if (res.ok) {
+        setBlogModalOpen(false);
+        fetchBlogsAdmin();
+        window.dispatchEvent(new Event('dataUpdated'));
+      } else {
+        const err = await res.json();
+        alert(`Failed to save blog: ${err.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      alert(`Error saving blog: ${err.message}`);
+    } finally {
+      setBlogSaving(false);
+    }
+  };
+
+  const handleDeleteBlog = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this blog article?')) return;
+    try {
+      const res = await fetch(`/api/blogs/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchBlogsAdmin();
+        window.dispatchEvent(new Event('dataUpdated'));
+      }
+    } catch (err) {
+      alert(`Error deleting blog: ${err.message}`);
+    }
+  };
+
+  const openAddClientModal = () => {
+    setClientForm({
+      id: null,
+      name: '',
+      logo: '',
+      display_order: (majorClients.length + 1),
+      status: 'Active',
+      is_active: 1
+    });
+    setClientFile(null);
+    setClientFilePreview('');
+    setClientFileError('');
+    setClientModalOpen(true);
+  };
+
+  const openEditClientModal = (client) => {
+    setClientForm({
+      id: client.id,
+      name: client.name || '',
+      logo: client.logo || '',
+      display_order: client.display_order || 1,
+      status: client.status || 'Active',
+      is_active: client.is_active !== undefined ? client.is_active : 1
+    });
+    setClientFile(null);
+    setClientFilePreview(client.logo || '');
+    setClientFileError('');
+    setClientModalOpen(true);
+  };
+
+  const handleClientLogoSelect = (file) => {
+    setClientFileError('');
+    if (!file) return;
+
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isAllowedExt = ['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(ext);
+
+    if (!allowedTypes.includes(file.type.toLowerCase()) && !isAllowedExt) {
+      setClientFileError('Invalid logo format. Please upload PNG, JPG, JPEG, WEBP, or SVG.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setClientFileError('Logo file size exceeds the allowed limit (5MB). Please upload a smaller image.');
+      return;
+    }
+
+    setClientFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setClientFilePreview(reader.result);
+      setClientForm(prev => ({ ...prev, logo: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveClient = async (e) => {
+    if (e) e.preventDefault();
+    if (!clientForm.name.trim()) {
+      alert('Please enter a client name.');
+      return;
+    }
+    if (!clientForm.logo && !clientFilePreview) {
+      alert('Please upload or select a client logo.');
+      return;
+    }
+
+    setClientSaving(true);
+    try {
+      const payload = {
+        name: clientForm.name.trim(),
+        logo: clientForm.logo || clientFilePreview,
+        display_order: Number(clientForm.display_order) || 1,
+        status: clientForm.status || 'Active',
+        is_active: clientForm.status === 'Active' ? 1 : 0
+      };
+
+      const isEdit = Boolean(clientForm.id);
+      const url = isEdit
+        ? `/api/company-information/major-clients/${clientForm.id}`
+        : '/api/company-information/major-clients';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setClientModalOpen(false);
+        await fetchMajorClientsAdmin();
+        window.dispatchEvent(new CustomEvent('companySettingsUpdated', { detail: payload }));
+        window.dispatchEvent(new Event('dataUpdated'));
+        alert(`✓ Client "${payload.name}" ${isEdit ? 'updated' : 'added'} successfully!`);
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        alert(errJson.error || 'Unable to save client information. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error saving client:', err);
+      alert('Unable to save client information.');
+    } finally {
+      setClientSaving(false);
+    }
+  };
+
+  const handleToggleClientStatus = async (client) => {
+    const newStatus = (client.status === 'Active' || client.is_active === 1) ? 'Inactive' : 'Active';
+    const newActive = newStatus === 'Active' ? 1 : 0;
+    try {
+      const res = await fetch(`/api/company-information/major-clients/${client.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...client,
+          status: newStatus,
+          is_active: newActive
+        })
+      });
+      if (res.ok) {
+        await fetchMajorClientsAdmin();
+        window.dispatchEvent(new Event('dataUpdated'));
+      }
+    } catch (err) {
+      console.error('Error toggling client status:', err);
+    }
+  };
+
+  const handleDeleteClient = async (id, name) => {
+    if (!confirm(`Are you sure you want to delete major client "${name}"?`)) return;
+    try {
+      const res = await fetch(`/api/company-information/major-clients/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        await fetchMajorClientsAdmin();
+        window.dispatchEvent(new Event('dataUpdated'));
+        alert(`✓ Major client "${name}" deleted.`);
+      } else {
+        alert('Unable to delete major client.');
+      }
+    } catch (err) {
+      console.error('Error deleting major client:', err);
+      alert('Error deleting major client.');
+    }
+  };
+
   // Maintenance Mode state
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceTitle, setMaintenanceTitle] = useState('WEBSITE UNDER MAINTENANCE');
@@ -1317,14 +1639,20 @@ export default function AdminPanel({ onNavigate }) {
         });
         if (res.ok) {
           const result = await res.json();
+          const newBannerUrl = result.bannerUrl || base64Url;
           setPageBanners(prev => ({
             ...prev,
-            [pageKey]: result.bannerUrl
+            [pageKey]: newBannerUrl
           }));
           if (keyMap[pageKey]) {
-            updateCachedCompanySettings({ [keyMap[pageKey]]: result.bannerUrl });
+            setCompanySettings(prev => ({
+              ...prev,
+              [keyMap[pageKey]]: newBannerUrl
+            }));
+            updateCachedCompanySettings({ [keyMap[pageKey]]: newBannerUrl });
           }
-          alert(`Success! ${pageKey.toUpperCase()} banner updated successfully.`);
+          window.dispatchEvent(new Event('dataUpdated'));
+          alert(`✓ ${pageKey.toUpperCase()} banner updated successfully! Changes are live on the website.`);
         } else {
           alert('Failed to upload banner. Please try again.');
         }
@@ -1356,9 +1684,14 @@ export default function AdminPanel({ onNavigate }) {
           [pageKey]: ''
         }));
         if (keyMap[pageKey]) {
+          setCompanySettings(prev => ({
+            ...prev,
+            [keyMap[pageKey]]: ''
+          }));
           updateCachedCompanySettings({ [keyMap[pageKey]]: '' });
         }
-        alert(`Custom banner for ${title} deleted. Reverted to default system banner.`);
+        window.dispatchEvent(new Event('dataUpdated'));
+        alert(`✓ Custom banner for ${title} deleted. Reverted to default system banner on the website.`);
       }
     } catch (err) {
       console.error('Delete error:', err);
@@ -1383,7 +1716,36 @@ export default function AdminPanel({ onNavigate }) {
     }));
   };
 
-  const saveCompanySettings = async () => {
+  const updateCompanyFieldAndSave = async (field, val) => {
+    const updatedSettings = {
+      ...companySettings,
+      [field]: val
+    };
+    setCompanySettings(updatedSettings);
+
+    try {
+      const payload = {
+        ...updatedSettings,
+        aboutUsVideoUrl,
+        aboutUsHeroType,
+        aboutUsHeroUrl
+      };
+      delete payload.id;
+      const res = await fetch('/api/settings/company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        window.dispatchEvent(new Event('companySettingsUpdated'));
+        window.dispatchEvent(new Event('dataUpdated'));
+      }
+    } catch (err) {
+      console.warn('Error saving company settings field:', err);
+    }
+  };
+
+  const saveCompanySettings = async (sectionName) => {
     try {
       const payload = {
         ...companySettings,
@@ -1416,7 +1778,8 @@ export default function AdminPanel({ onNavigate }) {
     } catch (err) {
       console.warn('DB save error:', err);
     }
-    alert('Company Information saved successfully! Changes will reflect on the frontend.');
+    const title = typeof sectionName === 'string' && sectionName.trim() ? sectionName.trim() : 'Company Information';
+    alert(`✓ ${title} saved successfully! Changes are live on the website.`);
   };
 
   const discardCompanyChanges = () => {
@@ -1429,20 +1792,23 @@ export default function AdminPanel({ onNavigate }) {
   };
 
   const saveContactSettings = async () => {
-    localStorage.setItem('contactSettings', JSON.stringify(contactSettings));
-
     try {
       const payload = { ...contactSettings };
       delete payload.id;
-      await fetch('/api/settings/contact', {
+      const res = await fetch('/api/settings/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (res.ok) {
+        localStorage.setItem('contactSettings', JSON.stringify(contactSettings));
+        window.dispatchEvent(new CustomEvent('contactSettingsUpdated', { detail: payload }));
+        window.dispatchEvent(new Event('dataUpdated'));
+      }
     } catch (err) {
       console.warn('DB save error:', err);
     }
-    alert('Contact Information saved successfully! Changes will appear on the Contact Us page.');
+    alert('✓ Contact Information saved successfully! Changes are live on the website.');
   };
 
   // Project form modal state
@@ -1696,13 +2062,13 @@ export default function AdminPanel({ onNavigate }) {
 
     if (type === 'discipline') {
       const list = parseJsonArray(companySettings.aboutUsDisciplinesJson, DEFAULT_COMPANY_SETTINGS.aboutUsDisciplinesJson);
-      const itemToSave = { name: data.name || 'New Discipline', icon: data.icon || 'Building2' };
+      const itemToSave = { name: data.name || 'New Discipline', icon: data.icon || 'Building2', image: data.image || '' };
       if (editIndex !== null) {
         list[editIndex] = itemToSave;
       } else {
         list.push(itemToSave);
       }
-      updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(list));
+      await updateCompanyFieldAndSave('aboutUsDisciplinesJson', JSON.stringify(list));
     } else if (type === 'digitalTwin') {
       const list = parseJsonArray(companySettings.aboutUsCapabilitiesJson, DEFAULT_COMPANY_SETTINGS.aboutUsCapabilitiesJson);
       const itemToSave = { title: data.title || 'New Capability', desc: data.desc || '', icon: data.icon || 'Cloud' };
@@ -1711,7 +2077,7 @@ export default function AdminPanel({ onNavigate }) {
       } else {
         list.push(itemToSave);
       }
-      updateCompanyField('aboutUsCapabilitiesJson', JSON.stringify(list));
+      await updateCompanyFieldAndSave('aboutUsCapabilitiesJson', JSON.stringify(list));
     } else if (type === 'capabilityChip') {
       const list = parseJsonArray(companySettings.sustainabilityCapabilitiesJson, DEFAULT_COMPANY_SETTINGS.sustainabilityCapabilitiesJson);
       const itemToSave = { name: data.name || 'New Capability', icon: data.icon || 'Award', slug: data.slug || 'Sustainability Services', desc: data.desc || '' };
@@ -1720,7 +2086,7 @@ export default function AdminPanel({ onNavigate }) {
       } else {
         list.push(itemToSave);
       }
-      updateCompanyField('sustainabilityCapabilitiesJson', JSON.stringify(list));
+      await updateCompanyFieldAndSave('sustainabilityCapabilitiesJson', JSON.stringify(list));
     } else if (type === 'remotePillar') {
       const list = parseJsonArray(companySettings.remotePillarsJson, DEFAULT_COMPANY_SETTINGS.remotePillarsJson);
       const itemToSave = {
@@ -1735,12 +2101,21 @@ export default function AdminPanel({ onNavigate }) {
       } else {
         list.push(itemToSave);
       }
-      updateCompanyField('remotePillarsJson', JSON.stringify(list));
+      await updateCompanyFieldAndSave('remotePillarsJson', JSON.stringify(list));
     } else if (type === 'teamMember') {
+      const hierarchyVal = parseInt(data.hierarchy_number ?? data.hierarchyNumber ?? data.order_num ?? 0, 10) || 1;
       if (editIndex !== null) {
         const member = (Array.isArray(teamMembers) ? teamMembers : [])[editIndex];
         if (member) {
-          const updatedMember = { ...member, name: data.name, role: data.role || '', image: data.image, department: data.department || '' };
+          const updatedMember = {
+            ...member,
+            name: data.name,
+            role: data.role || '',
+            image: data.image,
+            department: data.department || '',
+            hierarchy_number: hierarchyVal,
+            order_num: hierarchyVal
+          };
           try {
             const res = await fetch(`/api/team/${member.id}`, {
               method: 'PUT',
@@ -1749,10 +2124,20 @@ export default function AdminPanel({ onNavigate }) {
             });
             if (res.ok) {
               const saved = await res.json();
-              setTeamMembers(prev => (Array.isArray(prev) ? prev : []).map(m => m.id === member.id ? saved : m));
+              setTeamMembers(prev => {
+                const list = (Array.isArray(prev) ? prev : []).map(m => m.id === member.id ? saved : m);
+                return list.sort((a, b) => (parseInt(a.hierarchy_number ?? a.order_num ?? 0, 10) - parseInt(b.hierarchy_number ?? b.order_num ?? 0, 10)) || (a.id - b.id));
+              });
+              window.dispatchEvent(new CustomEvent('dataUpdated'));
+            } else {
+              const errData = await res.json().catch(() => ({}));
+              alert(errData.error || 'Failed to update team member. Please try again.');
+              return;
             }
           } catch (e) {
             console.error('Error updating team member:', e);
+            alert('Failed to update team member. Please try again.');
+            return;
           }
         }
       } else {
@@ -1765,15 +2150,26 @@ export default function AdminPanel({ onNavigate }) {
               role: data.role || '',
               image: data.image || null,
               department: data.department || '',
-              order_num: (Array.isArray(teamMembers) ? teamMembers.length : 0) + 1
+              hierarchy_number: hierarchyVal,
+              order_num: hierarchyVal
             })
           });
           if (res.ok) {
             const newMember = await res.json();
-            setTeamMembers(prev => [...(Array.isArray(prev) ? prev : []), newMember]);
+            setTeamMembers(prev => {
+              const list = [...(Array.isArray(prev) ? prev : []), newMember];
+              return list.sort((a, b) => (parseInt(a.hierarchy_number ?? a.order_num ?? 0, 10) - parseInt(b.hierarchy_number ?? b.order_num ?? 0, 10)) || (a.id - b.id));
+            });
+            window.dispatchEvent(new CustomEvent('dataUpdated'));
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            alert(errData.error || 'Failed to add team member. Please try again.');
+            return;
           }
         } catch (e) {
           console.error('Error adding team member:', e);
+          alert('Failed to add team member. Please try again.');
+          return;
         }
       }
     }
@@ -1880,13 +2276,12 @@ export default function AdminPanel({ onNavigate }) {
     if (isLoggedIn && currentUser) {
       const restrictedTabs = [
         '/admin/users',
-        '/admin/settings/company',
         '/admin/settings/contact',
         '/admin/settings/footer',
         '/admin/seo',
         '/admin/settings/maintenance'
       ];
-      if (currentUser.role !== 'super_admin' && restrictedTabs.includes(activeTab)) {
+      if (currentUser.role !== 'super_admin' && currentUser.role !== 'superadmin' && restrictedTabs.includes(activeTab)) {
         setActiveTab('/admin/dashboard');
       }
     }
@@ -1987,14 +2382,17 @@ export default function AdminPanel({ onNavigate }) {
       } else if (tab === 'partners') {
         const res = await fetch('/api/partners');
         if (res.ok) setPartners(await res.json());
-      } else if (tab === 'media') {
+      } else if (tab === 'media' || tab === '/admin/media') {
         const res = await fetch('/api/media');
         if (res.ok) setMediaItems(await res.json());
+        fetchBlogsAdmin();
       } else if (tab === 'team' || tab === '/admin/team') {
         const resTeam = await fetch('/api/team?all=true');
         if (resTeam.ok) setTeamMembers(await resTeam.json());
       } else if (tab === '/admin/settings/company') {
         fetchPageBanners();
+        fetchMajorClientsAdmin();
+        fetchPartnersAdmin();
         const resTeam = await fetch('/api/team?all=true');
         if (resTeam.ok) setTeamMembers(await resTeam.json());
         const res = await fetch('/api/settings/company');
@@ -2236,19 +2634,32 @@ export default function AdminPanel({ onNavigate }) {
   };
 
   const handleDelete = async (tab, id) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+    if (!confirm('Are you sure you want to permanently delete this item?')) return;
     const apiTab = getTabFromRoute(tab);
     const routeName = apiTab === 'hero' ? 'hero_slides' : apiTab;
     try {
       const res = await fetch(`/api/${routeName}/${id}`, { method: 'DELETE' });
       if (res.ok) {
+        // Optimistic UI state update for instant deletion response
+        if (apiTab === 'projects' || tab === 'projects') setProjects(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== id) : []));
+        if (apiTab === 'news' || tab === 'news') setNews(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== id) : []));
+        if (apiTab === 'media' || tab === 'media') setMediaItems(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== id) : []));
+        if (apiTab === 'team' || tab === 'team') setTeamMembers(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== id) : []));
+        if (apiTab === 'partners' || tab === 'partners') setPartners(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== id) : []));
+        if (apiTab === 'certificates' || tab === 'certificates') setCertificates(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== id) : []));
+        if (apiTab === 'testimonials' || tab === 'testimonials') setTestimonials(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== id) : []));
+
         fetchDataForTab(apiTab);
         window.dispatchEvent(new Event('menuUpdated'));
+        window.dispatchEvent(new Event('dataUpdated'));
+        window.dispatchEvent(new Event('companySettingsUpdated'));
+        showToast('Item permanently deleted from database!', 'success');
       } else {
-        alert('Failed to delete item.');
+        alert('Failed to delete item from database.');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error deleting item:', err);
+      alert('Error deleting item from server.');
     }
   };
 
@@ -2977,11 +3388,12 @@ export default function AdminPanel({ onNavigate }) {
 
   // Filter items helper
   const filterList = (list, keys) => {
-    if (!searchQuery) return list;
-    return list.filter(item =>
-      keys.some(key => {
+    const safeList = Array.isArray(list) ? list : [];
+    if (!searchQuery) return safeList;
+    return safeList.filter(item =>
+      item && Array.isArray(keys) && keys.some(key => {
         const val = item[key];
-        return val && String(val).toLowerCase().includes(searchQuery.toLowerCase());
+        return val !== undefined && val !== null && String(val).toLowerCase().includes(searchQuery.toLowerCase());
       })
     );
   };
@@ -3119,24 +3531,27 @@ export default function AdminPanel({ onNavigate }) {
           )}
 
           {/* Website Settings Section */}
-          {currentUser?.role === 'super_admin' && (
+          <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('settings')}>
+            <span className="admin-sidebar-header">Website Settings</span>
+            {sectionsExpanded.settings ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </div>
+          {sectionsExpanded.settings && (
             <>
-              <div className="admin-sidebar-header-wrapper" onClick={() => toggleSection('settings')}>
-                <span className="admin-sidebar-header">Website Settings</span>
-                {sectionsExpanded.settings ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-              </div>
-              {sectionsExpanded.settings && (
+              {/* Company Information: Accessible for both Admin and Super Admin */}
+              <button
+                className={`admin-nav-item ${activeTab === '/admin/settings/company' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/admin/settings/company')}
+              >
+                <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Sliders size={20} />
+                  <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Company Information</span>
+                </div>
+                {activeTab === '/admin/settings/company' && <div className="admin-nav-indicator" />}
+              </button>
+
+              {/* Remaining Website Settings: Super Admin Only */}
+              {(currentUser?.role === 'super_admin' || currentUser?.role === 'superadmin') && (
                 <>
-                  <button
-                    className={`admin-nav-item ${activeTab === '/admin/settings/company' ? 'active' : ''}`}
-                    onClick={() => handleNavClick('/admin/settings/company')}
-                  >
-                    <div className="admin-nav-item-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <Sliders size={20} />
-                      <span style={{ fontSize: '13.5px', whiteSpace: 'nowrap' }}>Company Information</span>
-                    </div>
-                    {activeTab === '/admin/settings/company' && <div className="admin-nav-indicator" />}
-                  </button>
                   <button
                     className={`admin-nav-item ${activeTab === '/admin/settings/contact' ? 'active' : ''}`}
                     onClick={() => handleNavClick('/admin/settings/contact')}
@@ -3157,7 +3572,7 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                     {activeTab === '/admin/settings/footer' && <div className="admin-nav-indicator" />}
                   </button>
-                  {/* SEO Management Item */}
+
                   <button
                     className={`admin-nav-item ${activeTab === '/admin/seo' ? 'active' : ''}`}
                     onClick={() => handleNavClick('/admin/seo')}
@@ -3169,7 +3584,6 @@ export default function AdminPanel({ onNavigate }) {
                     {activeTab === '/admin/seo' && <div className="admin-nav-indicator" />}
                   </button>
 
-                  {/* Maintenance Mode Item (Super Admin Only) */}
                   <button
                     className={`admin-nav-item ${activeTab === '/admin/settings/maintenance' ? 'active' : ''}`}
                     onClick={() => handleNavClick('/admin/settings/maintenance')}
@@ -3272,13 +3686,14 @@ export default function AdminPanel({ onNavigate }) {
         {/* Right Main Pane */}
         <main className="admin-content-pane">
           {/* Conditional Add Button Header */}
-          {['/admin/news', '/admin/services', '/admin/certificates', '/admin/testimonials', '/admin/users', '/admin/projects', '/admin/partners', '/admin/media', '/admin/team'].includes(activeTab) && (
+          {['/admin/news', '/admin/services', '/admin/certificates', '/admin/testimonials', '/admin/users', '/admin/projects', '/admin/partners', '/admin/team'].includes(activeTab) && (
             <div className="admin-pane-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
               <button
                 className="admin-add-btn"
                 onClick={() => {
                   if (activeTab === '/admin/team') {
-                    openCrudModal('teamMember', null, { name: '', role: '', department: '', image: null });
+                    const nextNum = (Array.isArray(teamMembers) ? teamMembers.length : 0) + 1;
+                    openCrudModal('teamMember', null, { name: '', role: '', department: '', image: null, hierarchy_number: nextNum });
                   } else if (activeTab === '/admin/projects') {
                     resetForms();
                     setEditingProjectId(null);
@@ -3297,7 +3712,6 @@ export default function AdminPanel({ onNavigate }) {
                 {activeTab === '/admin/users' && 'Create Administrator'}
                 {activeTab === '/admin/projects' && 'Add New Project'}
                 {activeTab === '/admin/partners' && 'Add Partner'}
-                {activeTab === '/admin/media' && 'Add Media'}
                 {activeTab === '/admin/team' && 'Add Team Member'}
               </button>
             </div>
@@ -3630,10 +4044,18 @@ export default function AdminPanel({ onNavigate }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                   {/* SECTION 1: Site Identity */}
-                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}><Building size={16} /></div>
-                      <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Site Identity</h3>
+                  <div style={{ background: '#F8FAFC', borderRadius: '14px', border: '1.5px solid #CBD5E1', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#EFF6FF', borderBottom: '1px solid #DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E40AF' }}><Building size={16} /></div>
+                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E3A8A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Site Identity & Legal Details</h3>
+                      </div>
+                      <button
+                        style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(37,99,235,0.2)' }}
+                        onClick={() => saveCompanySettings('Site Identity & Legal Details')}
+                      >
+                        <Check size={13} /> Save Section
+                      </button>
                     </div>
                     <div className="admin-form-grid-2col" style={{ padding: '24px' }}>
                       <div>
@@ -3659,22 +4081,245 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                   </div>
 
+                  {/* SECTION: OUR WORKING PARTNERS */}
+                  <div style={{ background: '#F8FAFC', borderRadius: '14px', border: '1.5px solid #CBD5E1', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F0FDF4', borderBottom: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#166534' }}><Globe size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#14532D', textTransform: 'uppercase', letterSpacing: '0.5px' }}>OUR WORKING PARTNERS</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#15803D' }}>Manage working partner logos, names, roles, and display order for the About Us page.</p>
+                        </div>
+                      </div>
+                      <button
+                        style={{ background: '#166534', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(22,101,52,0.2)' }}
+                        onClick={() => startAdd('partners')}
+                      >
+                        <Plus size={14} /> Add Working Partner
+                      </button>
+                    </div>
+
+                    <div style={{ padding: '24px' }}>
+                      {partners.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '30px 20px', background: '#FFFFFF', borderRadius: '10px', border: '1px dashed #CBD5E1' }}>
+                          <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#64748B', fontWeight: '600' }}>No working partners added yet.</p>
+                          <button
+                            style={{ background: '#166534', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => startAdd('partners')}
+                          >
+                            <Plus size={14} /> Add First Working Partner
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
+                          {partners.map((partner, idx) => {
+                            const cacheBust = partner.updated_at ? `?v=${new Date(partner.updated_at).getTime()}` : '';
+                            const logoSrc = partner.image ? `${partner.image}${cacheBust}` : '/partner_teknik.png';
+
+                            return (
+                              <div
+                                key={partner.id}
+                                style={{
+                                  background: '#FFFFFF',
+                                  borderRadius: '12px',
+                                  border: '1px solid #E2E8F0',
+                                  padding: '16px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '12px',
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: '800', padding: '2px 8px', borderRadius: '4px', background: '#F1F5F9', color: '#475569', letterSpacing: '0.5px' }}>
+                                    ORDER #{String(partner.order_num || idx + 1).padStart(2, '0')}
+                                  </span>
+                                  <span style={{ fontSize: '10.5px', fontWeight: '800', padding: '2px 8px', borderRadius: '12px', background: '#ECFDF5', color: '#10B981', textTransform: 'uppercase' }}>
+                                    Active
+                                  </span>
+                                </div>
+
+                                {/* Logo Box */}
+                                <div style={{ height: '90px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+                                  <img
+                                    src={logoSrc}
+                                    alt={partner.name}
+                                    style={{ maxHeight: '60px', maxWidth: '80%', objectFit: 'contain' }}
+                                    onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=200&q=80'; }}
+                                  />
+                                </div>
+
+                                <div>
+                                  <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '700', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {partner.name}
+                                  </h4>
+                                  <p style={{ margin: '2px 0 0 0', fontSize: '11.5px', color: '#64748B' }}>
+                                    {partner.role || 'Working Partner'}
+                                  </p>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div style={{ display: 'flex', gap: '8px', paddingTop: '8px', borderTop: '1px solid #F1F5F9', marginTop: 'auto' }}>
+                                  <button
+                                    style={{ flex: 1, background: '#EFF6FF', color: '#2563EB', border: '1px solid #DBEAFE', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                    onClick={() => startEdit('partners', partner)}
+                                  >
+                                    <Edit size={12} /> Edit
+                                  </button>
+                                  <button
+                                    style={{ background: '#FFF1F2', color: '#E11D48', border: '1px solid #FECDD3', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onClick={() => handleDelete('partners', partner.id)}
+                                    title="Delete Partner"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SECTION: OUR MAJOR CLIENTS */}
+                  <div style={{ background: '#F8FAFC', borderRadius: '14px', border: '1.5px solid #CBD5E1', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0F2747' }}><Users size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#0F2747', textTransform: 'uppercase', letterSpacing: '0.5px' }}>OUR MAJOR CLIENTS</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748B' }}>Manage client logos, display order (01, 02, 03...), and enable/disable status for the homepage carousel.</p>
+                        </div>
+                      </div>
+                      <button
+                        style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(0,62,138,0.2)' }}
+                        onClick={openAddClientModal}
+                      >
+                        <Plus size={14} /> Add Major Client
+                      </button>
+                    </div>
+
+                    <div style={{ padding: '24px' }}>
+                      {majorClients.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '30px 20px', background: '#FFFFFF', borderRadius: '10px', border: '1px dashed #CBD5E1' }}>
+                          <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#64748B', fontWeight: '600' }}>No major clients added yet.</p>
+                          <button
+                            style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            onClick={openAddClientModal}
+                          >
+                            <Plus size={14} /> Add First Major Client
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
+                          {majorClients.map((client, idx) => {
+                            const cacheBust = client.updated_at ? `?v=${new Date(client.updated_at).getTime()}` : '';
+                            const logoSrc = client.logo ? `${client.logo}${cacheBust}` : '/partner_teknik.png';
+                            const isActive = client.status === 'Active' || client.is_active === 1 || client.is_active === true;
+
+                            return (
+                              <div
+                                key={client.id}
+                                style={{
+                                  background: '#FFFFFF',
+                                  borderRadius: '12px',
+                                  border: '1px solid #E2E8F0',
+                                  padding: '16px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '12px',
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: '800', padding: '2px 8px', borderRadius: '4px', background: '#F1F5F9', color: '#475569', letterSpacing: '0.5px' }}>
+                                    ORDER #{String(client.display_order || idx + 1).padStart(2, '0')}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: '10.5px',
+                                      fontWeight: '800',
+                                      padding: '2px 8px',
+                                      borderRadius: '12px',
+                                      background: isActive ? '#ECFDF5' : '#F1F5F9',
+                                      color: isActive ? '#10B981' : '#94A3B8',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px'
+                                    }}
+                                  >
+                                    {isActive ? 'Active' : 'Inactive'}
+                                  </span>
+                                </div>
+
+                                {/* Logo Box */}
+                                <div style={{ height: '90px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+                                  <img
+                                    src={logoSrc}
+                                    alt={client.name}
+                                    style={{ maxHeight: '60px', maxWidth: '80%', objectFit: 'contain' }}
+                                    onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=200&q=80'; }}
+                                  />
+                                </div>
+
+                                <div>
+                                  <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '700', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {client.name}
+                                  </h4>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div style={{ display: 'flex', gap: '8px', paddingTop: '8px', borderTop: '1px solid #F1F5F9', marginTop: 'auto' }}>
+                                  <button
+                                    style={{ flex: 1, background: '#EFF6FF', color: '#2563EB', border: '1px solid #DBEAFE', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                    onClick={() => openEditClientModal(client)}
+                                  >
+                                    <Edit size={12} /> Edit
+                                  </button>
+                                  <button
+                                    style={{ background: isActive ? '#FFF1F2' : '#ECFDF5', color: isActive ? '#DC2626' : '#059669', border: isActive ? '1px solid #FECDD3' : '1px solid #A7F3D0', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                                    onClick={() => handleToggleClientStatus(client)}
+                                  >
+                                    <Eye size={12} /> {isActive ? 'Disable' : 'Enable'}
+                                  </button>
+                                  <button
+                                    style={{ background: '#FFF1F2', color: '#E11D48', border: '1px solid #FECDD3', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onClick={() => handleDeleteClient(client.id, client.name)}
+                                    title="Delete Client"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* ALL WEBSITE PAGE BANNERS MANAGEMENT SECTION */}
-                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 24px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ background: '#FAF5FF', borderRadius: '14px', border: '1.5px solid #E9D5FF', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#F3E8FF', borderBottom: '1px solid #E9D5FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#E9D5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E22CE' }}>
                           <ImageIcon size={20} />
                         </div>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#581C87', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             Website Page Banners Management
                           </h3>
-                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748B' }}>
-                            Upload, view, replace, or delete custom top banner images for each page. Click "Reset Default" to restore the system default banner.
+                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#7E22CE' }}>
+                            Upload, view, replace, or delete custom top banner images for each page.
                           </p>
                         </div>
                       </div>
+                      <button
+                        style={{ background: '#9333EA', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(147,51,234,0.2)' }}
+                        onClick={() => saveCompanySettings('Website Page Banners')}
+                      >
+                        <Check size={13} /> Save Banners
+                      </button>
                     </div>
 
                     <div className="admin-banners-grid">
@@ -3782,15 +4427,21 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
 
                   {/* HERO BANNER MEDIA MANAGEMENT */}
-                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ background: '#F0F9FF', borderRadius: '14px', border: '1.5px solid #BAE6FD', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#E0F2FE', borderBottom: '1px solid #BAE6FD', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}><ImageIcon size={16} /></div>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#BAE6FD', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7' }}><Video size={16} /></div>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Home — Hero Banner Media</h3>
-                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize the top banner media of the Home page with either a custom image or background video.</p>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#075985', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Home — Hero Banner Media</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#0369A1' }}>Customize top banner media of the Home page with custom image or background video.</p>
                         </div>
                       </div>
+                      <button
+                        style={{ background: '#0284C7', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(2,132,199,0.2)' }}
+                        onClick={() => saveCompanySettings('Home Hero Media')}
+                      >
+                        <Check size={13} /> Save Hero Media
+                      </button>
                     </div>
 
                     <div className="admin-hero-media-grid" style={{ padding: '24px' }}>
@@ -3919,15 +4570,21 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
 
                   {/* HERO SLIDER STAT CARDS MANAGEMENT */}
-                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ background: '#FFFBEB', borderRadius: '14px', border: '1.5px solid #FDE68A', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#FEF3C7', borderBottom: '1px solid #FDE68A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#087CFF' }}><BarChart3 size={16} /></div>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#FDE68A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#B45309' }}><BarChart3 size={16} /></div>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Home — Hero Stat Cards (4 Dynamic Cards)</h3>
-                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize values & labels for the 4 floating stat cards on the Home Page Hero section.</p>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#78350F', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Home — Hero Stat Cards (4 Dynamic Cards)</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#B45309' }}>Customize values & labels for the 4 floating stat cards on the Home Page Hero section.</p>
                         </div>
                       </div>
+                      <button
+                        style={{ background: '#D97706', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(217,119,6,0.2)' }}
+                        onClick={() => saveCompanySettings('Hero Statistics')}
+                      >
+                        <Check size={13} /> Save Statistics
+                      </button>
                     </div>
 
                     <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
@@ -4052,14 +4709,22 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                   </div>
 
-                  {/* SECTION 2: About Us — Who We Are */}
-                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#FFF7ED', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EA580C' }}><Layers size={16} /></div>
-                      <div>
-                        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>About Us — Who We Are</h3>
-                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Displayed in the "Who We Are" section on the About Us page</p>
+                  {/* SECTION 6: About Us — Who We Are */}
+                  <div style={{ background: '#FFF7ED', borderRadius: '14px', border: '1.5px solid #FED7AA', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#FFEDD5', borderBottom: '1px solid #FED7AA', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#FED7AA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EA580C' }}><Layers size={16} /></div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#9A3412', textTransform: 'uppercase', letterSpacing: '0.5px' }}>About Us — Who We Are & Media</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#C2410C' }}>Displayed in the "Who We Are" section on the About Us page</p>
+                        </div>
                       </div>
+                      <button
+                        style={{ background: '#EA580C', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(234,88,12,0.2)' }}
+                        onClick={() => saveCompanySettings('About Us Content')}
+                      >
+                        <Check size={13} /> Save About Us
+                      </button>
                     </div>
                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -4464,7 +5129,7 @@ export default function AdminPanel({ onNavigate }) {
                       </div>
                       <button
                         style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)' }}
-                        onClick={() => openCrudModal('discipline', null, { name: '', icon: 'Building2' })}
+                        onClick={() => openCrudModal('discipline', null, { name: '', icon: 'Building2', image: '' })}
                       >
                         <Plus size={15} /> + Add Card
                       </button>
@@ -4475,9 +5140,13 @@ export default function AdminPanel({ onNavigate }) {
                         return list.map((item, idx) => (
                           <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', background: '#F8FAFC', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{ background: '#EFF6FF', color: '#2563EB', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid #BFDBFE' }}>
-                                {item.icon || 'Building2'}
-                              </div>
+                              {item.image ? (
+                                <img src={item.image} alt={item.name} style={{ width: '34px', height: '34px', objectFit: 'contain', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFFFFF', padding: '2px' }} />
+                              ) : (
+                                <div style={{ background: '#EFF6FF', color: '#2563EB', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid #BFDBFE' }}>
+                                  {item.icon || 'Building2'}
+                                </div>
+                              )}
                               <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#1E293B' }}>{item.name}</span>
                             </div>
                             <div style={{ display: 'flex', gap: '6px' }}>
@@ -4492,9 +5161,10 @@ export default function AdminPanel({ onNavigate }) {
                                 title="Delete Discipline"
                                 style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 onClick={() => {
+                                  if (!confirm('Are you sure you want to delete this discipline card?')) return;
                                   const copy = [...list];
                                   copy.splice(idx, 1);
-                                  updateCompanyField('aboutUsDisciplinesJson', JSON.stringify(copy));
+                                  updateCompanyFieldAndSave('aboutUsDisciplinesJson', JSON.stringify(copy));
                                 }}
                               >
                                 <Trash2 size={14} />
@@ -4622,16 +5292,22 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
 
 
-                  {/* SECTION 11: Sustainability Consultancy Section Manager (CRUD) */}
-                  <div style={{ background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 24px', background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {/* SECTION 7: Sustainability Consultancy Section Manager */}
+                  <div style={{ background: '#F0FDFA', borderRadius: '14px', border: '1.5px solid #99F6E4', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#CCFBF1', borderBottom: '1px solid #99F6E4', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}><Leaf size={16} /></div>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#99F6E4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D9488' }}><Leaf size={16} /></div>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sustainability Consultancy Section (Homepage CRUD)</h3>
-                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94A3B8' }}>Customize text, descriptions, main section image and core capability chips</p>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#115E59', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sustainability Consultancy & Specialty Sections</h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#0F766E' }}>Customize text, descriptions, main section image and core capability chips</p>
                         </div>
                       </div>
+                      <button
+                        style={{ background: '#0D9488', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(13,148,136,0.2)' }}
+                        onClick={() => saveCompanySettings('Sustainability & Specialty Sections')}
+                      >
+                        <Check size={13} /> Save Specialty Section
+                      </button>
                     </div>
 
                     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -5790,23 +6466,39 @@ export default function AdminPanel({ onNavigate }) {
                   {/* Left Column: Quick Actions */}
                   <div className="admin-dashboard-left-col">
                     <div className="admin-quick-links-section">
-                      <h3>+ QUICK ACTIONS</h3>
+                      <h3>+ QUICK ACCESS MENUS</h3>
                       <div className="admin-quick-grid">
+                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/projects')}>
+                          <div className="admin-action-icon blue"><Briefcase size={20} /></div>
+                          <h4>PROJECTS</h4>
+                        </div>
+                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/services')}>
+                          <div className="admin-action-icon green"><Wrench size={20} /></div>
+                          <h4>SERVICES</h4>
+                        </div>
+                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/certificates')}>
+                          <div className="admin-action-icon orange"><Award size={20} /></div>
+                          <h4>CERTIFICATES</h4>
+                        </div>
+                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/testimonials')}>
+                          <div className="admin-action-icon purple"><Star size={20} /></div>
+                          <h4>TESTIMONIALS</h4>
+                        </div>
+                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/partners')}>
+                          <div className="admin-action-icon teal"><Building2 size={20} /></div>
+                          <h4>WORKING PARTNERS</h4>
+                        </div>
+                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/media')}>
+                          <div className="admin-action-icon indigo"><ImageIcon size={20} /></div>
+                          <h4>MEDIA LIBRARY</h4>
+                        </div>
+                        <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/team')}>
+                          <div className="admin-action-icon pink"><Users size={20} /></div>
+                          <h4>OUR TEAM</h4>
+                        </div>
                         <div className="admin-quick-action-card" onClick={() => { resetForms(); setShowAddModal(true); }}>
                           <div className="admin-action-icon blue"><Newspaper size={20} /></div>
                           <h4>COMPOSE NEWS</h4>
-                        </div>
-                        <div className="admin-quick-action-card" onClick={() => { resetForms(); setShowAddModal(true); }}>
-                          <div className="admin-action-icon green"><Wrench size={20} /></div>
-                          <h4>ADD SERVICE</h4>
-                        </div>
-                        <div className="admin-quick-action-card" onClick={() => { resetForms(); setShowAddModal(true); }}>
-                          <div className="admin-action-icon orange"><Award size={20} /></div>
-                          <h4>ADD CERTIFICATE</h4>
-                        </div>
-                        <div className="admin-quick-action-card" onClick={() => { resetForms(); setShowAddModal(true); }}>
-                          <div className="admin-action-icon purple"><Star size={20} /></div>
-                          <h4>ADD REVIEW</h4>
                         </div>
                         {currentUser?.role === 'super_admin' && (
                           <div className="admin-quick-action-card" onClick={() => setActiveTab('/admin/users')}>
@@ -8486,39 +9178,67 @@ export default function AdminPanel({ onNavigate }) {
             {/* MEDIA LIBRARY WORKSPACE */}
             {activeTab === '/admin/media' && (
               <div>
-                <div className="admin-table-card-header">
+                <div className="admin-table-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                   <h3>Media Library</h3>
-                  <div className="admin-search-bar">
-                    <input
-                      type="text"
-                      className="admin-input"
-                      placeholder="Search media..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                    />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <div className="admin-search-bar">
+                      <input
+                        type="text"
+                        className="admin-input"
+                        placeholder="Search media..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      style={{
+                        background: 'linear-gradient(135deg, #0057B8, #003E8A)',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 12px rgba(0, 87, 184, 0.25)',
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={() => {
+                        setActiveEditItem(null);
+                        setMediaForm({ type: 'gallery', category: 'Site', title: '', url: '' });
+                        setShowAddModal(true);
+                      }}
+                    >
+                      <Plus size={15} /> Add Media
+                    </button>
                   </div>
                 </div>
                 {/* Gallery Section */}
                 <div style={{ marginBottom: '24px' }}>
                   <h4 style={{ color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '1px' }}>📸 Gallery Images</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
-                    {filterList(mediaItems.filter(m => m.type === 'gallery'), ['title']).map((item) => (
-                      <div key={item.id} style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--card-bg)' }}>
-                        <div style={{ position: 'relative', paddingBottom: '70%', overflow: 'hidden', background: '#0F172A' }}>
-                          <img src={item.url} alt={item.title} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
-                        </div>
-                        <div style={{ padding: '8px' }}>
-                          <span className="admin-badge" style={{ fontSize: '9px', marginBottom: '4px', display: 'inline-block' }}>{item.category || 'Site'}</span>
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title || 'Untitled'}</div>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={12} /></button>
-                            <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('media', item.id)}><Trash size={12} /></button>
+                    {(Array.isArray(mediaItems) ? mediaItems : []).filter(m => m && m.type === 'gallery').length === 0 ? (
+                      <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '14px' }}>No gallery images yet. Click "Add Media" above.</div>
+                    ) : (
+                      filterList((Array.isArray(mediaItems) ? mediaItems : []).filter(m => m && m.type === 'gallery'), ['title']).map((item) => (
+                        <div key={item.id} style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--card-bg)' }}>
+                          <div style={{ position: 'relative', paddingBottom: '70%', overflow: 'hidden', background: '#0F172A' }}>
+                            <img src={item.url || '/servicepage1.png'} alt={item.title || 'Gallery Item'} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+                          </div>
+                          <div style={{ padding: '8px' }}>
+                            <span className="admin-badge" style={{ fontSize: '9px', marginBottom: '4px', display: 'inline-block' }}>{item.category || 'Site'}</span>
+                            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title || 'Untitled'}</div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={12} /></button>
+                              <button className="admin-action-btn delete" title="Delete" onClick={() => handleDelete('media', item.id)}><Trash size={12} /></button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                    {mediaItems.filter(m => m.type === 'gallery').length === 0 && (
-                      <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '14px' }}>No gallery images yet. Click "Add Media" above.</div>
+                      ))
                     )}
                   </div>
                 </div>
@@ -8538,19 +9258,21 @@ export default function AdminPanel({ onNavigate }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {filterList(mediaItems.filter(m => m.type === 'video'), ['title', 'url']).map((item, idx) => {
-                          const ytId = item.url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/)?.[1];
+                        {filterList((Array.isArray(mediaItems) ? mediaItems : []).filter(m => m && m.type === 'video'), ['title', 'url']).map((item, idx) => {
+                          const ytUrl = item && item.url && typeof item.url === 'string' ? item.url : '';
+                          const ytId = ytUrl ? ytUrl.match(/(?:v=|youtu\.be\/|embed\/)([^&?/]+)/)?.[1] : null;
+
                           return (
-                            <tr key={item.id}>
+                            <tr key={item.id || idx}>
                               <td>{idx + 1}</td>
                               <td>
                                 {ytId ? (
-                                  <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={item.title} style={{ width: '100px', height: '56px', objectFit: 'cover', borderRadius: '6px' }} />
+                                  <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={item.title || 'Video'} style={{ width: '100px', height: '56px', objectFit: 'cover', borderRadius: '6px' }} />
                                 ) : <span style={{ color: '#94A3B8', fontSize: '12px' }}>No Thumb</span>}
                               </td>
                               <td><span className="admin-badge">{item.category || 'Our Work'}</span></td>
-                              <td style={{ fontWeight: 600 }}>{item.title}</td>
-                              <td style={{ color: '#00B8A0', fontSize: '13px', wordBreak: 'break-all' }}>{item.url}</td>
+                              <td style={{ fontWeight: 600 }}>{item.title || 'Untitled Video'}</td>
+                              <td style={{ color: '#00B8A0', fontSize: '13px', wordBreak: 'break-all' }}>{ytUrl}</td>
                               <td>
                                 <div className="admin-actions">
                                   <button className="admin-action-btn" title="Edit" onClick={() => startEdit('media', item)}><Edit size={13} /></button>
@@ -8560,11 +9282,193 @@ export default function AdminPanel({ onNavigate }) {
                             </tr>
                           );
                         })}
-                        {mediaItems.filter(m => m.type === 'video').length === 0 && (
-                          <tr><td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No videos yet. Click "Add Media" above.</td></tr>
+                        {(Array.isArray(mediaItems) ? mediaItems : []).filter(m => m && m.type === 'video').length === 0 && (
+                          <tr><td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No videos yet. Click "Add Media" above.</td></tr>
                         )}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* Centered Save Button for YouTube Videos Section */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                    <button
+                      type="button"
+                      style={{
+                        background: 'linear-gradient(135deg, #0057B8, #003E8A)',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '10px 28px',
+                        borderRadius: '8px',
+                        fontSize: '13.5px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 14px rgba(0, 87, 184, 0.25)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => {
+                        fetchData('/admin/media');
+                        showToast('success', 'YouTube Videos settings saved successfully!');
+                      }}
+                    >
+                      <Save size={16} /> Save Video Section
+                    </button>
+                  </div>
+                </div>
+
+                {/* Blogs & News Articles Section */}
+                <div style={{ marginTop: '36px', paddingTop: '28px', borderTop: '2px dashed var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                      <h4 style={{ color: '#0F2747', fontWeight: 800, margin: 0, textTransform: 'uppercase', fontSize: '16px', letterSpacing: '0.5px' }}>📝 Blogs & Articles</h4>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748B' }}>Manage blog articles, publications, category tags, author details, and publication dates for the Insights page.</p>
+                    </div>
+                    <button
+                      type="button"
+                      style={{
+                        background: 'linear-gradient(135deg, #0057B8, #003E8A)',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        fontSize: '13.5px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 87, 184, 0.25)',
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={openAddBlogModal}
+                    >
+                      <Plus size={16} /> Add New Blog
+                    </button>
+                  </div>
+
+                  <div className="admin-table-wrapper">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '40px' }}>#</th>
+                          <th style={{ width: '110px' }}>Cover Image</th>
+                          <th>Category</th>
+                          <th>Title</th>
+                          <th>Author & Date</th>
+                          <th style={{ width: '110px' }}>Status</th>
+                          <th style={{ width: '110px' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filterList(Array.isArray(blogs) ? blogs : [], ['title', 'category', 'author', 'summary']).map((blog, idx) => {
+                          const cacheBust = blog.updated_at ? `?v=${new Date(blog.updated_at).getTime()}` : '';
+                          const imgSrc = blog.image ? (blog.image.startsWith('data:') || blog.image.startsWith('http') ? blog.image : `${blog.image}${cacheBust}`) : '/servicepage1.png';
+                          const isPub = blog.status === 'Published' || blog.status === 'Active' || blog.is_active === 1;
+
+                          return (
+                            <tr key={blog.id || idx}>
+                              <td>{idx + 1}</td>
+                              <td>
+                                <img
+                                  src={imgSrc}
+                                  alt={blog.title || 'Blog Article'}
+                                  style={{ width: '90px', height: '56px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #CBD5E1' }}
+                                  onError={(e) => { e.currentTarget.src = '/servicepage1.png'; }}
+                                />
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#0057B8', background: '#EFF6FF', border: '1px solid #DBEAFE', padding: '4px 10px', borderRadius: '14px', display: 'inline-block', textTransform: 'uppercase' }}>
+                                  {blog.category || 'Company News'}
+                                </span>
+                              </td>
+                              <td style={{ maxWidth: '300px' }}>
+                                <div style={{ color: '#0F2747', fontSize: '14px', fontWeight: '800', lineHeight: 1.35 }}>{blog.title}</div>
+                                {(blog.short_description || blog.summary) && (
+                                  <div style={{ color: '#64748B', fontSize: '12px', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '280px' }}>
+                                    {blog.short_description || blog.summary}
+                                  </div>
+                                )}
+                              </td>
+                              <td style={{ fontSize: '12.5px', color: '#64748B' }}>
+                                <div style={{ fontWeight: '700', color: '#334155' }}>{blog.author || 'Blue Crescent Team'}</div>
+                                <div style={{ fontSize: '11.5px', marginTop: '2px' }}>📅 {blog.date}</div>
+                              </td>
+                              <td>
+                                <span 
+                                  style={{
+                                    display: 'inline-block',
+                                    padding: '4px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '11.5px',
+                                    fontWeight: '800',
+                                    textTransform: 'uppercase',
+                                    background: isPub ? '#DCFCE7' : '#FEF3C7',
+                                    color: isPub ? '#15803D' : '#D97706',
+                                    border: isPub ? '1px solid #BBF7D0' : '1px solid #FDE68A'
+                                  }}
+                                >
+                                  {isPub ? 'Published' : 'Draft'}
+                                </span>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <button
+                                    type="button"
+                                    title="Edit Article"
+                                    onClick={() => openEditBlogModal(blog)}
+                                    style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#0057B8', width: '32px', height: '32px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Delete Article"
+                                    onClick={() => handleDeleteBlog(blog.id)}
+                                    style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444', width: '32px', height: '32px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                  >
+                                    <Trash size={14} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {(Array.isArray(blogs) ? blogs : []).length === 0 && (
+                          <tr><td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>No blogs added yet. Click "Add New Blog" to get started.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Centered Save Button for Blogs Section */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+                    <button
+                      type="button"
+                      style={{
+                        background: 'linear-gradient(135deg, #0057B8, #003E8A)',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '10px 28px',
+                        borderRadius: '8px',
+                        fontSize: '13.5px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 14px rgba(0, 87, 184, 0.25)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => {
+                        fetchBlogsAdmin();
+                        showToast('success', 'Blogs & Articles settings saved successfully!');
+                      }}
+                    >
+                      <Save size={16} /> Save Blog Section
+                    </button>
                   </div>
                 </div>
               </div>
@@ -8631,66 +9535,89 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
                 </div>
 
-                {/* Grid of Team Member Cards (Single Line Layout) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-                  {filterList((Array.isArray(teamMembers) ? teamMembers : []), ['name', 'role', 'department']).map((member, idx) => (
-                    <div
-                      key={member.id || idx}
-                      style={{
-                        background: '#FFFFFF',
-                        borderRadius: '14px',
-                        border: '1px solid #E2E8F0',
-                        padding: '14px 18px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '14px',
-                        boxShadow: '0 2px 8px rgba(6, 59, 115, 0.04)',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#BFDBFE';
-                        e.currentTarget.style.boxShadow = '0 6px 18px rgba(6, 59, 115, 0.08)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#E2E8F0';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(6, 59, 115, 0.04)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
-                        <div style={{
-                          width: '52px',
-                          height: '52px',
-                          borderRadius: '50%',
-                          overflow: 'hidden',
-                          background: 'linear-gradient(135deg, #071C3B, #00A198)',
-                          flexShrink: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#FFFFFF',
-                          fontWeight: '800',
-                          fontSize: '20px',
-                          boxShadow: '0 3px 8px rgba(0, 161, 152, 0.2)'
-                        }}>
-                          {member.image ? (
-                            <img src={member.image} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            (member.name ? member.name.charAt(0) : 'T')
-                          )}
-                        </div>
+                {/* Grid of Team Member Cards (Sorted by Hierarchy Number) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+                  {filterList((Array.isArray(teamMembers) ? teamMembers : []), ['name', 'role', 'department'])
+                    .sort((a, b) => (parseInt(a.hierarchy_number ?? a.order_num ?? 0, 10) - parseInt(b.hierarchy_number ?? b.order_num ?? 0, 10)) || (a.id - b.id))
+                    .map((member, idx) => {
+                      const hierarchyNum = String(member.hierarchy_number ?? member.order_num ?? (idx + 1)).padStart(2, '0');
+                      return (
+                        <div
+                          key={member.id || idx}
+                          style={{
+                            background: '#FFFFFF',
+                            borderRadius: '14px',
+                            border: '1px solid #E2E8F0',
+                            padding: '14px 18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '14px',
+                            boxShadow: '0 2px 8px rgba(6, 59, 115, 0.04)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#BFDBFE';
+                            e.currentTarget.style.boxShadow = '0 6px 18px rgba(6, 59, 115, 0.08)';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#E2E8F0';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(6, 59, 115, 0.04)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                            {/* Hierarchy Badge */}
+                            <div
+                              style={{
+                                background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+                                color: '#1D4ED8',
+                                border: '1px solid #BFDBFE',
+                                borderRadius: '8px',
+                                padding: '4px 8px',
+                                fontSize: '13px',
+                                fontWeight: '800',
+                                fontFamily: 'Space Grotesk, monospace',
+                                flexShrink: 0
+                              }}
+                              title={`Staff Hierarchy #${hierarchyNum}`}
+                            >
+                              {hierarchyNum}
+                            </div>
 
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <h4 style={{ margin: '0 0 2px 0', fontSize: '15px', fontWeight: '800', color: '#063B73', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {member.name}
-                          </h4>
-                          <span style={{ fontSize: '12.5px', color: '#087CFF', fontWeight: '700', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {member.role || 'Team Member'}
-                          </span>
-                        </div>
-                      </div>
+                            {/* Photo */}
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '50%',
+                              overflow: 'hidden',
+                              background: 'linear-gradient(135deg, #071C3B, #00A198)',
+                              flexShrink: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#FFFFFF',
+                              fontWeight: '800',
+                              fontSize: '18px',
+                              boxShadow: '0 2px 6px rgba(0, 161, 152, 0.2)'
+                            }}>
+                              {member.image ? (
+                                <img src={member.image} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                (member.name ? member.name.charAt(0) : 'T')
+                              )}
+                            </div>
+
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <h4 style={{ margin: '0 0 2px 0', fontSize: '15px', fontWeight: '800', color: '#063B73', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {member.name}
+                              </h4>
+                              <span style={{ fontSize: '12px', color: '#087CFF', fontWeight: '700', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {member.role || 'Team Member'}
+                              </span>
+                            </div>
+                          </div>
 
                       {/* Single Line Action Icon Buttons */}
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
@@ -8763,7 +9690,8 @@ export default function AdminPanel({ onNavigate }) {
                         </button>
                       </div>
                     </div>
-                  ))}
+                  );
+                })}
                   {(Array.isArray(teamMembers) ? teamMembers : []).length === 0 && (
                     <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', background: '#FFFFFF', borderRadius: '16px', color: '#64748B' }}>
                       No team members added yet. Click "+ Add Team Member" to create one.
@@ -10143,6 +11071,30 @@ export default function AdminPanel({ onNavigate }) {
                   </div>
 
                   <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>
+                      Staff Hierarchy Number *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={crudModal.data.hierarchy_number ?? crudModal.data.hierarchyNumber ?? crudModal.data.order_num ?? ''}
+                      onChange={e => {
+                        const val = parseInt(e.target.value, 10);
+                        setCrudModal(prev => ({
+                          ...prev,
+                          data: { ...prev.data, hierarchy_number: isNaN(val) ? '' : Math.max(1, val) }
+                        }));
+                      }}
+                      placeholder="Enter hierarchy number (e.g. 1, 2, 3...)"
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none' }}
+                    />
+                    <span style={{ fontSize: '11.5px', color: '#64748B', display: 'block', marginTop: '4px' }}>
+                      Determines the display order on website (1 = Top position, 2 = Second, etc.)
+                    </span>
+                  </div>
+
+                  <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Department / Service Tag</label>
                     <select
                       value={crudModal.data.department || ''}
@@ -10161,36 +11113,125 @@ export default function AdminPanel({ onNavigate }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Profile Photo</label>
-                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', background: 'linear-gradient(135deg, #071C3B, #00A198)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: '800', fontSize: '20px' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{
+                        width: '68px',
+                        height: '68px',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        background: 'linear-gradient(135deg, #071C3B, #00A198)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#FFF',
+                        fontWeight: '800',
+                        fontSize: '22px',
+                        border: '2px solid #E2E8F0',
+                        flexShrink: 0
+                      }}>
                         {crudModal.data.image ? (
                           <img src={crudModal.data.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
                           (crudModal.data.name ? crudModal.data.name.charAt(0) : 'T')
                         )}
                       </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: reader.result } }));
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        style={{ fontSize: '13px' }}
-                      />
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '200px' }}>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <label
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              background: '#EFF6FF',
+                              color: '#087CFF',
+                              border: '1px solid #BFDBFE',
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {crudModal.data.image ? '📷 Change Photo' : '📷 Upload Photo'}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/webp"
+                              style={{ display: 'none' }}
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                                if (!allowedTypes.includes(file.type.toLowerCase())) {
+                                  alert('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).');
+                                  return;
+                                }
+                                if (file.size > 5 * 1024 * 1024) {
+                                  alert('Image size exceeds the allowed limit (5MB). Please upload a smaller image.');
+                                  return;
+                                }
+
+                                // Try multipart upload endpoint first
+                                const formData = new FormData();
+                                formData.append('photo', file);
+
+                                try {
+                                  const res = await fetch('/api/upload', {
+                                    method: 'POST',
+                                    body: formData
+                                  });
+                                  if (res.ok) {
+                                    const uploadData = await res.json();
+                                    if (uploadData && uploadData.url) {
+                                      setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: uploadData.url } }));
+                                      return;
+                                    }
+                                  }
+                                } catch (uploadErr) {
+                                  console.warn('Multipart upload fallback to base64 reader:', uploadErr);
+                                }
+
+                                // Fallback to Base64 reader if multipart endpoint fails
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: reader.result } }));
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                          </label>
+
+                          {crudModal.data.image && (
+                            <button
+                              type="button"
+                              onClick={() => setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: '' } }))}
+                              style={{
+                                background: '#FEF2F2',
+                                color: '#EF4444',
+                                border: '1px solid #FEE2E2',
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ✕ Remove Photo
+                            </button>
+                          )}
+                        </div>
+                        <span style={{ fontSize: '11.5px', color: '#64748B' }}>
+                          Allowed: JPG, JPEG, PNG, WEBP (Max 5MB)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </>
               )}
 
-              {/* Icon Dropdown */}
-              {crudModal.type !== 'teamMember' && (
+              {/* Icon Dropdown (Hidden for Discipline cards which use Image & Title) */}
+              {crudModal.type !== 'teamMember' && crudModal.type !== 'discipline' && (
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>Card Display Icon</label>
                   <select
@@ -10208,6 +11249,125 @@ export default function AdminPanel({ onNavigate }) {
                       <option key={i} value={i}>{i}</option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {/* Custom Card Image Field for Disciplines */}
+              {crudModal.type === 'discipline' && (
+                <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#0F2747', textTransform: 'uppercase', marginBottom: '8px' }}>
+                    Custom Card Image (Upload or Image URL)
+                  </label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{
+                      width: '56px',
+                      height: '56px',
+                      borderRadius: '10px',
+                      background: '#FFFFFF',
+                      border: '1.5px solid #CBD5E1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      flexShrink: 0
+                    }}>
+                      {crudModal.data.image ? (
+                        <img src={crudModal.data.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
+                      ) : (
+                        <ImageIcon size={24} color="#94A3B8" />
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <label
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: '#EFF6FF',
+                          color: '#087CFF',
+                          border: '1px solid #BFDBFE',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          fontSize: '12.5px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          width: 'fit-content'
+                        }}
+                      >
+                        📷 {crudModal.data.image ? 'Change Photo' : 'Upload Photo'}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp,image/svg+xml"
+                          style={{ display: 'none' }}
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) {
+                              alert('Image size exceeds allowed 5MB limit.');
+                              return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('photo', file);
+
+                            try {
+                              const res = await fetch('/api/upload', {
+                                method: 'POST',
+                                body: formData
+                              });
+                              if (res.ok) {
+                                const uploadData = await res.json();
+                                if (uploadData && uploadData.url) {
+                                  setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: uploadData.url } }));
+                                  return;
+                                }
+                              }
+                            } catch (err) {
+                              console.warn('Multipart upload fallback to base64 reader:', err);
+                            }
+
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: reader.result } }));
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                      </label>
+
+                      {crudModal.data.image && (
+                        <button
+                          type="button"
+                          onClick={() => setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: '' } }))}
+                          style={{
+                            background: '#FEF2F2',
+                            color: '#EF4444',
+                            border: '1px solid #FEE2E2',
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            fontSize: '11.5px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            width: 'fit-content'
+                          }}
+                        >
+                          ✕ Remove Custom Image
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={crudModal.data.image || ''}
+                    onChange={e => setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: e.target.value } }))}
+                    placeholder="Or paste image URL (e.g. /our capacity/cad.png)"
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', background: '#FFFFFF' }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748B', display: 'block', marginTop: '4px' }}>
+                    If an image is uploaded or specified above, it will be displayed on the website card instead of the Lucide icon.
+                  </span>
                 </div>
               )}
 
@@ -10383,6 +11543,388 @@ export default function AdminPanel({ onNavigate }) {
                 {targetMaintenanceState ? 'ENABLE MAINTENANCE' : 'MAKE WEBSITE LIVE'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD / EDIT MAJOR CLIENT MODAL */}
+      {clientModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '520px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', border: '1px solid #E2E8F0' }}>
+            
+            {/* Header */}
+            <div style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #0F2747, #063B73)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Users size={20} style={{ color: '#38BDF8' }} />
+                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800' }}>
+                  {clientForm.id ? 'Edit Major Client' : 'Add Major Client'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setClientModalOpen(false)}
+                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#FFFFFF', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveClient} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* Client Name */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                  Client Name <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={clientForm.name}
+                  onChange={(e) => setClientForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Qatar Free Zones Authority"
+                  style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Display Order & Status Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={clientForm.display_order}
+                    onChange={(e) => setClientForm(prev => ({ ...prev, display_order: e.target.value }))}
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                    Status
+                  </label>
+                  <select
+                    value={clientForm.status}
+                    onChange={(e) => setClientForm(prev => ({ ...prev, status: e.target.value, is_active: e.target.value === 'Active' ? 1 : 0 }))}
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', background: '#FFFFFF', boxSizing: 'border-box' }}
+                  >
+                    <option value="Active">Active (Visible)</option>
+                    <option value="Inactive">Inactive (Hidden)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Client Logo Upload & Preview */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                  Client Logo <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                
+                {/* Image Preview Box */}
+                {clientFilePreview && (
+                  <div style={{ marginBottom: '12px', height: '110px', background: '#F8FAFC', borderRadius: '10px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', position: 'relative' }}>
+                    <img
+                      src={clientFilePreview}
+                      alt="Logo preview"
+                      style={{ maxHeight: '80px', maxWidth: '85%', objectFit: 'contain' }}
+                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=200&q=80'; }}
+                    />
+                  </div>
+                )}
+
+                {/* File Upload Zone */}
+                <input
+                  type="file"
+                  id="client-logo-input"
+                  accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleClientLogoSelect(e.target.files[0]);
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                />
+                
+                <label
+                  htmlFor="client-logo-input"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1.5px dashed #0057B8',
+                    background: '#F0F7FF',
+                    color: '#0057B8',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Upload size={16} /> {clientFilePreview ? 'Replace Logo' : 'Upload Client Logo (PNG, JPG, WEBP, SVG max 5MB)'}
+                </label>
+
+                {clientFileError && (
+                  <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#EF4444', fontWeight: '700' }}>
+                    ⚠️ {clientFileError}
+                  </p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid #E2E8F0' }}>
+                <button
+                  type="button"
+                  onClick={() => setClientModalOpen(false)}
+                  style={{ padding: '10px 18px', borderRadius: '8px', background: '#F1F5F9', color: '#475569', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={clientSaving}
+                  style={{ padding: '10px 22px', borderRadius: '8px', background: '#003E8A', color: '#FFFFFF', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: clientSaving ? 0.7 : 1 }}
+                >
+                  {clientSaving ? 'Saving...' : 'Save Client'}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD / EDIT BLOG MODAL */}
+      {blogModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', border: '1px solid #E2E8F0' }}>
+            
+            {/* Header */}
+            <div style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #0F2747, #063B73)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Edit size={20} style={{ color: '#38BDF8' }} />
+                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800' }}>
+                  {blogForm.id ? 'Edit Blog Article' : 'Add New Blog Article'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setBlogModalOpen(false)}
+                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#FFFFFF', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveBlog} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              
+              {/* Blog Title */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  Article Title <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Blue Crescent Expands Multidisciplinary BIM Services in Qatar"
+                  value={blogForm.title}
+                  onChange={(e) => setBlogForm(prev => ({ ...prev, title: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Grid: Category & Author */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Category</label>
+                  <select
+                    value={blogForm.category}
+                    onChange={(e) => setBlogForm(prev => ({ ...prev, category: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: '#FFFFFF' }}
+                  >
+                    <option value="Company News">Company News</option>
+                    <option value="Announcements">Announcements</option>
+                    <option value="Engineering Insights">Engineering Insights</option>
+                    <option value="Project Insights">Project Insights</option>
+                    <option value="BIM & Digital Twin">BIM & Digital Twin</option>
+                    <option value="Sustainability">Sustainability</option>
+                    <option value="Construction Technology">Construction Technology</option>
+                    <option value="Industry Trends">Industry Trends</option>
+                    <option value="Case Studies">Case Studies</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Author / Team</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Blue Crescent Editorial"
+                    value={blogForm.author}
+                    onChange={(e) => setBlogForm(prev => ({ ...prev, author: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              {/* Grid: Date & Status & Display Order */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Publication Date</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. August 27, 2026"
+                    value={blogForm.date}
+                    onChange={(e) => setBlogForm(prev => ({ ...prev, date: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Publication Status</label>
+                  <select
+                    value={blogForm.status}
+                    onChange={(e) => setBlogForm(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', background: '#FFFFFF' }}
+                  >
+                    <option value="Published">Published (Live on Website)</option>
+                    <option value="Draft">Draft (Hidden from Public)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Sort Order</label>
+                  <input
+                    type="number"
+                    value={blogForm.display_order}
+                    onChange={(e) => setBlogForm(prev => ({ ...prev, display_order: parseInt(e.target.value, 10) || 0 }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              {/* Cover Image Upload */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Featured Cover Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBlogImageChange}
+                  style={{ width: '100%', fontSize: '13px' }}
+                />
+                {blogFilePreview && (
+                  <div style={{ marginTop: '10px', height: '120px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #CBD5E1', overflow: 'hidden', position: 'relative' }}>
+                    <img src={blogFilePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.7)', color: '#FFF', fontSize: '10px', padding: '2px 8px', borderRadius: '4px' }}>CURRENT FEATURED IMAGE</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Short Description */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Short Description (Card Excerpt)</label>
+                <textarea
+                  rows={3}
+                  placeholder="Brief 2-3 sentence overview displayed on the blog card..."
+                  value={blogForm.summary}
+                  onChange={(e) => setBlogForm(prev => ({ ...prev, summary: e.target.value, short_description: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13.5px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Full Article Content with Rich Text Toolbar */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', margin: 0 }}>Full Article Content (Rich Text Body)</label>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[
+                      { label: 'H2', tag: '<h2>Heading 2</h2>' },
+                      { label: 'H3', tag: '<h3>Heading 3</h3>' },
+                      { label: 'Bold', tag: '<strong>Bold Text</strong>' },
+                      { label: 'Italic', tag: '<em>Italic Text</em>' },
+                      { label: 'List', tag: '<ul>\n  <li>List item 1</li>\n  <li>List item 2</li>\n</ul>' },
+                      { label: 'Quote', tag: '<blockquote>Key takeaway quote...</blockquote>' }
+                    ].map(btn => (
+                      <button
+                        key={btn.label}
+                        type="button"
+                        onClick={() => setBlogForm(prev => ({ ...prev, content: (prev.content || '') + '\n' + btn.tag }))}
+                        style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#475569', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        +{btn.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <textarea
+                  rows={7}
+                  placeholder="Detailed HTML formatted article body content (paragraphs, headings, lists, blockquotes)..."
+                  value={blogForm.content}
+                  onChange={(e) => setBlogForm(prev => ({ ...prev, content: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13.5px', outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                />
+              </div>
+
+              {/* SEO Meta Fields Accordion */}
+              <div style={{ border: '1px solid #CBD5E1', borderRadius: '8px', padding: '14px', background: '#F8FAFC' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '12.5px', fontWeight: '800', color: '#0F2747', textTransform: 'uppercase' }}>🔍 SEO Meta Information (Optional)</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748B', marginBottom: '4px' }}>SEO Title Tag</label>
+                    <input
+                      type="text"
+                      placeholder="Leave blank to use Article Title"
+                      value={blogForm.seo_title || ''}
+                      onChange={(e) => setBlogForm(prev => ({ ...prev, seo_title: e.target.value }))}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748B', marginBottom: '4px' }}>SEO Meta Description</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Leave blank to use Short Description"
+                      value={blogForm.seo_description || ''}
+                      onChange={(e) => setBlogForm(prev => ({ ...prev, seo_description: e.target.value }))}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12.5px', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '800', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Full Article Body</label>
+                <textarea
+                  rows={5}
+                  placeholder="Detailed article body text..."
+                  value={blogForm.content}
+                  onChange={(e) => setBlogForm(prev => ({ ...prev, content: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '13.5px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid #F1F5F9' }}>
+                <button
+                  type="button"
+                  onClick={() => setBlogModalOpen(false)}
+                  style={{ background: '#F1F5F9', color: '#475569', border: 'none', padding: '10px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={blogSaving}
+                  style={{ background: '#003E8A', color: '#FFFFFF', border: 'none', padding: '10px 22px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  {blogSaving ? 'Saving...' : 'Save Blog Article'}
+                </button>
+              </div>
+
+            </form>
           </div>
         </div>
       )}

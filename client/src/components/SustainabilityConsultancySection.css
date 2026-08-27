@@ -4,7 +4,8 @@
 
 .sustainability-consultancy-section {
   position: relative;
-  padding: 88px 0;
+  padding: 44px 0;
+  margin: 0 !important;
   background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #EFF6FF 100%);
   border-top: 1px solid #E2E8F0;
   border-bottom: 1px solid #E2E8F0;

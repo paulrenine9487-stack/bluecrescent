@@ -185,10 +185,10 @@ export default function ServicesList({ onNavigate }) {
   };
 
   return (
-    <section id="services" className="services-section-premium" style={{ marginTop: '64px', marginBottom: '80px' }}>
+    <section id="services" className="services-section-premium" style={{ margin: '0 auto' }}>
       <div className="services-container-inner">
         {/* Section Header */}
-        <div className="services-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '40px', padding: '0 20px' }}>
+        <div className="services-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '20px', padding: '0 20px' }}>
           <h2 className="services-title-premium" style={{ margin: '0 0 10px 0', color: '#063B73', fontSize: '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
             Our Services
           </h2>

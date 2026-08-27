@@ -148,10 +148,10 @@ const FALLBACK_DIVISIONS = [
 ];
 
 const resolveCategoryAndSubTab = (subTabParam) => {
-  if (!subTabParam) {
+  if (!subTabParam || typeof subTabParam !== 'string' || subTabParam.trim() === '') {
     return {
-      category: PROJECT_CATEGORIES[0],
-      subCategory: PROJECT_CATEGORIES[0].subCategories[0]
+      category: null,
+      subCategory: null
     };
   }
 
@@ -181,12 +181,12 @@ const resolveCategoryAndSubTab = (subTabParam) => {
   }
 
   return {
-    category: PROJECT_CATEGORIES[0],
-    subCategory: PROJECT_CATEGORIES[0].subCategories[0]
+    category: null,
+    subCategory: null
   };
 };
 
-export default function ProjectsPage({ activeSubTab = 'engineering-services', onNavigate }) {
+export default function ProjectsPage({ activeSubTab = '', onNavigate }) {
   const [projectDivisions, setProjectDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -195,11 +195,9 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
   const [activeSubCategory, setActiveSubCategory] = useState(initialResolved.subCategory);
 
   useEffect(() => {
-    if (activeSubTab) {
-      const resolved = resolveCategoryAndSubTab(activeSubTab);
-      setActiveCategory(resolved.category);
-      setActiveSubCategory(resolved.subCategory);
-    }
+    const resolved = resolveCategoryAndSubTab(activeSubTab);
+    setActiveCategory(resolved.category);
+    setActiveSubCategory(resolved.subCategory);
   }, [activeSubTab]);
 
   const [companySettings, setCompanySettings] = useState(() => getCachedCompanySettings());
@@ -226,18 +224,18 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
       .catch(err => console.warn('Company settings fetch warning:', err));
 
     const fetchProjects = () => {
-      fetch('/api/projects')
+      fetch('/api/projects?all=true')
         .then(res => res.ok ? res.json() : [])
         .then(data => {
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             setProjectDivisions(data.filter(p => p.status !== 'Inactive'));
           } else {
-            setProjectDivisions(FALLBACK_DIVISIONS);
+            setProjectDivisions([]);
           }
           setLoading(false);
         })
         .catch(() => {
-          setProjectDivisions(FALLBACK_DIVISIONS);
+          setProjectDivisions([]);
           setLoading(false);
         });
     };
@@ -254,14 +252,33 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
     };
   }, []);
 
-  const handleSelectMainCategory = (cat) => {
+  const handleSelectCategory = (cat) => {
+    const defaultSub = cat.subCategories && cat.subCategories.length > 0 ? cat.subCategories[0] : null;
     setActiveCategory(cat);
-    if (cat.subCategories && cat.subCategories.length > 0) {
-      setActiveSubCategory(cat.subCategories[0]);
+    setActiveSubCategory(defaultSub);
+    if (onNavigate) {
+      onNavigate('Projects', cat.slug || cat.name);
     }
+    setTimeout(() => {
+      const el = document.getElementById('project-detail-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleSelectSubCategory = (cat, sub) => {
+    setActiveCategory(cat);
+    setActiveSubCategory(sub);
+    if (onNavigate) {
+      onNavigate('Projects', sub.key || sub.label);
+    }
+    setTimeout(() => {
+      const el = document.getElementById('project-detail-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const isProjectInActiveCategory = (p, category) => {
+    if (!category) return false;
     const pDiv = (p.division_type || p.category || '').toLowerCase().trim();
     const catName = (category.name || '').toLowerCase().trim();
     const catSlug = (category.slug || category.id || '').toLowerCase().trim();
@@ -302,7 +319,7 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
     return false;
   };
 
-  const currentProjects = projectDivisions.filter(p => {
+  const currentProjects = activeCategory ? projectDivisions.filter(p => {
     // Must belong to active main category
     if (!isProjectInActiveCategory(p, activeCategory)) return false;
 
@@ -338,11 +355,11 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
     }
 
     return false;
-  });
+  }) : [];
 
   const hasRealBackendProjects = projectDivisions.length > 0 && projectDivisions !== FALLBACK_DIVISIONS;
 
-  const categoryBackendProjects = hasRealBackendProjects
+  const categoryBackendProjects = (hasRealBackendProjects && activeCategory)
     ? projectDivisions.filter(p => isProjectInActiveCategory(p, activeCategory))
     : [];
 
@@ -367,8 +384,6 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
         />
       </section>
 
-
-
       {/* Main Content */}
       <div className="container" style={{ paddingTop: '40px', paddingBottom: '60px' }}>
         {/* Projects Heading & Accent Underline matching Services Page */}
@@ -377,176 +392,223 @@ export default function ProjectsPage({ activeSubTab = 'engineering-services', on
           <div className="title-underline-yellow"></div>
         </div>
 
-        {/* 4 Premium Category Overview Cards Grid (Matches Services Page layout) */}
-        <div className="premium-service-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-          {PROJECT_CATEGORIES.map(cat => (
-            <div key={cat.name} className="premium-card" style={{ background: '#F8FAFC', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>{cat.icon}</div>
-              <h3 className="service-category-title" style={{ fontSize: '18px', color: '#063B73', fontWeight: '700', marginBottom: '16px' }}>
-                {cat.name}
-              </h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {cat.subCategories.slice(0, 4).map(sub => (
-                  <li key={sub.key} style={{ marginBottom: '8px' }}>
-                    <button onClick={() => { setActiveCategory(cat); setActiveSubCategory(sub); window.scrollTo({ top: 500, behavior: 'smooth' }); }} style={{ background: 'none', border: 'none', padding: 0, color: '#64748B', cursor: 'pointer', textAlign: 'left', fontWeight: '600', fontSize: '14px' }}>
-                      <span style={{ color: '#087CFF', fontWeight: 'bold', marginRight: '8px' }}>›</span> {sub.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Selected Category Header Detail Card */}
-        <div
-          style={{
-            marginBottom: '32px',
-            background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
-            borderRadius: '16px',
-            padding: '28px 32px',
-            border: '1px solid rgba(8, 124, 255, 0.12)',
-            textAlign: 'center'
-          }}
-        >
-          <div style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', color: '#087CFF', letterSpacing: '1.2px', marginBottom: '8px' }}>
-            PROJECT PORTFOLIO • {activeCategory.name}
-          </div>
-          <h2 style={{ fontSize: '28px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
-            {activeSubCategory.label}
-          </h2>
-          <p style={{ fontSize: '14.5px', color: '#475569', margin: '0 0 16px 0', lineHeight: 1.6, maxWidth: '780px', marginLeft: 'auto', marginRight: 'auto', fontWeight: '500' }}>
-            {activeSubCategory.description}
-          </p>
-          {activeSubCategory.tags && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
-              {activeSubCategory.tags.map(t => (
-                <span key={t} style={{
-                  fontSize: '11.5px',
-                  fontWeight: '700',
-                  color: '#063B73',
-                  background: '#FFFFFF',
-                  border: '1px solid rgba(6, 59, 115, 0.12)',
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-                }}>
-                  #{t}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: '#888', fontSize: '15px' }}>
-            Loading projects...
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: '24px',
-          }}>
-            {displayProjects.map((proj, idx) => (
-              <div
-                key={proj.id || idx}
-                onClick={() => onNavigate('ProjectDetail', proj.slug || proj.id)}
-                style={{
-                  background: '#FFFFFF',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                  border: '1px solid #E2E8F0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 32px rgba(8,124,255,0.18)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                {/* Project Image Container */}
-                <div style={{ height: '200px', width: '100%', overflow: 'hidden', background: '#F1F5F9', position: 'relative' }}>
-                  <img
-                    src={proj.image || projectBanner}
-                    alt={proj.name}
-                    onError={(e) => { e.target.onerror = null; e.target.src = projectBanner; }}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  />
-                  <span style={{
-                    position: 'absolute',
-                    top: '14px',
-                    left: '14px',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    color: '#087CFF',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.8px',
-                    background: 'rgba(255,255,255,0.92)',
-                    backdropFilter: 'blur(4px)',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}>
-                    {proj.division_type || activeSubCategory.label}
-                  </span>
-                </div>
-
-                {/* Project Info Block */}
-                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '18px',
-                    fontWeight: '700',
-                    color: '#063B73',
-                    lineHeight: '1.35',
-                    fontFamily: 'Space Grotesk, sans-serif'
-                  }}>
-                    {proj.name}
-                  </h3>
-
-                  {/* Sub-Category Badge Under Title */}
-                  <div
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '4px 12px',
-                      borderRadius: '16px',
-                      background: '#ECFDF5',
-                      border: '1px solid #A7F3D0',
-                      color: '#059669',
-                      fontSize: '11.5px',
-                      fontWeight: '700',
-                      width: 'fit-content'
-                    }}
-                  >
-                    {proj.division_type || activeSubCategory.label}
-                  </div>
-
-                  {(proj.location || proj.sector) && (
-                    <p style={{ margin: 0, fontSize: '13px', color: '#087CFF', fontWeight: '600' }}>
-                      {[proj.location, proj.sector].filter(Boolean).join(' • ')}
-                    </p>
-                  )}
-
-                  <p style={{ margin: 0, fontSize: '14px', color: '#64748B', lineHeight: '1.6', flex: 1 }}>
-                    {proj.short_description || proj.description || 'Multidisciplinary engineering and BIM coordination deliverables.'}
-                  </p>
-
-                  <div style={{ paddingTop: '12px', marginTop: 'auto', borderTop: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#087CFF', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      VIEW PROJECT →
-                    </span>
-                    {proj.year && (
-                      <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600' }}>
-                        {proj.year}
-                      </span>
-                    )}
-                  </div>
-                </div>
+        {/* 4 Premium Category Overview Cards Grid (Shown ONLY when NO sub-menu is selected) */}
+        {(!activeCategory || !activeSubCategory) ? (
+          <div className="premium-service-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+            {PROJECT_CATEGORIES.map(cat => (
+              <div key={cat.name} className="premium-card" style={{ background: '#F8FAFC', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>{cat.icon}</div>
+                <h3
+                  className="service-category-title"
+                  style={{ fontSize: '18px', color: '#063B73', fontWeight: '700', marginBottom: '16px', cursor: 'pointer' }}
+                  onClick={() => handleSelectCategory(cat)}
+                >
+                  {cat.name}
+                </h3>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {cat.subCategories.map(sub => (
+                    <li key={sub.key} style={{ marginBottom: '8px' }}>
+                      <button
+                        onClick={() => handleSelectSubCategory(cat, sub)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          color: '#64748B',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          fontWeight: '600',
+                          fontSize: '14px'
+                        }}
+                      >
+                        <span style={{ color: '#087CFF', fontWeight: 'bold', marginRight: '8px' }}>›</span> {sub.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
+          </div>
+        ) : (
+          /* When a project sub-menu is touched, hide the top 4 cards and show ONLY the project section */
+          <div id="project-detail-section">
+            <div style={{ marginBottom: '20px' }}>
+              <button
+                onClick={() => {
+                  setActiveCategory(null);
+                  setActiveSubCategory(null);
+                  if (onNavigate) onNavigate('Projects');
+                }}
+                style={{
+                  background: '#F1F5F9',
+                  border: '1px solid #CBD5E1',
+                  color: '#063B73',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#063B73'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.color = '#063B73'; }}
+              >
+                ← Back to All Project Categories
+              </button>
+            </div>
+            <div
+              style={{
+                marginBottom: '32px',
+                background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
+                borderRadius: '16px',
+                padding: '28px 32px',
+                border: '1px solid rgba(8, 124, 255, 0.12)',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', color: '#087CFF', letterSpacing: '1.2px', marginBottom: '8px' }}>
+                PROJECT PORTFOLIO • {activeCategory.name}
+              </div>
+              <h2 style={{ fontSize: '28px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
+                {activeSubCategory.label}
+              </h2>
+              <p style={{ fontSize: '14.5px', color: '#475569', margin: '0 0 16px 0', lineHeight: 1.6, maxWidth: '780px', marginLeft: 'auto', marginRight: 'auto', fontWeight: '500' }}>
+                {activeSubCategory.description}
+              </p>
+              {activeSubCategory.tags && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
+                  {activeSubCategory.tags.map(t => (
+                    <span key={t} style={{
+                      fontSize: '11.5px',
+                      fontWeight: '700',
+                      color: '#063B73',
+                      background: '#FFFFFF',
+                      border: '1px solid rgba(6, 59, 115, 0.12)',
+                      padding: '4px 12px',
+                      borderRadius: '20px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                    }}>
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '80px 0', color: '#888', fontSize: '15px' }}>
+                Loading projects...
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: '24px',
+              }}>
+                {displayProjects.map((proj, idx) => (
+                  <div
+                    key={proj.id || idx}
+                    onClick={() => onNavigate('ProjectDetail', proj.slug || proj.id)}
+                    style={{
+                      background: '#FFFFFF',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                      border: '1px solid #E2E8F0',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 32px rgba(8,124,255,0.18)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  >
+                    {/* Project Image Container */}
+                    <div style={{ height: '200px', width: '100%', overflow: 'hidden', background: '#F1F5F9', position: 'relative' }}>
+                      <img
+                        src={proj.image || projectBanner}
+                        alt={proj.name}
+                        onError={(e) => { e.target.onerror = null; e.target.src = projectBanner; }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                      <span style={{
+                        position: 'absolute',
+                        top: '14px',
+                        left: '14px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        color: '#087CFF',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.8px',
+                        background: 'rgba(255,255,255,0.92)',
+                        backdropFilter: 'blur(4px)',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        {proj.division_type || activeSubCategory.label}
+                      </span>
+                    </div>
+
+                    {/* Project Info Block */}
+                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>
+                      <h3 style={{
+                        margin: 0,
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        color: '#063B73',
+                        lineHeight: '1.35',
+                        fontFamily: 'Space Grotesk, sans-serif'
+                      }}>
+                        {proj.name}
+                      </h3>
+
+                      {/* Sub-Category Badge Under Title */}
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '4px 12px',
+                          borderRadius: '16px',
+                          background: '#ECFDF5',
+                          border: '1px solid #A7F3D0',
+                          color: '#059669',
+                          fontSize: '11.5px',
+                          fontWeight: '700',
+                          width: 'fit-content'
+                        }}
+                      >
+                        {proj.division_type || activeSubCategory.label}
+                      </div>
+
+                      {(proj.location || proj.sector) && (
+                        <p style={{ margin: 0, fontSize: '13px', color: '#087CFF', fontWeight: '600' }}>
+                          {[proj.location, proj.sector].filter(Boolean).join(' • ')}
+                        </p>
+                      )}
+
+                      <p style={{ margin: 0, fontSize: '14px', color: '#64748B', lineHeight: '1.6', flex: 1 }}>
+                        {proj.short_description || proj.description || 'Multidisciplinary engineering and BIM coordination deliverables.'}
+                      </p>
+
+                      <div style={{ paddingTop: '12px', marginTop: 'auto', borderTop: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '700', color: '#087CFF', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          VIEW PROJECT →
+                        </span>
+                        {proj.year && (
+                          <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600' }}>
+                            {proj.year}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

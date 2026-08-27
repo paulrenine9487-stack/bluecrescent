@@ -245,7 +245,7 @@ export default function HeroSlider({ onNavigate }) {
         ))}
       </div>
 
-      {/* ── Main Hero Content ───────────────────────────────────── */}
+      {/* ── Main Hero Content Container ─────────────────────────── */}
       <div className="hs-container">
 
         {/* LEFT COLUMN: Text + CTA Buttons */}
@@ -256,8 +256,13 @@ export default function HeroSlider({ onNavigate }) {
           </div>
 
           <h1 className="hs-title">
-            {renderTitle(displayTitle)}
+            Engineering the <span className="hs-blue-text">Digital Future.</span>
           </h1>
+
+          <div className="hs-subheading">
+            From BIM to CAD.<br />
+            From Reality Capture to <span className="hs-blue-text">Digital Twin.</span>
+          </div>
 
           <p className="hs-sub">{displayDesc}</p>
 
@@ -277,69 +282,79 @@ export default function HeroSlider({ onNavigate }) {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Glassmorphism Stat Cards */}
-        <div className="hs-right">
-          {[
-            {
-              icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="#74D2FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-              ),
-              value: companySettings?.heroStat1Value || '13+',
-              label: companySettings?.heroStat1Label || 'YEARS OF EXPERIENCE',
-            },
-            {
-              icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="#74D2FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                </svg>
-              ),
-              value: companySettings?.heroStat2Value || '50+',
-              label: companySettings?.heroStat2Label || 'COMPLETED PROJECTS',
-            },
-            {
-              icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="#74D2FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              ),
-              value: companySettings?.heroStat3Value || '150+',
-              label: companySettings?.heroStat3Label || 'TECHNICAL EXPERTS',
-            },
-            {
-              icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="#74D2FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
-                </svg>
-              ),
-              value: companySettings?.heroStat4Value || '5',
-              label: companySettings?.heroStat4Label || 'REGIONAL MARKETS',
-              sublabel: companySettings?.heroStat4Sublabel || 'Qatar • UAE • Kuwait • Saudi Arabia • India'
-            }
-          ].map((s, i) => (
-            <div key={i} className="hs-stat-card">
-              <div className="hs-stat-icon">{s.icon}</div>
-              <div className="hs-stat-info">
-                <span className="hs-stat-val">{s.value}</span>
-                <span className="hs-stat-lbl">{s.label}</span>
-                {s.sublabel && (
-                  <span className="hs-stat-sublbl" style={{ fontSize: '7.5px', fontWeight: '500', color: 'rgba(116, 210, 255, 0.85)', letterSpacing: '0.3px', marginTop: '1px', textTransform: 'uppercase', lineHeight: '1.1' }}>
-                    {s.sublabel}
-                  </span>
-                )}
-              </div>
+        {/* BOTTOM HORIZONTAL GLASS STAT BAR (Exact match to reference image) */}
+        <div className="hs-bottom-stat-bar">
+          {/* Stat 1 */}
+          <div className="hs-stat-item">
+            <div className="hs-stat-icon-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+                <circle cx="8" cy="14" r="1" fill="currentColor" />
+                <circle cx="12" cy="14" r="1" fill="currentColor" />
+                <circle cx="16" cy="14" r="1" fill="currentColor" />
+              </svg>
             </div>
-          ))}
+            <div className="hs-stat-details">
+              <span className="hs-stat-number">{companySettings?.heroStat1Value || '13+'}</span>
+              <span className="hs-stat-label">{companySettings?.heroStat1Label || 'YEARS OF EXPERIENCE'}</span>
+            </div>
+          </div>
+
+          <div className="hs-stat-divider" />
+
+          {/* Stat 2 */}
+          <div className="hs-stat-item">
+            <div className="hs-stat-icon-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                <line x1="6" y1="11" x2="10" y2="11" />
+                <line x1="6" y1="15" x2="10" y2="15" />
+              </svg>
+            </div>
+            <div className="hs-stat-details">
+              <span className="hs-stat-number">{companySettings?.heroStat2Value || '100+'}</span>
+              <span className="hs-stat-label">{companySettings?.heroStat2Label || 'COMPLETED PROJECTS'}</span>
+            </div>
+          </div>
+
+          <div className="hs-stat-divider" />
+
+          {/* Stat 3 */}
+          <div className="hs-stat-item">
+            <div className="hs-stat-icon-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+            <div className="hs-stat-details">
+              <span className="hs-stat-number">{companySettings?.heroStat3Value || '150+'}</span>
+              <span className="hs-stat-label">{companySettings?.heroStat3Label || 'TECHNICAL EXPERTS'}</span>
+            </div>
+          </div>
+
+          <div className="hs-stat-divider" />
+
+          {/* Stat 4 */}
+          <div className="hs-stat-item">
+            <div className="hs-stat-icon-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z" />
+              </svg>
+            </div>
+            <div className="hs-stat-details">
+              <span className="hs-stat-number">{companySettings?.heroStat4Value || '5+'}</span>
+              <span className="hs-stat-label">{companySettings?.heroStat4Label || 'REGIONAL MARKETS'}</span>
+            </div>
+          </div>
         </div>
 
       </div>

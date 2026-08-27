@@ -1159,6 +1159,54 @@ async function initDB() {
 
     try { await pool.query(`ALTER TABLE media_items ADD COLUMN category VARCHAR(100) DEFAULT 'Our Work';`); } catch (e) {}
 
+    // 16. Blogs Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS blogs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE,
+        category VARCHAR(100) DEFAULT 'Company News',
+        author VARCHAR(100) DEFAULT 'Blue Crescent Team',
+        date VARCHAR(100),
+        image LONGTEXT,
+        summary TEXT,
+        short_description TEXT,
+        content LONGTEXT,
+        status VARCHAR(20) DEFAULT 'Published',
+        is_active TINYINT(1) DEFAULT 1,
+        display_order INT DEFAULT 0,
+        seo_title VARCHAR(255),
+        seo_description TEXT,
+        seo_keywords TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+
+    try {
+      const blogCols = [
+        { name: 'slug', type: 'VARCHAR(255)' },
+        { name: 'short_description', type: 'TEXT' },
+        { name: 'author', type: "VARCHAR(100) DEFAULT 'Blue Crescent Team'" },
+        { name: 'date', type: 'VARCHAR(100)' },
+        { name: 'status', type: "VARCHAR(20) DEFAULT 'Published'" },
+        { name: 'is_active', type: 'TINYINT(1) DEFAULT 1' },
+        { name: 'display_order', type: 'INT DEFAULT 0' },
+        { name: 'seo_title', type: 'VARCHAR(255)' },
+        { name: 'seo_description', type: 'TEXT' },
+        { name: 'seo_keywords', type: 'TEXT' }
+      ];
+      for (const col of blogCols) {
+        try {
+          await pool.query(`SELECT ${col.name} FROM blogs LIMIT 1`);
+        } catch (e) {
+          await pool.query(`ALTER TABLE blogs ADD COLUMN ${col.name} ${col.type}`);
+        }
+      }
+    } catch (err) {
+      console.warn('Altering blogs table columns warning:', err.message);
+    }
+
     // 17. System Settings Table (Maintenance Mode Source of Truth)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS system_settings (
@@ -1210,6 +1258,34 @@ async function initDB() {
       `);
     }
 
+    // 14b. Major Clients Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS major_clients (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        logo LONGTEXT NOT NULL,
+        display_order INT DEFAULT 0,
+        status VARCHAR(20) DEFAULT 'Active',
+        is_active TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+
+    const [clientCountRows] = await pool.query('SELECT COUNT(*) as count FROM major_clients');
+    if (clientCountRows[0].count === 0) {
+      console.log('Seeding default major clients...');
+      await pool.query(`
+        INSERT INTO major_clients (name, logo, display_order, status, is_active) VALUES
+        ('Qatar Free Zones Authority',     '/partner_teknik.png',    1, 'Active', 1),
+        ('Lusail Real Estate Development', '/partner_arcana.png',    2, 'Active', 1),
+        ('Qatari Diar',                    '/partner_nexagen.png',   3, 'Active', 1),
+        ('Ashghal Public Works Authority', '/partner_qaframe.png',   4, 'Active', 1),
+        ('Qatar Airways Group',            '/partner_meridian.png',  5, 'Active', 1),
+        ('KAHRAMAA Qatar',                 '/partner_vistara.png',   6, 'Active', 1)
+      `);
+    }
+
     // 16. Team Members Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS team_members (
@@ -1219,6 +1295,7 @@ async function initDB() {
         image LONGTEXT,
         department VARCHAR(255) DEFAULT '',
         order_num INT DEFAULT 0,
+        hierarchy_number INT DEFAULT 0,
         status VARCHAR(50) DEFAULT 'Active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -1229,16 +1306,25 @@ async function initDB() {
     if (teamCountRows[0].count === 0) {
       console.log('Seeding default team members...');
       await pool.query(`
-        INSERT INTO team_members (name, role, image, department, order_num) VALUES
-        ('Praveen',   'Team Member',               '/team_praveen.png',   'Engineering', 1),
-        ('Nancy',     'Team Member',               '/team_nancy.png',     'BIM & CAD',   2),
-        ('Raghul',    'Team Member',               '/team_raghul.png',    'Digital Twin', 3),
-        ('Zubariya',  'Team Member',               '/team_zubariya.png',  'Sustainability', 4),
-        ('Mohammed',  'BIM Specialist',            null,                  'BIM & CAD',   5),
-        ('Ananya',    'CAD Engineer',              null,                  'Engineering', 6),
-        ('Karthik',   'Project Lead',              null,                  'Management',  7),
-        ('Divya',     'Sustainability Specialist', null,                  'Sustainability', 8)
+        INSERT INTO team_members (name, role, image, department, order_num, hierarchy_number) VALUES
+        ('Praveen',   'Team Member',               '/team_praveen.png',   'Engineering', 1, 1),
+        ('Nancy',     'Team Member',               '/team_nancy.png',     'BIM & CAD',   2, 2),
+        ('Raghul',    'Team Member',               '/team_raghul.png',    'Digital Twin', 3, 3),
+        ('Zubariya',  'Team Member',               '/team_zubariya.png',  'Sustainability', 4, 4),
+        ('Mohammed',  'BIM Specialist',            null,                  'BIM & CAD',   5, 5),
+        ('Ananya',    'CAD Engineer',              null,                  'Engineering', 6, 6),
+        ('Karthik',   'Project Lead',              null,                  'Management',  7, 7),
+        ('Divya',     'Sustainability Specialist', null,                  'Sustainability', 8, 8)
       `);
+    }
+
+    // Migration for team_members hierarchy_number
+    try {
+      await pool.query("SELECT hierarchy_number FROM team_members LIMIT 1");
+    } catch (e) {
+      console.log('Adding hierarchy_number column to team_members...');
+      await pool.query("ALTER TABLE team_members ADD COLUMN hierarchy_number INT DEFAULT 0");
+      await pool.query("UPDATE team_members SET hierarchy_number = order_num WHERE hierarchy_number = 0 OR hierarchy_number IS NULL");
     }
 
 
@@ -1428,6 +1514,18 @@ async function initDB() {
         ('video', 'BIM Modelling & LOD 500 Virtual Tour', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
         ('video', 'Sustainability & GSAS Green Design Methods', 'https://www.youtube.com/embed/dQw4w9WgXcQ'),
         ('video', 'Telecom Network Rollout Showcase', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
+      `);
+    }
+
+    // Seed default blogs if empty
+    const [blogsCountRows] = await pool.query('SELECT COUNT(*) as count FROM blogs');
+    if (blogsCountRows[0].count === 0) {
+      console.log('Seeding default blogs...');
+      await pool.query(`
+        INSERT INTO blogs (title, slug, category, author, date, image, summary, content, status, is_active, display_order) VALUES
+        ('Blue Crescent Expands Multidisciplinary BIM & Digital Twin Services in Qatar', 'blue-crescent-expands-bim-digital-twin', 'Company News', 'Blue Crescent Editorial', 'August 2026', '/servicepage1.png', 'Blue Crescent Engineering announces the expansion of LOD 500 BIM modeling, 3D laser scanning, and real-time Digital Twin asset integrations across major Qatari infrastructure projects.', 'Full detailed blog article content regarding Blue Crescent Engineering expansion in Qatar...', 'Active', 1, 1),
+        ('ISO 9001:2015 & GSAS Sustainability Accreditation Recertification', 'iso-9001-gsas-recertification', 'Announcement', 'Quality & Compliance Division', 'July 2026', '/why.png', 'Our engineering quality control management and GSAS green building consultancy frameworks have achieved renewed compliance certification.', 'Full detailed blog article content regarding ISO 9001:2015 and GSAS accreditation...', 'Active', 1, 2),
+        ('Innovations in Remote Construction Management & Drone Site Inspections', 'innovations-remote-construction-drone-inspections', 'Engineering Blog', 'Technical Innovation Team', 'June 2026', '/project1.png', 'Discover how 360-degree site monitoring and cloud-based CAD/BIM collaboration are accelerating remote project deliveries.', 'Full detailed blog article content regarding drone site inspections and point cloud scans...', 'Active', 1, 3)
       `);
     }
 
@@ -1800,6 +1898,13 @@ async function initDB() {
           whyIntro3 = 'Supported by team of specialists in the areas of MEP design, Acoustics, Stress and Hydraulics, all engineering calculations.',
           whyIntro4 = 'Services are applicable for Owners, Designers, Contractors and Operators.'
       `);
+      try {
+        await pool.query(`
+          UPDATE company_settings 
+          SET aboutUsDisciplinesJson = '[{"name":"BIM Modeling & Coordination","icon":"Layers","image":"/uploads/bimmodel.png"},{"name":"CAD Documentation","icon":"Building2","image":""},{"name":"Reality Capture & Laser Scanning","icon":"Radio","image":""},{"name":"Specialized Engineering support","icon":"Wrench","image":""},{"name":"Computational Fluid Dynamics (CFD)","icon":"Wind","image":""},{"name":"Acoustic & Vibration Analysis","icon":"Volume2","image":""},{"name":"Hydraulic Analysis & Surge Control","icon":"Droplet","image":""},{"name":"Stress Analysis & Pipe Flexibility","icon":"Activity","image":""},{"name":"Energy Auditing & Commissioning","icon":"Zap","image":""},{"name":"Green Building Facilitation","icon":"Leaf","image":""},{"name":"Technical experts outsourcing","icon":"Users","image":""}]'
+          WHERE aboutUsDisciplinesJson IS NULL OR aboutUsDisciplinesJson = ''
+        `);
+      } catch (err) {}
     }
 
     // Seed Contact Settings

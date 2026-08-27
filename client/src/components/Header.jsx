@@ -75,7 +75,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   }, [currentView]);
 
   // Fallbacks
-  const defaultNavItems = ['Home', 'About Us', 'Services', 'Projects', 'Media', 'Contact Us'];
+  const defaultNavItems = ['Home', 'About Us', 'Services', 'Projects', 'Insights', 'Contact Us'];
   const defaultProjectSubItems = ['BIM Projects', 'CAD Projects', 'Laser Scanning Projects', 'Digital Twin Projects', 'Sustainability Projects'];
   const defaultServiceCategories = [
     {
@@ -404,8 +404,8 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                   );
                 }
 
-                // Media Dropdown with Gallery & Videos
-                if (item === 'Media') {
+                // Insights / Media Dropdown with Gallery, Videos & Blogs / Announcements
+                if (item === 'Media' || item === 'Insights') {
                   return (
                     <li
                       key={item}
@@ -421,7 +421,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                           if (onNavigate) onNavigate('Media', 'Gallery');
                         }}
                       >
-                        Media <span className="dropdown-arrow">▾</span>
+                        Insights <span className="dropdown-arrow">▾</span>
                       </a>
 
                       {mediaDropdownOpen && (
@@ -429,7 +429,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                           <li className="dropdown-item">
                             <a
                               href="#"
-                              className={`dropdown-item-link ${currentView === 'Media' && activeSubTab === 'Gallery' ? 'active-sub' : ''}`}
+                              className={`dropdown-item-link ${currentView === 'Media' && (activeSubTab === 'Gallery' || !activeSubTab) ? 'active-sub' : ''}`}
                               onClick={(e) => {
                                 e.preventDefault();
                                 setMediaDropdownOpen(false);
@@ -450,6 +450,19 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                               }}
                             >
                               🎥 Videos
+                            </a>
+                          </li>
+                          <li className="dropdown-item">
+                            <a
+                              href="#"
+                              className={`dropdown-item-link ${currentView === 'Media' && (activeSubTab === 'Blogs' || activeSubTab === 'Announcements') ? 'active-sub' : ''}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setMediaDropdownOpen(false);
+                                if (onNavigate) onNavigate('Media', 'Blogs');
+                              }}
+                            >
+                              📝 Blogs
                             </a>
                           </li>
                         </ul>
@@ -624,7 +637,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                 );
               }
 
-              // Projects single-level category list (no sub-menu)
+              // Projects single-level category list in mobile
               if (item === 'Projects') {
                 const isOpen = activeMobileDropdown === 'Projects';
                 return (
@@ -660,16 +673,16 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                 );
               }
 
-              // Media accordion
-              if (item === 'Media') {
-                const isOpen = activeMobileDropdown === 'Media';
+              // Insights / Media accordion
+              if (item === 'Media' || item === 'Insights') {
+                const isOpen = activeMobileDropdown === 'Media' || activeMobileDropdown === 'Insights';
                 return (
                   <li key={item} className="mobile-dropdown-item">
                     <button
                       className={`mobile-dropdown-trigger ${currentView === 'Media' ? 'active' : ''}`}
-                      onClick={() => setActiveMobileDropdown(isOpen ? null : 'Media')}
+                      onClick={() => setActiveMobileDropdown(isOpen ? null : 'Insights')}
                     >
-                      <span>Media</span>
+                      <span>Insights</span>
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
 
@@ -678,7 +691,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                         <li>
                           <a
                             href="#"
-                            className={currentView === 'Media' && activeSubTab === 'Gallery' ? 'active-sub' : ''}
+                            className={currentView === 'Media' && (activeSubTab === 'Gallery' || !activeSubTab) ? 'active-sub' : ''}
                             onClick={(e) => {
                               e.preventDefault();
                               setIsMobileMenuOpen(false);
@@ -699,6 +712,19 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                             }}
                           >
                             🎥 Videos
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            href="#"
+                            className={currentView === 'Media' && (activeSubTab === 'Blogs' || activeSubTab === 'Announcements') ? 'active-sub' : ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsMobileMenuOpen(false);
+                              if (onNavigate) onNavigate('Media', 'Blogs');
+                            }}
+                          >
+                            📝 Blogs
                           </a>
                         </li>
                       </ul>

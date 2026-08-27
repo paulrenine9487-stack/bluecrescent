@@ -10,6 +10,7 @@ import CompanyInfo from './components/CompanyInfo';
 import SidebarContent from './components/SidebarContent';
 import ServicesList from './components/ServicesList';
 import ProjectsSlider from './components/ProjectsSlider';
+import MajorClientsSection from './components/MajorClientsSection';
 import ServicesPage from './components/ServicesPage';
 import AboutUsPage from './components/AboutUsPage';
 import ProjectsPage from './components/ProjectsPage';
@@ -22,6 +23,7 @@ import TestimonialModal from './components/TestimonialModal';
 import AdminPanel from './components/AdminPanel';
 import MaintenancePage from './components/MaintenancePage';
 import ProjectDetailPage from './components/ProjectDetailPage';
+import BlogDetailPage from './components/BlogDetailPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
@@ -63,16 +65,31 @@ export default function App() {
         setCurrentView('Admin');
       } else if (path === '/our-journey') {
         setCurrentView('Our Journey');
-      } else if (path.startsWith('/projects/') && path.length > 10) {
-        const slug = path.replace('/projects/', '').split('/')[0];
+      } else if (path.startsWith('/projects/')) {
+        const parts = path.replace('/projects/', '').split('/').filter(Boolean);
+        const slug = parts.length > 0 ? parts[parts.length - 1] : '';
         if (slug) {
-          setCurrentView('ProjectDetail');
-          setActiveSubTab(slug);
+          const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const knownSubTabs = [
+            'engineering', 'sustainability', 'digitaltwin', 'construction', 'technology',
+            'bim', 'cad', 'laserscanning', 'gsas', 'leed', 'energyaudit', 'environment',
+            'assetmanagement', 'systemintegration', '360site', 'arsolutions', 'digitalcollaboration'
+          ];
+          const isCategorySubTab = knownSubTabs.some(k => cleanSlug.includes(k));
+          if (isCategorySubTab) {
+            setCurrentView('Projects');
+            setActiveSubTab(decodeURIComponent(slug));
+          } else {
+            setCurrentView('ProjectDetail');
+            setActiveSubTab(slug);
+          }
         } else {
           setCurrentView('Projects');
+          setActiveSubTab('');
         }
       } else if (path === '/projects') {
         setCurrentView('Projects');
+        setActiveSubTab('');
       } else if (path.startsWith('/services/')) {
         const parts = path.replace('/services/', '').split('/').filter(Boolean);
         const sub = parts.length > 0 ? parts[parts.length - 1] : '';
@@ -87,7 +104,12 @@ export default function App() {
         setCurrentView('Contact Us');
       } else if (path === '/certifications') {
         setCurrentView('Certifications');
-      } else if (path === '/media') {
+      } else if (path.startsWith('/insights/') || path.startsWith('/blog/')) {
+        const parts = path.split('/').filter(Boolean);
+        const slug = parts.length > 1 ? parts[parts.length - 1] : '';
+        setCurrentView('BlogDetail');
+        setActiveSubTab(slug);
+      } else if (path === '/media' || path === '/insights') {
         setCurrentView('Media');
       } else {
         setCurrentView('Home');
@@ -125,8 +147,14 @@ export default function App() {
       window.history.pushState({}, '', '/manager');
     } else if (view === 'ProjectDetail' && subTab) {
       window.history.pushState({}, '', `/projects/${subTab}`);
+    } else if (view === 'BlogDetail' && subTab) {
+      window.history.pushState({}, '', `/insights/${subTab}`);
     } else if (view === 'Projects') {
-      window.history.pushState({}, '', '/projects');
+      if (subTab) {
+        window.history.pushState({}, '', `/projects/${slugify(subTab)}`);
+      } else {
+        window.history.pushState({}, '', '/projects');
+      }
     } else if (view === 'Services') {
       if (subTab) {
         window.history.pushState({}, '', `/services/${slugify(subTab)}`);
@@ -229,6 +257,11 @@ export default function App() {
             activeSubTab={activeSubTab}
             onNavigate={handleNavigate}
           />
+        ) : currentView === 'BlogDetail' ? (
+          <BlogDetailPage
+            slug={activeSubTab}
+            onNavigate={handleNavigate}
+          />
         ) : (
           <>
             {/* Welcome Hero Carousel */}
@@ -249,7 +282,7 @@ export default function App() {
             {/* Main Container with Company Info & Sidebar */}
             <main className="container">
               {/* Why Blue Crescent Redesigned Section */}
-              <div className="why-bce-section-wrap" style={{ marginBottom: '80px' }}>
+              <div className="why-bce-section-wrap" style={{ marginBottom: '24px' }}>
                 <CompanyInfo onNavigate={handleNavigate} />
               </div>
 
@@ -259,11 +292,18 @@ export default function App() {
               {/* Our Projects Section */}
               <ProjectsSlider onNavigate={handleNavigate} />
 
-              {/* News and Testimonials */}
+            </main>
+
+            {/* OUR MAJOR CLIENTS SECTION - FULL WIDTH BLUE BACKGROUND */}
+            <MajorClientsSection />
+
+            {/* WHAT OUR CLIENTS SAY (News & Testimonials) */}
+            <main className="container" style={{ marginTop: '40px' }}>
               <div className="main-content-layout-downside" style={{ marginBottom: '80px' }}>
                 <SidebarContent 
-                  key={refreshKey} 
-                  onOpenModal={() => setIsModalOpen(true)} 
+                  currentView={currentView}
+                  activeSubTab={activeSubTab}
+                  onNavigate={handleNavigate}
                 />
               </div>
             </main>

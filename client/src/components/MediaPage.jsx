@@ -84,6 +84,8 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
     }
   }, [activeSubTab]);
 
+  const [blogs, setBlogs] = useState([]);
+
   const fetchMediaData = () => {
     fetch('/api/media')
       .then(res => res.ok ? res.json() : [])
@@ -93,6 +95,15 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
         }
       })
       .catch(err => console.warn('Error fetching media items:', err));
+
+    fetch('/api/blogs')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setBlogs(data);
+        }
+      })
+      .catch(err => console.warn('Error fetching blogs:', err));
   };
 
   useEffect(() => {
@@ -188,6 +199,34 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
   }, []);
 
   const isGalleryView = activeTab.toLowerCase().startsWith('gal');
+  const isBlogView = activeTab.toLowerCase().startsWith('blog') || activeTab.toLowerCase().startsWith('announc');
+
+  const sampleBlogs = [
+    {
+      id: 'b1',
+      title: 'Blue Crescent Expands Multidisciplinary BIM & Digital Twin Services in Qatar',
+      date: 'August 2026',
+      category: 'Company News',
+      image: '/servicepage1.png',
+      summary: 'Blue Crescent Engineering announces the expansion of LOD 500 BIM modeling, 3D laser scanning, and real-time Digital Twin asset integrations across major Qatari infrastructure projects.'
+    },
+    {
+      id: 'b2',
+      title: 'ISO 9001:2015 & GSAS Sustainability Accreditation Recertification',
+      date: 'July 2026',
+      category: 'Announcement',
+      image: '/why.png',
+      summary: 'Our engineering quality control management and GSAS green building consultancy frameworks have achieved renewed compliance certification.'
+    },
+    {
+      id: 'b3',
+      title: 'Innovations in Remote Construction Management & Drone Site Inspections',
+      date: 'June 2026',
+      category: 'Engineering Blog',
+      image: '/project1.png',
+      summary: 'Discover how 360-degree site monitoring and cloud-based CAD/BIM collaboration are accelerating remote project deliveries.'
+    }
+  ];
 
   const renderGalleryCard = (item) => (
     <div 
@@ -268,12 +307,14 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
         <div className="media-hero-overlay"></div>
         <div className="media-hero-container">
           <h1 className="media-hero-title">
-            {isGalleryView ? 'Photo Gallery' : 'Video Showcase'}
+            {isBlogView ? 'Blogs' : isGalleryView ? 'Photo Gallery' : 'Video Showcase'}
           </h1>
           <p className="media-hero-subtitle">
-            {isGalleryView 
-              ? 'Explore site operations, Qatar Expo highlights, our main offices, and technical milestones.' 
-              : 'Watch 3D BIM walkthroughs, team leadership videos, and engineering briefings.'}
+            {isBlogView
+              ? 'Stay informed with the latest engineering insights, company articles, and technical publications.'
+              : isGalleryView 
+                ? 'Explore site operations, Qatar Expo highlights, our main offices, and technical milestones.' 
+                : 'Watch 3D BIM walkthroughs, team leadership videos, and engineering briefings.'}
           </p>
         </div>
       </section>
@@ -281,10 +322,187 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
       {/* Main Container */}
       <section className="media-content-section container" style={{ padding: '50px 24px 90px 24px' }}>
         
+        {/* Top Sub-Tab Navigation Bar */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '40px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('Gallery')}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '30px',
+              border: isGalleryView ? '2px solid #0057B8' : '1.5px solid #E2E8F0',
+              background: isGalleryView ? '#0057B8' : '#FFFFFF',
+              color: isGalleryView ? '#FFFFFF' : '#475569',
+              fontWeight: '800',
+              fontSize: '14px',
+              cursor: 'pointer',
+              boxShadow: isGalleryView ? '0 4px 14px rgba(0, 87, 184, 0.25)' : 'none',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            📸 Photo Gallery
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('Videos')}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '30px',
+              border: (!isGalleryView && !isBlogView) ? '2px solid #10B981' : '1.5px solid #E2E8F0',
+              background: (!isGalleryView && !isBlogView) ? '#10B981' : '#FFFFFF',
+              color: (!isGalleryView && !isBlogView) ? '#FFFFFF' : '#475569',
+              fontWeight: '800',
+              fontSize: '14px',
+              cursor: 'pointer',
+              boxShadow: (!isGalleryView && !isBlogView) ? '0 4px 14px rgba(16, 185, 129, 0.25)' : 'none',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            🎥 Video Showcase
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('Blogs')}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '30px',
+              border: isBlogView ? '2px solid #087CFF' : '1.5px solid #E2E8F0',
+              background: isBlogView ? '#087CFF' : '#FFFFFF',
+              color: isBlogView ? '#FFFFFF' : '#475569',
+              fontWeight: '800',
+              fontSize: '14px',
+              cursor: 'pointer',
+              boxShadow: isBlogView ? '0 4px 14px rgba(8, 124, 255, 0.25)' : 'none',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            📝 Blogs
+          </button>
+        </div>
+        
         {/* =========================================================================
-            VIEW 1: GALLERY PAGE ONLY
+            VIEW 3: BLOGS
            ========================================================================= */}
-        {isGalleryView ? (
+        {isBlogView ? (
+          <div>
+            <div style={{ borderBottom: '2px solid #E2E8F0', paddingBottom: '20px', marginBottom: '36px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ background: '#087CFF', color: '#FFFFFF', padding: '6px 14px', borderRadius: '8px', fontWeight: '800', fontSize: '13px', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  BLOGS
+                </div>
+              </div>
+            </div>
+
+            {(() => {
+              const activeBlogsList = blogs.length > 0 ? blogs : sampleBlogs;
+
+              if (activeBlogsList.length === 0) {
+                return (
+                  <div style={{ textAlign: 'center', padding: '60px 24px', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                    <p style={{ fontSize: '15px', color: '#64748B', fontWeight: '600', margin: 0 }}>No engineering insights published in this category yet.</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
+                  {activeBlogsList.map((blog) => {
+                    const cacheBust = blog.updated_at ? `?v=${new Date(blog.updated_at).getTime()}` : '';
+                    const blogImg = blog.image ? (blog.image.startsWith('data:') || blog.image.startsWith('http') ? blog.image : `${blog.image}${cacheBust}`) : '/servicepage1.png';
+
+                    return (
+                      <div
+                        key={blog.id}
+                        style={{
+                          background: '#FFFFFF',
+                          borderRadius: '16px',
+                          border: '1px solid #E2E8F0',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 20px rgba(6, 59, 115, 0.05)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          cursor: 'pointer',
+                          transition: 'transform 0.3s ease, boxShadow 0.3s ease'
+                        }}
+                        onClick={() => onNavigate ? onNavigate('BlogDetail', blog.slug || blog.id) : null}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-6px)';
+                          e.currentTarget.style.boxShadow = '0 12px 30px rgba(8, 124, 255, 0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 59, 115, 0.05)';
+                        }}
+                      >
+                        <div style={{ height: '200px', position: 'relative', overflow: 'hidden' }}>
+                          <img
+                            src={blogImg}
+                            alt={blog.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => { e.currentTarget.src = '/servicepage1.png'; }}
+                          />
+                          <span
+                            style={{
+                              position: 'absolute',
+                              top: '14px',
+                              left: '14px',
+                              background: '#087CFF',
+                              color: '#FFFFFF',
+                              fontSize: '11px',
+                              fontWeight: '800',
+                              padding: '4px 12px',
+                              borderRadius: '20px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
+                            }}
+                          >
+                            {blog.category || 'Company News'}
+                          </span>
+                        </div>
+
+                        <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: '#64748B', marginBottom: '8px' }}>
+                            📅 {blog.date}
+                          </span>
+                          <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: '800', color: '#063B73', margin: '0 0 12px 0', lineHeight: 1.35 }}>
+                            {blog.title}
+                          </h3>
+                          <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.6, margin: '0 0 20px 0', flex: 1 }}>
+                            {blog.short_description || blog.summary}
+                          </p>
+                          <button
+                            type="button"
+                            style={{
+                              alignSelf: 'flex-start',
+                              background: '#EFF6FF',
+                              color: '#087CFF',
+                              border: '1px solid #DBEAFE',
+                              padding: '8px 18px',
+                              borderRadius: '8px',
+                              fontSize: '13px',
+                              fontWeight: '800',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onNavigate) onNavigate('BlogDetail', blog.slug || blog.id);
+                            }}
+                          >
+                            Read Full Article →
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        ) : isGalleryView ? (
           <div>
             <div style={{ borderBottom: '2px solid #E2E8F0', paddingBottom: '20px', marginBottom: '36px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>

@@ -29,8 +29,13 @@ app.get('/api/news', (req, res) => {
 // SETTINGS PERSISTENCE APIs (MySQL)
 // ==========================================
 
+let companySettingsMemoryCache = null;
+
 app.get('/api/settings/company', async (req, res) => {
   try {
+    if (companySettingsMemoryCache) {
+      return res.json(companySettingsMemoryCache);
+    }
     const pool = getPool();
     if (getIsConnected() && pool) {
       const [rows] = await pool.query('SELECT * FROM company_settings LIMIT 1');
@@ -43,17 +48,19 @@ app.get('/api/settings/company', async (req, res) => {
           if (str === '' || str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined') continue;
           cleaned[key] = val;
         }
+        companySettingsMemoryCache = cleaned;
         return res.json(cleaned);
       }
     }
   } catch (err) {
     console.error('Error fetching company settings:', err);
   }
-  return res.json({});
+  return res.json(companySettingsMemoryCache || {});
 });
 
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 
 // Uploads directory lives inside /server/uploads/ so it survives client rebuilds
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -61,35 +68,97 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// Helper to save base64 to file and return static path
-const saveBase64File = (base64Str, prefix) => {
-  if (!base64Str || !base64Str.startsWith('data:')) {
-    return base64Str; // already a path or empty
+// Multer storage & upload configuration for multipart/form-data
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_DIR);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const safeExt = ['.jpg', '.jpeg', '.png', '.webp'].includes(ext) ? ext : '.jpg';
+    const uniqueName = `team_${Date.now()}_${Math.round(Math.random() * 1e6)}${safeExt}`;
+    cb(null, uniqueName);
   }
-  
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (allowedMimeTypes.includes(file.mimetype.toLowerCase())) {
+    cb(null, true);
+  } else {
+    cb(new Error('Please upload a valid image file (JPG, JPEG, PNG, or WEBP).'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+});
+
+// Production-safe upload endpoint
+app.post('/api/upload', (req, res) => {
+  upload.single('photo')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Image size exceeds the allowed limit (5MB). Please upload a smaller image.' });
+      }
+      return res.status(400).json({ error: err.message || 'Photo upload failed. Please try again.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No photo file provided.' });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    console.log(`Multipart upload successful: ${imageUrl}`);
+    return res.json({ success: true, url: imageUrl, filename: req.file.filename });
+  });
+});
+
+// Helper to delete old upload file if replaced or deleted
+const deleteOldImageFile = (imagePath) => {
+  if (!imagePath || typeof imagePath !== 'string') return;
+  if (imagePath.startsWith('/uploads/')) {
+    const filename = path.basename(imagePath);
+    const fullPath = path.join(UPLOADS_DIR, filename);
+    try {
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+        console.log(`Deleted old team image file: ${fullPath}`);
+      }
+    } catch (err) {
+      console.warn(`Could not delete old image ${fullPath}:`, err);
+    }
+  }
+};
+
+// Helper to save base64 to file and return persistent static path
+const saveBase64File = (base64Str, prefix) => {
+  if (!base64Str || typeof base64Str !== 'string') return base64Str;
+  if (!base64Str.startsWith('data:')) return base64Str;
+
   try {
-    const matches = base64Str.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
+    const parts = base64Str.split(';base64,');
+    if (parts.length !== 2) return base64Str;
+
+    const mimeType = parts[0].replace('data:', '').toLowerCase();
+    const base64Data = parts[1].trim();
+
+    let ext = 'jpg';
+    if (mimeType.includes('png')) ext = 'png';
+    else if (mimeType.includes('webp')) ext = 'webp';
+    else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
+    else return base64Str;
+
+    const buffer = Buffer.from(base64Data, 'base64');
+    if (buffer.length > 5 * 1024 * 1024) {
+      console.warn('Base64 file exceeds allowed 5MB limit');
       return base64Str;
     }
-    
-    const mimeType = matches[1];
-    const base64Data = matches[2];
-    const buffer = Buffer.from(base64Data, 'base64');
-    
-    // Determine file extension
-    let ext = 'bin';
-    if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
-    else if (mimeType.includes('png')) ext = 'png';
-    else if (mimeType.includes('webp')) ext = 'webp';
-    else if (mimeType.includes('mp4')) ext = 'mp4';
-    else if (mimeType.includes('webm')) ext = 'webm';
-    else if (mimeType.includes('quicktime') || mimeType.includes('mov')) ext = 'mov';
-    
-    const filename = `${prefix}_${Date.now()}.${ext}`;
+
+    const filename = `${prefix}_${Date.now()}_${Math.round(Math.random() * 1000)}.${ext}`;
     const filePath = path.join(UPLOADS_DIR, filename);
     fs.writeFileSync(filePath, buffer);
-    
+
     console.log(`Successfully saved Base64 upload to: ${filePath}`);
     return `/uploads/${filename}`;
   } catch (err) {
@@ -174,6 +243,7 @@ app.post('/api/settings/company', async (req, res) => {
         const values = keys.map(k => typeof settings[k] === 'object' ? JSON.stringify(settings[k]) : settings[k]);
         await pool.query(`UPDATE company_settings SET ${setQuery} WHERE id = ?`, [...values, id]);
         fallbackData.company_settings = { ...fallbackData.company_settings, ...settings };
+        companySettingsMemoryCache = { ...companySettingsMemoryCache, ...settings };
         return res.json({ success: true, message: 'Settings updated.', data: settings });
       } else {
         const keys = Object.keys(settings).filter(k => k !== 'id');
@@ -2742,7 +2812,11 @@ app.get('/api/partners', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      const [rows] = await pool.query('SELECT * FROM partners ORDER BY order_num ASC, id ASC');
+      const showAll = req.query.all === 'true';
+      const sql = showAll
+        ? 'SELECT * FROM partners ORDER BY order_num ASC, id ASC'
+        : 'SELECT * FROM partners ORDER BY order_num ASC, id ASC';
+      const [rows] = await pool.query(sql);
       return res.json(rows);
     }
   } catch (err) {
@@ -2754,13 +2828,15 @@ app.get('/api/partners', async (req, res) => {
 // POST create partner
 app.post('/api/partners', async (req, res) => {
   const { name, role, image, order_num } = req.body;
-  if (!name) return res.status(400).json({ error: 'Partner name is required.' });
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Partner name is required.' });
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
+      const savedImage = saveBase64File(image, 'partner');
+      const orderVal = parseInt(order_num, 10) || 0;
       const [result] = await pool.query(
         'INSERT INTO partners (name, role, image, order_num) VALUES (?, ?, ?, ?)',
-        [name, role || 'Working Partner', image || '', order_num || 0]
+        [name.trim(), role || 'Working Partner', savedImage || '', orderVal]
       );
       const [rows] = await pool.query('SELECT * FROM partners WHERE id = ?', [result.insertId]);
       return res.status(201).json(rows[0]);
@@ -2779,9 +2855,18 @@ app.put('/api/partners/:id', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
+      const [existing] = await pool.query('SELECT * FROM partners WHERE id = ?', [id]);
+      let savedImage = image;
+      if (image && image.startsWith('data:')) {
+        savedImage = saveBase64File(image, 'partner');
+        if (existing[0] && existing[0].image && existing[0].image !== savedImage) {
+          deleteOldImageFile(existing[0].image);
+        }
+      }
+      const orderVal = parseInt(order_num, 10) || 0;
       await pool.query(
         'UPDATE partners SET name=?, role=?, image=?, order_num=? WHERE id=?',
-        [name, role, image, order_num || 0, id]
+        [name ? name.trim() : (existing[0] ? existing[0].name : ''), role || 'Working Partner', savedImage || '', orderVal, id]
       );
       const [rows] = await pool.query('SELECT * FROM partners WHERE id = ?', [id]);
       return res.json(rows[0]);
@@ -2799,6 +2884,10 @@ app.delete('/api/partners/:id', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
+      const [existing] = await pool.query('SELECT * FROM partners WHERE id = ?', [id]);
+      if (existing[0] && existing[0].image) {
+        deleteOldImageFile(existing[0].image);
+      }
       await pool.query('DELETE FROM partners WHERE id = ?', [id]);
       return res.json({ success: true });
     }
@@ -2808,6 +2897,119 @@ app.delete('/api/partners/:id', async (req, res) => {
   }
   return res.status(503).json({ error: 'Database not connected.' });
 });
+
+// ==========================================
+// OUR MAJOR CLIENTS API ENDPOINTS
+// ==========================================
+
+const getMajorClientsHandler = async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const showAll = req.query.all === 'true';
+      const sql = showAll
+        ? 'SELECT * FROM major_clients ORDER BY display_order ASC, id ASC'
+        : "SELECT * FROM major_clients WHERE (status = 'Active' OR is_active = 1) ORDER BY display_order ASC, id ASC";
+      const [rows] = await pool.query(sql);
+      return res.json(rows);
+    }
+  } catch (err) {
+    console.error('Error fetching major clients:', err);
+  }
+  return res.json([]);
+};
+
+app.get('/api/company-information/major-clients', getMajorClientsHandler);
+app.get('/api/major-clients', getMajorClientsHandler);
+
+const createMajorClientHandler = async (req, res) => {
+  const { name, logo, display_order, status, is_active } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Client name is required.' });
+
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const savedLogo = saveBase64File(logo, 'client');
+      const orderNum = parseInt(display_order, 10) || 0;
+      const clientStatus = status || 'Active';
+      const activeFlag = is_active !== undefined ? (is_active ? 1 : 0) : (clientStatus === 'Active' ? 1 : 0);
+
+      const [result] = await pool.query(
+        'INSERT INTO major_clients (name, logo, display_order, status, is_active) VALUES (?, ?, ?, ?, ?)',
+        [name.trim(), savedLogo || '', orderNum, clientStatus, activeFlag]
+      );
+      const [rows] = await pool.query('SELECT * FROM major_clients WHERE id = ?', [result.insertId]);
+      return res.status(201).json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error creating major client:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+};
+
+app.post('/api/company-information/major-clients', createMajorClientHandler);
+app.post('/api/major-clients', createMajorClientHandler);
+
+const updateMajorClientHandler = async (req, res) => {
+  const { id } = req.params;
+  const { name, logo, display_order, status, is_active } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Client name is required.' });
+
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [existing] = await pool.query('SELECT * FROM major_clients WHERE id = ?', [id]);
+      let savedLogo = logo;
+      if (logo && logo.startsWith('data:')) {
+        savedLogo = saveBase64File(logo, 'client');
+        if (existing[0] && existing[0].logo && existing[0].logo !== savedLogo) {
+          deleteOldImageFile(existing[0].logo);
+        }
+      }
+
+      const orderNum = parseInt(display_order, 10) || 0;
+      const clientStatus = status || 'Active';
+      const activeFlag = is_active !== undefined ? (is_active ? 1 : 0) : (clientStatus === 'Active' ? 1 : 0);
+
+      await pool.query(
+        'UPDATE major_clients SET name=?, logo=?, display_order=?, status=?, is_active=? WHERE id=?',
+        [name.trim(), savedLogo || '', orderNum, clientStatus, activeFlag, id]
+      );
+      const [rows] = await pool.query('SELECT * FROM major_clients WHERE id = ?', [id]);
+      return res.json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error updating major client:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+};
+
+app.put('/api/company-information/major-clients/:id', updateMajorClientHandler);
+app.put('/api/major-clients/:id', updateMajorClientHandler);
+
+const deleteMajorClientHandler = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [existing] = await pool.query('SELECT * FROM major_clients WHERE id = ?', [id]);
+      if (existing[0] && existing[0].logo) {
+        deleteOldImageFile(existing[0].logo);
+      }
+      await pool.query('DELETE FROM major_clients WHERE id = ?', [id]);
+      return res.json({ success: true, message: 'Major client deleted successfully.' });
+    }
+  } catch (err) {
+    console.error('Error deleting major client:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+};
+
+app.delete('/api/company-information/major-clients/:id', deleteMajorClientHandler);
+app.delete('/api/major-clients/:id', deleteMajorClientHandler);
 
 // ==========================================
 // MEDIA ITEMS API
@@ -2888,6 +3090,184 @@ app.delete('/api/media/:id', async (req, res) => {
 });
 
 // ==========================================
+// BLOGS API
+// ==========================================
+
+// GET all blogs
+app.get('/api/blogs', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const showAll = req.query.all === 'true';
+      const sql = showAll
+        ? 'SELECT * FROM blogs ORDER BY display_order ASC, id DESC'
+        : 'SELECT * FROM blogs WHERE status = "Published" OR status = "Active" OR is_active = 1 ORDER BY display_order ASC, id DESC';
+      const [rows] = await pool.query(sql);
+      return res.json(rows);
+    }
+  } catch (err) {
+    console.error('Error fetching blogs:', err);
+  }
+  return res.json([]);
+});
+
+// GET single blog by slug or ID
+app.get('/api/blogs/:slug', async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const isNum = /^\d+$/.test(slug);
+      const sql = isNum
+        ? 'SELECT * FROM blogs WHERE id = ?'
+        : 'SELECT * FROM blogs WHERE slug = ?';
+      const [rows] = await pool.query(sql, [slug]);
+      if (rows.length > 0) {
+        return res.json(rows[0]);
+      }
+      return res.status(404).json({ error: 'Article not found' });
+    }
+  } catch (err) {
+    console.error('Error fetching blog details:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// POST create blog
+app.post('/api/blogs', async (req, res) => {
+  const { title, category, author, date, image, summary, short_description, content, status, display_order, seo_title, seo_description, seo_keywords } = req.body;
+  if (!title || !title.trim()) return res.status(400).json({ error: 'Blog title is required.' });
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const savedImage = saveBase64File(image, 'blog');
+      const baseSlug = title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      let slugVal = baseSlug;
+      
+      // Ensure unique slug
+      const [existingSlug] = await pool.query('SELECT id FROM blogs WHERE slug = ?', [slugVal]);
+      if (existingSlug.length > 0) {
+        slugVal = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+      }
+
+      const orderVal = parseInt(display_order, 10) || 0;
+      const shortDescToSave = short_description || summary || '';
+      const statusToSave = status === 'Draft' ? 'Draft' : 'Published';
+      const isActiveToSave = statusToSave === 'Draft' ? 0 : 1;
+      
+      const [result] = await pool.query(
+        'INSERT INTO blogs (title, slug, category, author, date, image, summary, short_description, content, status, is_active, display_order, seo_title, seo_description, seo_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          title.trim(),
+          slugVal,
+          category || 'Company News',
+          author || 'Blue Crescent Team',
+          date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          savedImage || '/servicepage1.png',
+          shortDescToSave,
+          shortDescToSave,
+          content || '',
+          statusToSave,
+          isActiveToSave,
+          orderVal,
+          seo_title || title.trim(),
+          seo_description || shortDescToSave,
+          seo_keywords || ''
+        ]
+      );
+      const [rows] = await pool.query('SELECT * FROM blogs WHERE id = ?', [result.insertId]);
+      return res.status(201).json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error creating blog:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// PUT update blog
+app.put('/api/blogs/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, category, author, date, image, summary, short_description, content, status, display_order, seo_title, seo_description, seo_keywords } = req.body;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [existing] = await pool.query('SELECT * FROM blogs WHERE id = ?', [id]);
+      if (existing.length === 0) return res.status(404).json({ error: 'Blog not found' });
+
+      let savedImage = image;
+      if (image && image.startsWith('data:')) {
+        savedImage = saveBase64File(image, 'blog');
+        if (existing[0].image && existing[0].image !== savedImage) {
+          deleteOldImageFile(existing[0].image);
+        }
+      }
+
+      let slugVal = existing[0].slug;
+      if (title && title.trim() && title.trim() !== existing[0].title) {
+        const baseSlug = title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const [existingSlug] = await pool.query('SELECT id FROM blogs WHERE slug = ? AND id != ?', [baseSlug, id]);
+        slugVal = existingSlug.length > 0 ? `${baseSlug}-${id}` : baseSlug;
+      }
+
+      const orderVal = display_order !== undefined ? (parseInt(display_order, 10) || 0) : existing[0].display_order;
+      const shortDescToSave = short_description !== undefined ? short_description : (summary !== undefined ? summary : existing[0].short_description);
+      const statusToSave = status ? (status === 'Draft' ? 'Draft' : 'Published') : existing[0].status;
+      const isActiveToSave = statusToSave === 'Draft' ? 0 : 1;
+
+      await pool.query(
+        'UPDATE blogs SET title=?, slug=?, category=?, author=?, date=?, image=?, summary=?, short_description=?, content=?, status=?, is_active=?, display_order=?, seo_title=?, seo_description=?, seo_keywords=? WHERE id=?',
+        [
+          title ? title.trim() : existing[0].title,
+          slugVal,
+          category || existing[0].category,
+          author || existing[0].author,
+          date || existing[0].date,
+          savedImage || existing[0].image,
+          shortDescToSave,
+          shortDescToSave,
+          content !== undefined ? content : existing[0].content,
+          statusToSave,
+          isActiveToSave,
+          orderVal,
+          seo_title || existing[0].seo_title,
+          seo_description || existing[0].seo_description,
+          seo_keywords || existing[0].seo_keywords,
+          id
+        ]
+      );
+      const [rows] = await pool.query('SELECT * FROM blogs WHERE id = ?', [id]);
+      return res.json(rows[0]);
+    }
+  } catch (err) {
+    console.error('Error updating blog:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// DELETE blog
+app.delete('/api/blogs/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [existing] = await pool.query('SELECT * FROM blogs WHERE id = ?', [id]);
+      if (existing[0] && existing[0].image) {
+        deleteOldImageFile(existing[0].image);
+      }
+      await pool.query('DELETE FROM blogs WHERE id = ?', [id]);
+      return res.json({ success: true });
+    }
+  } catch (err) {
+    console.error('Error deleting blog:', err);
+    return res.status(500).json({ error: err.message });
+  }
+  return res.status(503).json({ error: 'Database not connected.' });
+});
+
+// ==========================================
 // 11. OUR TEAM API ENDPOINTS
 // ==========================================
 
@@ -2897,11 +3277,11 @@ app.get('/api/team', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
-      let query = "SELECT id, name, role, image, department, order_num, status FROM team_members";
+      let query = "SELECT id, name, role, image, department, order_num, hierarchy_number, status FROM team_members";
       if (!all || all === 'false') {
         query += " WHERE status != 'Inactive'";
       }
-      query += " ORDER BY order_num ASC, id ASC";
+      query += " ORDER BY hierarchy_number ASC, order_num ASC, id ASC";
       const [rows] = await pool.query(query);
       
       // Return response immediately for fast UI paint
@@ -2928,22 +3308,25 @@ app.get('/api/team', async (req, res) => {
     console.error('Error fetching team members:', err);
   }
   return res.json([
-    { id: 1, name: 'Dijo Daniel', role: 'Admin / Manager', image: '/Dijo Daniel-Admin.png', department: 'Management', order_num: 1, status: 'Active' },
-    { id: 2, name: 'Hamza Maroof', role: 'Sales Executive', image: '/Hamza Maroof - Sales Executive.png', department: 'Sales', order_num: 2, status: 'Active' },
-    { id: 3, name: 'Hanuman Pandey', role: 'Lidar Specialist', image: '/Hanuman Pandey - Lidar Specialist.png', department: 'Reality Capture', order_num: 3, status: 'Active' },
-    { id: 4, name: 'Pandiarajan Nattathi', role: 'Sr. BIM Coordinator', image: '/Pandiarajan Nattathi - Sr. BIM Coordinator.png', department: 'BIM & CAD', order_num: 4, status: 'Active' },
-    { id: 5, name: 'Ranjithkumar', role: 'Sustainability Manager', image: '/Ranjithkumar - Sustainability Manager.png', department: 'Sustainability', order_num: 5, status: 'Active' },
-    { id: 6, name: 'Riyas Abdul Rasheed', role: 'Branch Office Manager', image: '/Riyas Abdul Rasheed - Branch Office Manager.png', department: 'Management', order_num: 6, status: 'Active' },
-    { id: 7, name: 'Sudharsan Shanmugam', role: 'Sr. BIM Coordinator', image: '/Sudharsan Shanmugam - Sr. BIM Coordinator.png', department: 'BIM & CAD', order_num: 7, status: 'Active' },
-    { id: 8, name: 'Sulaiman Siddique', role: 'Sustainablity Engineer', image: '/Sulaiman Siddique  - Sustainablity Engineer.png', department: 'Sustainability', order_num: 8, status: 'Active' },
-    { id: 9, name: 'Vasanth Subburam', role: 'BIM Coordinator', image: '/Vasanth Subburam - BIM Coordinator.png', department: 'BIM & CAD', order_num: 9, status: 'Active' }
+    { id: 1, name: 'Dijo Daniel', role: 'Admin / Manager', image: '/Dijo Daniel-Admin.png', department: 'Management', order_num: 1, hierarchy_number: 1, status: 'Active' },
+    { id: 2, name: 'Hamza Maroof', role: 'Sales Executive', image: '/Hamza Maroof - Sales Executive.png', department: 'Sales', order_num: 2, hierarchy_number: 2, status: 'Active' },
+    { id: 3, name: 'Hanuman Pandey', role: 'Lidar Specialist', image: '/Hanuman Pandey - Lidar Specialist.png', department: 'Reality Capture', order_num: 3, hierarchy_number: 3, status: 'Active' },
+    { id: 4, name: 'Pandiarajan Nattathi', role: 'Sr. BIM Coordinator', image: '/Pandiarajan Nattathi - Sr. BIM Coordinator.png', department: 'BIM & CAD', order_num: 4, hierarchy_number: 4, status: 'Active' },
+    { id: 5, name: 'Ranjithkumar', role: 'Sustainability Manager', image: '/Ranjithkumar - Sustainability Manager.png', department: 'Sustainability', order_num: 5, hierarchy_number: 5, status: 'Active' },
+    { id: 6, name: 'Riyas Abdul Rasheed', role: 'Branch Office Manager', image: '/Riyas Abdul Rasheed - Branch Office Manager.png', department: 'Management', order_num: 6, hierarchy_number: 6, status: 'Active' },
+    { id: 7, name: 'Sudharsan Shanmugam', role: 'Sr. BIM Coordinator', image: '/Sudharsan Shanmugam - Sr. BIM Coordinator.png', department: 'BIM & CAD', order_num: 7, hierarchy_number: 7, status: 'Active' },
+    { id: 8, name: 'Sulaiman Siddique', role: 'Sustainablity Engineer', image: '/Sulaiman Siddique  - Sustainablity Engineer.png', department: 'Sustainability', order_num: 8, hierarchy_number: 8, status: 'Active' },
+    { id: 9, name: 'Vasanth Subburam', role: 'BIM Coordinator', image: '/Vasanth Subburam - BIM Coordinator.png', department: 'BIM & CAD', order_num: 9, hierarchy_number: 9, status: 'Active' }
   ]);
 });
 
 // POST add team member
 app.post('/api/team', async (req, res) => {
-  let { name, role, image, department, order_num, status } = req.body;
+  let { name, role, image, department, order_num, hierarchy_number, hierarchyNumber, status } = req.body;
   if (!name) return res.status(400).json({ error: 'Team member name is required.' });
+
+  const hierarchyVal = parseInt(hierarchy_number ?? hierarchyNumber ?? order_num ?? 0, 10) || 1;
+
   if (image && image.startsWith('data:')) {
     image = saveBase64File(image, 'team');
   }
@@ -2951,8 +3334,8 @@ app.post('/api/team', async (req, res) => {
     const pool = getPool();
     if (getIsConnected() && pool) {
       const [result] = await pool.query(
-        'INSERT INTO team_members (name, role, image, department, order_num, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [name, role || 'Team Member', image || null, department || '', order_num || 0, status || 'Active']
+        'INSERT INTO team_members (name, role, image, department, order_num, hierarchy_number, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [name, role || 'Team Member', image || null, department || '', hierarchyVal, hierarchyVal, status || 'Active']
       );
       const [rows] = await pool.query('SELECT * FROM team_members WHERE id = ?', [result.insertId]);
       return res.status(201).json(rows[0]);
@@ -2967,16 +3350,26 @@ app.post('/api/team', async (req, res) => {
 // PUT update team member
 app.put('/api/team/:id', async (req, res) => {
   const { id } = req.params;
-  let { name, role, image, department, order_num, status } = req.body;
-  if (image && image.startsWith('data:')) {
-    image = saveBase64File(image, 'team');
-  }
+  let { name, role, image, department, order_num, hierarchy_number, hierarchyNumber, status } = req.body;
+  const hierarchyVal = parseInt(hierarchy_number ?? hierarchyNumber ?? order_num ?? 0, 10) || 1;
+
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
+      const [existingRows] = await pool.query('SELECT image FROM team_members WHERE id = ?', [id]);
+      const oldImage = existingRows.length > 0 ? existingRows[0].image : null;
+
+      if (image && image.startsWith('data:')) {
+        image = saveBase64File(image, 'team');
+      }
+
+      if (oldImage && oldImage !== image && oldImage.startsWith('/uploads/')) {
+        deleteOldImageFile(oldImage);
+      }
+
       await pool.query(
-        'UPDATE team_members SET name=?, role=?, image=?, department=?, order_num=?, status=? WHERE id=?',
-        [name, role, image, department, order_num || 0, status || 'Active', id]
+        'UPDATE team_members SET name=?, role=?, image=?, department=?, order_num=?, hierarchy_number=?, status=? WHERE id=?',
+        [name, role, image, department, hierarchyVal, hierarchyVal, status || 'Active', id]
       );
       const [rows] = await pool.query('SELECT * FROM team_members WHERE id = ?', [id]);
       return res.json(rows[0]);
@@ -2994,6 +3387,10 @@ app.delete('/api/team/:id', async (req, res) => {
   try {
     const pool = getPool();
     if (getIsConnected() && pool) {
+      const [existingRows] = await pool.query('SELECT image FROM team_members WHERE id = ?', [id]);
+      if (existingRows.length > 0 && existingRows[0].image) {
+        deleteOldImageFile(existingRows[0].image);
+      }
       await pool.query('DELETE FROM team_members WHERE id = ?', [id]);
       return res.json({ success: true });
     }

@@ -78,11 +78,9 @@ export default function ProjectsSlider({ onNavigate }) {
     fetch('/api/projects')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data && data.length > 0) {
+        if (Array.isArray(data)) {
           const activeProjects = data.filter(p => p.status !== 'Inactive');
-          if (activeProjects.length > 0) {
-            setProjects(activeProjects);
-          }
+          setProjects(activeProjects);
         }
       })
       .catch(err => console.warn('Projects slider fetch warning:', err));
@@ -167,25 +165,24 @@ export default function ProjectsSlider({ onNavigate }) {
   };
 
   return (
-    <section 
-      className="projects-section-staggered" 
-      style={{ 
-        marginTop: '64px', 
-        marginBottom: '100px',
-        background: 'linear-gradient(180deg, #F0F7FF 0%, #E6F0FA 100%)',
-        padding: '50px 24px 60px 24px',
-        borderRadius: '32px',
-        border: '1px solid #BAE6FD'
+    <section
+      className="projects-section-staggered"
+      style={{
+        padding: '32px 24px',
+        margin: '24px 0 0 0',
+        background: '#F8FBFF',
+        border: '1px solid #BAE6FD',
+        borderRadius: '32px'
       }}
     >
       <div className="projects-container-inner">
         {/* Centered Section Header */}
-        <div className="projects-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '32px', padding: windowWidth < 768 ? '0 16px' : '0 100px' }}>
-          <h2 style={{ margin: '0 0 10px 0', color: '#063B73', fontSize: windowWidth < 640 ? '24px' : '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
+        <div className="projects-header-wrap" style={{ position: 'relative', textAlign: 'center', marginBottom: '16px', padding: windowWidth < 768 ? '0 16px' : '0 100px' }}>
+          <h2 style={{ margin: '0 0 8px 0', color: '#063B73', fontSize: windowWidth < 640 ? '24px' : '32px', fontWeight: '800', fontFamily: 'Space Grotesk, sans-serif' }}>
             Our Projects
           </h2>
-          <div style={{ width: '48px', height: '4px', background: 'linear-gradient(90deg, #087CFF, #00B8FF)', borderRadius: '2px', margin: '0 auto 14px auto' }} />
-          <p style={{ margin: '0 auto', maxWidth: '760px', color: '#475569', fontSize: windowWidth < 640 ? '13.5px' : '15px', lineHeight: 1.6, fontWeight: '400' }}>
+          <div style={{ width: '48px', height: '4px', background: 'linear-gradient(90deg, #087CFF, #00B8FF)', borderRadius: '2px', margin: '0 auto 10px auto' }} />
+          <p style={{ margin: '0 auto', maxWidth: '760px', color: '#475569', fontSize: windowWidth < 640 ? '13.5px' : '15px', lineHeight: 1.5, fontWeight: '400' }}>
             Explore our engineering, BIM coordination, digital twin, and sustainability portfolio across key industry sectors.
           </p>
 
@@ -250,8 +247,8 @@ export default function ProjectsSlider({ onNavigate }) {
             flexWrap: 'wrap',
             justifyContent: 'center',
             gap: windowWidth < 768 ? '8px 6px' : '8px',
-            padding: windowWidth < 768 ? '0 12px 12px 12px' : '0 0 12px 0',
-            marginBottom: windowWidth < 768 ? '24px' : '40px',
+            padding: windowWidth < 768 ? '0 12px 8px 12px' : '0 0 8px 0',
+            marginBottom: '16px',
             WebkitOverflowScrolling: 'touch'
           }}
         >

@@ -118,19 +118,6 @@ export default function SustainabilityConsultancySection({ onNavigate }) {
                 className="sust-main-image"
                 loading="lazy"
               />
-              
-              {/* Floating Badge */}
-              <div className="sust-floating-badge">
-                <div className="sust-badge-header">
-                  <div className="sust-badge-icon">
-                    <Leaf size={16} color="#10B981" />
-                  </div>
-                  <span className="sust-badge-title">{cleanText(data.sustainabilityBadgeTitle, 'SUSTAINABLE ENGINEERING')}</span>
-                </div>
-                <div className="sust-badge-subtitle">
-                  {cleanText(data.sustainabilityBadgeSubtitle, 'GSAS • LEED • ENERGY • CARBON')}
-                </div>
-              </div>
             </div>
           </div>
 
