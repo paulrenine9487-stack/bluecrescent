@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import './MediaPage.css';
+import DynamicBanner from './DynamicBanner';
 
 function CategoryMediaSlider({ title, categoryColor, items, renderCard, cardsToShow = 3 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -299,25 +300,17 @@ export default function MediaPage({ activeSubTab = 'Gallery', onNavigate }) {
 
   return (
     <div className="media-page-wrapper">
-      {/* Banner */}
-      <section
-        className="media-hero-section"
-        style={companySettings?.mediaPageBannerUrl ? { backgroundImage: `url("${companySettings.mediaPageBannerUrl}")` } : {}}
-      >
-        <div className="media-hero-overlay"></div>
-        <div className="media-hero-container">
-          <h1 className="media-hero-title">
-            {isBlogView ? 'Blogs' : isGalleryView ? 'Photo Gallery' : 'Video Showcase'}
-          </h1>
-          <p className="media-hero-subtitle">
-            {isBlogView
-              ? 'Stay informed with the latest engineering insights, company articles, and technical publications.'
-              : isGalleryView 
-                ? 'Explore site operations, Qatar Expo highlights, our main offices, and technical milestones.' 
-                : 'Watch 3D BIM walkthroughs, team leadership videos, and engineering briefings.'}
-          </p>
-        </div>
-      </section>
+      {/* Dynamic Live Banner with Overlaid Title & Subtitle */}
+      <DynamicBanner
+        pageKey={isBlogView ? 'blogs' : isGalleryView ? 'gallery' : 'videos'}
+        defaultImage={companySettings?.mediaPageBannerUrl || 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=80'}
+        title={isBlogView ? 'Blogs' : isGalleryView ? 'Photo Gallery' : 'Video Showcase'}
+        subtitle={isBlogView
+          ? 'Stay informed with the latest engineering insights, company articles, and technical publications.'
+          : isGalleryView 
+            ? 'Explore site operations, Qatar Expo highlights, our main offices, and technical milestones.' 
+            : 'Watch 3D BIM walkthroughs, team leadership videos, and engineering briefings.'}
+      />
 
       {/* Main Container */}
       <section className="media-content-section container" style={{ padding: '50px 24px 90px 24px' }}>

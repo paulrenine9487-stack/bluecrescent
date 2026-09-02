@@ -4,13 +4,15 @@ import Header from './components/Header';
 import HeroSlider from './components/HeroSlider';
 import CredentialsSection from './components/CredentialsSection';
 import WhoWeAreSection from './components/WhoWeAreSection';
+import ManagingPartnersMessageSection from './components/ManagingPartnersMessageSection';
 import SustainabilityConsultancySection from './components/SustainabilityConsultancySection';
 import RemoteConstruction from './components/RemoteConstruction';
 import CompanyInfo from './components/CompanyInfo';
 import SidebarContent from './components/SidebarContent';
-import ServicesList from './components/ServicesList';
 import ProjectsSlider from './components/ProjectsSlider';
+import WorkingPartnersSection from './components/WorkingPartnersSection';
 import MajorClientsSection from './components/MajorClientsSection';
+import ProjectInMindCTASection from './components/ProjectInMindCTASection';
 import ServicesPage from './components/ServicesPage';
 import AboutUsPage from './components/AboutUsPage';
 import ProjectsPage from './components/ProjectsPage';
@@ -137,6 +139,12 @@ export default function App() {
       window.history.pushState({}, '', '/about-us#our-journey');
       setCurrentView('About Us');
       setActiveSubTab('our-journey-section');
+    } else if (view === "Let's Connect") {
+      setCurrentView('Contact Us');
+      setActiveSubTab(subTab);
+    } else if (view === 'Expertise') {
+      setCurrentView('Services');
+      setActiveSubTab(subTab);
     } else {
       setCurrentView(view);
       setActiveSubTab(subTab);
@@ -155,7 +163,7 @@ export default function App() {
       } else {
         window.history.pushState({}, '', '/projects');
       }
-    } else if (view === 'Services') {
+    } else if (view === 'Services' || view === 'Expertise') {
       if (subTab) {
         window.history.pushState({}, '', `/services/${slugify(subTab)}`);
       } else {
@@ -163,7 +171,7 @@ export default function App() {
       }
     } else if (view === 'About Us') {
       window.history.pushState({}, '', subTab === 'our-journey-section' ? '/about-us#our-journey' : '/about-us');
-    } else if (view === 'Contact Us') {
+    } else if (view === 'Contact Us' || view === "Let's Connect") {
       window.history.pushState({}, '', '/contact-us');
     } else if (view === 'Certifications') {
       window.history.pushState({}, '', '/certifications');
@@ -231,7 +239,7 @@ export default function App() {
           <CertificationsPage
             onNavigate={handleNavigate}
           />
-        ) : currentView === 'Contact Us' ? (
+        ) : (currentView === 'Contact Us' || currentView === "Let's Connect") ? (
           <ContactUsPage
             onNavigate={handleNavigate}
           />
@@ -267,11 +275,11 @@ export default function App() {
             {/* Welcome Hero Carousel */}
             <HeroSlider onNavigate={handleNavigate} />
 
-            {/* OUR CREDENTIALS / CERTIFICATIONS Section */}
-            <CredentialsSection onNavigate={handleNavigate} />
-
             {/* NEW WHO WE ARE SECTION */}
             <WhoWeAreSection onNavigate={handleNavigate} />
+
+            {/* MANAGING PARTNER'S MESSAGE SECTION */}
+            <ManagingPartnersMessageSection />
 
             {/* SUSTAINABILITY CONSULTANCY SECTION */}
             <SustainabilityConsultancySection onNavigate={handleNavigate} />
@@ -286,20 +294,23 @@ export default function App() {
                 <CompanyInfo onNavigate={handleNavigate} />
               </div>
 
-              {/* Our Services Section */}
-              <ServicesList onNavigate={handleNavigate} />
-
               {/* Our Projects Section */}
               <ProjectsSlider onNavigate={handleNavigate} />
 
             </main>
+
+            {/* OUR CREDENTIALS / CERTIFICATIONS Section (UNDER OUR PROJECTS) */}
+            <CredentialsSection onNavigate={handleNavigate} />
+
+            {/* OUR WORKING PARTNERS SECTION */}
+            <WorkingPartnersSection />
 
             {/* OUR MAJOR CLIENTS SECTION - FULL WIDTH BLUE BACKGROUND */}
             <MajorClientsSection />
 
             {/* WHAT OUR CLIENTS SAY (News & Testimonials) */}
             <main className="container" style={{ marginTop: '40px' }}>
-              <div className="main-content-layout-downside" style={{ marginBottom: '80px' }}>
+              <div className="main-content-layout-downside" style={{ marginBottom: '40px' }}>
                 <SidebarContent 
                   currentView={currentView}
                   activeSubTab={activeSubTab}
@@ -307,6 +318,9 @@ export default function App() {
                 />
               </div>
             </main>
+
+            {/* HAVE A PROJECT IN MIND? LET’S CONNECT. SECTION */}
+            <ProjectInMindCTASection onNavigate={handleNavigate} />
           </>
         )}
       </ErrorBoundary>

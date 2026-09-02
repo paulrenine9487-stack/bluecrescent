@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, User, Tag, Share2, Clock, ChevronRight } from 'lucide-react';
 import { getCachedCompanySettings } from '../utils/bannerCache';
+import DynamicBanner from './DynamicBanner';
 
 export default function BlogDetailPage({ slug, onNavigate }) {
   const [article, setArticle] = useState(null);
@@ -81,9 +82,14 @@ export default function BlogDetailPage({ slug, onNavigate }) {
   return (
     <div className="blog-detail-wrapper" style={{ background: '#F8FAFC', minHeight: '100vh', paddingBottom: '100px' }}>
       
-      {/* Top Banner / Breadcrumb Bar */}
-      <div style={{ background: '#0F2747', padding: '48px 24px 40px 24px', color: '#FFFFFF' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+      {/* Dynamic Live Banner / Breadcrumb Bar */}
+      <DynamicBanner
+        pageKey="blog-detail"
+        defaultImage={featuredImg}
+        defaultImages={[featuredImg, '/servicepage1.png', '/why.png']}
+        minHeight="320px"
+      >
+        <div style={{ maxWidth: '960px', margin: '0 auto', textAlign: 'left' }}>
           
           {/* Breadcrumbs */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#94A3B8', marginBottom: '20px', flexWrap: 'wrap' }}>
@@ -143,16 +149,20 @@ export default function BlogDetailPage({ slug, onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '13.5px', color: '#CBD5E1', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <User size={15} style={{ color: '#38BDF8' }} />
-              <span>{article.author || 'Blue Crescent Team'}</span>
+              <span>{article.author || 'Blue Crescent Engineering'}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Calendar size={15} style={{ color: '#38BDF8' }} />
-              <span>{article.date || 'August 2026'}</span>
+              <span>{article.date || 'Recent Article'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={15} style={{ color: '#38BDF8' }} />
+              <span>{article.read_time || '4 min read'}</span>
             </div>
           </div>
 
         </div>
-      </div>
+      </DynamicBanner>
 
       {/* Main Container */}
       <div style={{ maxWidth: '960px', margin: '-30px auto 0 auto', padding: '0 24px', position: 'relative', zIndex: 10 }}>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import TestimonialsSection from './TestimonialsSection';
-import MajorClientsSection from './MajorClientsSection';
 import {
   Building2,
   Compass,
@@ -50,6 +49,7 @@ import aboutus5 from '../assets/aboutus5.png';
 import aboutus6 from '../assets/aboutus6.png';
 import bimmodelImg from '../assets/bimmodel.png';
 import './AboutUsPage.css';
+import DynamicBanner from './DynamicBanner';
 
 const getLucideIcon = (name, size = 22, color = '#0057B8') => {
   switch (name) {
@@ -428,31 +428,23 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
   return (
     <div className="about-us-page-wrapper" style={{ background: '#FFFFFF' }}>
 
-      {/* ── SECTION 1: ABOUT US HERO ────────────────────────────────── */}
-      <section className="about-hero-banner-wrap">
-        <img
-          src={companySettings?.aboutUsPageBannerUrl || companySettings?.aboutUsHeroUrl || aboutBanner}
-          alt="About Us Banner - Blue Crescent Engineering"
-          className="about-hero-banner-img"
-          fetchPriority="high"
-          loading="eager"
-          decoding="async"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = aboutBanner;
-          }}
-        />
-      </section>
+      {/* ── SECTION 1: ABOUT US HERO (DYNAMIC LIVE BANNER) ─────────── */}
+      <DynamicBanner
+        pageKey="aboutus"
+        defaultImage={aboutBanner}
+        defaultImages={[aboutBanner, aboutEngineeringImg, aboutus5]}
+        overlayOpacity="none"
+      />
 
       <div className="bce-container">
 
         {/* ── SECTION 2: WHO WE ARE (REPLACED CONTENT) ───────────────── */}
-        <section className="who-we-are-section" style={{ marginBottom: '28px' }}>
+        <section className="who-we-are-section" style={{ marginBottom: '48px' }}>
           <div className="who-we-are-grid">
             {/* Left: Text content */}
             <div className="who-we-are-content-box">
               <h2 className="bce-heading-primary" style={{ fontSize: '32px', fontWeight: '800', color: '#063B73', marginBottom: '12px', lineHeight: 1.3 }}>
-                Engineering Experience. Digital Innovation.
+                WHO WE ARE
               </h2>
               {/* Subtle Blue Accent Line */}
               <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', marginBottom: '24px' }}></div>
@@ -817,117 +809,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         {/* ── SECTION: OUR TEAM (LEADERSHIP & TECHNICAL SPECIALISTS) ─────── */}
         <OurTeamSection windowWidth={windowWidth} />
 
-        {/* ── SECTION 6: OUR APPROACH (NEW SECTION) ──────────────────── */}
-        <section style={{ marginBottom: '24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              OUR APPROACH
-            </h2>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
-              Digital. Smart. Sustainable.
-            </p>
-            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
-            <p style={{ fontSize: '16px', color: '#475569', maxWidth: '650px', margin: '0 auto', lineHeight: 1.7 }}>
-              Our approach connects engineering information, people, processes and technologies throughout the asset lifecycle.
-            </p>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            flexDirection: windowWidth >= 1024 ? 'row' : 'column',
-            alignItems: 'center',
-            gap: windowWidth >= 1024 ? '50px' : '70px',
-            justifyContent: 'center',
-            padding: '30px 0'
-          }}>
-            {/* Card 1 */}
-            <ApproachDiamondCard
-              num="01"
-              title="DIGITAL"
-              desc="Transform physical and engineering information into structured digital assets."
-              icon={<Cpu size={22} color="#0057B8" />}
-              windowWidth={windowWidth}
-            />
-
-            {windowWidth >= 1024 && <span style={{ color: '#08A8F0', fontSize: '24px', fontWeight: '800', margin: '0 10px' }}>→</span>}
-
-            {/* Card 2 */}
-            <ApproachDiamondCard
-              num="02"
-              title="SMART"
-              desc="Connect data, systems and technologies to improve collaboration, automation and decision-making."
-              icon={<Compass size={22} color="#0057B8" />}
-              windowWidth={windowWidth}
-            />
-
-            {windowWidth >= 1024 && <span style={{ color: '#08A8F0', fontSize: '24px', fontWeight: '800', margin: '0 10px' }}>→</span>}
-
-            {/* Card 3 */}
-            <ApproachDiamondCard
-              num="03"
-              title="SUSTAINABLE"
-              desc="Support efficient design, construction and operation while improving long-term environmental and asset performance."
-              icon={<Leaf size={22} color="#0057B8" />}
-              windowWidth={windowWidth}
-            />
-          </div>
-        </section>
-
-      </div> {/* Close bce-container for full width section */}
-
-      {/* ── SECTION 7: INDUSTRIES WE SERVE (NEW SECTION - FULL WIDTH) ───────────── */}
-      <section
-        style={{
-          marginBottom: '0px',
-          background: `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.8) 55%, rgba(255, 255, 255, 0.25) 100%), url(${aboutus5})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
-          padding: '20px 0',
-          width: '100%',
-          borderTop: '1.5px solid #E2EAF3',
-          borderBottom: '1.5px solid #E2EAF3',
-          boxSizing: 'border-box'
-        }}
-      >
-        <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              Industries We Serve
-            </h2>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
-              Experience Across Complex Project Environments
-            </p>
-            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
-            <p style={{ fontSize: '16px', color: '#475569', maxWidth: '650px', margin: '0 auto', lineHeight: 1.7 }}>
-              Our multidisciplinary capabilities allow us to support a wide range of sectors.
-            </p>
-          </div>
-
-          <IndustriesArc
-            windowWidth={windowWidth}
-            activeIdx={activeIndustryIdx}
-            setActiveIdx={setActiveIndustryIdx}
-          />
-        </div>
-      </section>
-
-      <div className="bce-container"> {/* Reopen bce-container */}
-
-        {/* ── SECTION 8: OUR GEOGRAPHICAL PRESENCE (NEW SECTION) ───────── */}
-        <section style={{ marginBottom: '28px', padding: '10px 0' }}>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              Our Geographical Presence
-            </h2>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
-              GCC Expertise. Global Delivery Capability.
-            </p>
-            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
-          </div>
-          <GeographicalPresence windowWidth={windowWidth} mapImg={companySettings.aboutUsMapImg || '/map1.png'} countries={countries} />
-        </section>
-
-        {/* ── SECTION 9: OUR CAPACITY (NEW SECTION) ──────────────────── */}
+        {/* ── SECTION 9: OUR CAPACITY (MOVED UNDER TEAM / CORE STRENGTHS) ───────── */}
         <section style={{ marginBottom: '28px' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
@@ -1049,9 +931,9 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
           </div>
         </section>
 
-      </div> {/* Close bce-container for full bleed Section 10 */}
+      </div> {/* Close bce-container for full bleed Digital Twin */}
 
-      {/* ── SECTION 10: DIGITAL TWIN (NEW SECTION) ────────────────── */}
+      {/* ── SECTION 10: DIGITAL TWIN (MOVED UNDER CAPACITY & ABOVE OUR APPROACH) ────────────────── */}
       <section style={{
         background: `linear-gradient(180deg, rgba(244, 248, 255, 0.92) 0%, rgba(240, 246, 255, 0.95) 100%), url(${companySettings.aboutUsDigitalImg || '/digital.png'}) no-repeat center center / cover`,
         padding: '40px 0',
@@ -1196,71 +1078,186 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
         </div> {/* Close inner bce-container */}
       </section>
 
-      <div className="bce-container"> {/* Reopen bce-container for subsequent sections */}
+      {/* Re-open bce-container for Our Approach */}
+      <div className="bce-container" style={{ paddingTop: '32px' }}>
 
-        {/* ── SECTION 11: OUR WORKING PARTNERS ───────────────────────── */}
-        {(() => {
-          const visible = Math.min(4, partners.length);
-          const max = Math.max(0, partners.length - visible);
-          const prev = () => setPartnerIdx(i => Math.max(0, i - 1));
-          const next = () => setPartnerIdx(i => Math.min(max, i + 1));
-          return (
-            <section className="working-partners-section">
-              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-                  OUR WORKING PARTNERS
-                </h2>
-                <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
-                  Trusted collaborations that drive excellence across every project we deliver.
-                </p>
-                <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
-              </div>
+        {/* ── SECTION 6: OUR APPROACH (MOVED UNDER DIGITAL TWIN) ──────────────────── */}
+        <section style={{ marginBottom: '24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+              OUR APPROACH
+            </h2>
+            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
+              Digital. Smart. Sustainable.
+            </p>
+            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
+            <p style={{ fontSize: '16px', color: '#475569', maxWidth: '650px', margin: '0 auto', lineHeight: 1.7 }}>
+              Our approach connects engineering information, people, processes and technologies throughout the asset lifecycle.
+            </p>
+          </div>
 
-              {partners.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#94a3b8', padding: '40px 0' }}>No partners added yet.</p>
-              ) : (
-                <>
-                  <div className="partners-carousel-wrap">
-                    <button className="partner-arrow partner-arrow-left" onClick={prev} disabled={partnerIdx === 0} aria-label="Previous">&#8249;</button>
-                    <div className="partners-track-outer">
-                      <div className="partners-track" style={{ transform: `translateX(calc(-${partnerIdx} * (100% / ${visible})))` }}>
-                        {partners.map((p) => (
-                          <div key={p.id} className="partner-card">
-                            <div className="partner-img-wrap">
-                              <img src={p.image} alt={p.name} className="partner-img" />
-                            </div>
-                            <div className="partner-card-body">
-                              <p className="partner-name">{p.name}</p>
-                              <p className="partner-role">{p.role}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <button className="partner-arrow partner-arrow-right" onClick={next} disabled={partnerIdx >= max} aria-label="Next">&#8250;</button>
-                  </div>
-                  {max > 0 && (
-                    <div className="partners-dots">
-                      {Array.from({ length: max + 1 }).map((_, i) => (
-                        <button key={i} className={`partner-dot ${i === partnerIdx ? 'active' : ''}`} onClick={() => setPartnerIdx(i)} aria-label={`Slide ${i + 1}`} />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </section>
-          );
-        })()}
+          <div style={{
+            display: 'flex',
+            flexDirection: windowWidth >= 1024 ? 'row' : 'column',
+            alignItems: 'center',
+            gap: windowWidth >= 1024 ? '50px' : '70px',
+            justifyContent: 'center',
+            padding: '30px 0'
+          }}>
+            {/* Card 1 */}
+            <ApproachDiamondCard
+              num="01"
+              title="DIGITAL"
+              desc="Transform physical and engineering information into structured digital assets."
+              icon={<Cpu size={22} color="#0057B8" />}
+              windowWidth={windowWidth}
+            />
 
-        {/* ── SECTION 12: OUR MAJOR CLIENTS (REUSABLE MARQUEE RAIL) ───── */}
-        <MajorClientsSection />
+            {windowWidth >= 1024 && <span style={{ color: '#08A8F0', fontSize: '24px', fontWeight: '800', margin: '0 10px' }}>→</span>}
 
-        {/* ── SECTION 13: TESTIMONIALS (SAME HOME PAGE DESIGN) ───────── */}
-        <TestimonialsSection />
+            {/* Card 2 */}
+            <ApproachDiamondCard
+              num="02"
+              title="SMART"
+              desc="Connect data, systems and technologies to improve collaboration, automation and decision-making."
+              icon={<Compass size={22} color="#0057B8" />}
+              windowWidth={windowWidth}
+            />
 
-        {/* ── SECTION 14: FOOTER SPACING ─────────────────────────────── */}
-        <div className="about-footer-spacer"></div>
+            {windowWidth >= 1024 && <span style={{ color: '#08A8F0', fontSize: '24px', fontWeight: '800', margin: '0 10px' }}>→</span>}
+
+            {/* Card 3 */}
+            <ApproachDiamondCard
+              num="03"
+              title="SUSTAINABLE"
+              desc="Support efficient design, construction and operation while improving long-term environmental and asset performance."
+              icon={<Leaf size={22} color="#0057B8" />}
+              windowWidth={windowWidth}
+            />
+          </div>
+        </section>
+
+      </div> {/* Close bce-container for full width section */}
+
+      {/* ── SECTION 7: INDUSTRIES WE SERVE (NEW SECTION - FULL WIDTH) ───────────── */}
+      <section
+        style={{
+          marginBottom: '0px',
+          background: `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.8) 55%, rgba(255, 255, 255, 0.25) 100%), url(${aboutus5})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          padding: '20px 0',
+          width: '100%',
+          borderTop: '1.5px solid #E2EAF3',
+          borderBottom: '1.5px solid #E2EAF3',
+          boxSizing: 'border-box'
+        }}
+      >
+        <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+              Industries We Serve
+            </h2>
+            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
+              Experience Across Complex Project Environments
+            </p>
+            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
+            <p style={{ fontSize: '16px', color: '#475569', maxWidth: '650px', margin: '0 auto', lineHeight: 1.7 }}>
+              Our multidisciplinary capabilities allow us to support a wide range of sectors.
+            </p>
+          </div>
+
+          <IndustriesArc
+            windowWidth={windowWidth}
+            activeIdx={activeIndustryIdx}
+            setActiveIdx={setActiveIndustryIdx}
+          />
+        </div>
+      </section>
+
+      <div className="bce-container"> {/* Reopen bce-container */}
+
+        {/* ── SECTION 8: OUR GEOGRAPHICAL PRESENCE (NEW SECTION) ───────── */}
+        <section style={{ marginBottom: '28px', padding: '10px 0' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '32px', fontWeight: '800', color: '#063B73', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+              Our Geographical Presence
+            </h2>
+            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '24px', fontWeight: '600', color: '#0057B8', margin: '0 0 14px 0', lineHeight: 1.4 }}>
+              GCC Expertise. Global Delivery Capability.
+            </p>
+            <div style={{ width: '60px', height: '3.5px', background: '#0057B8', borderRadius: '4px', margin: '0 auto 16px auto' }} />
+          </div>
+          <GeographicalPresence windowWidth={windowWidth} mapImg={companySettings.aboutUsMapImg || '/map1.png'} countries={countries} />
+        </section>
+
       </div>
+
+      {/* ── TESTIMONIALS (WHAT OUR CLIENTS SAY) ───────────────────────── */}
+      <div className="bce-container" style={{ paddingTop: '40px' }}>
+        <TestimonialsSection />
+      </div>
+
+      {/* ── SECTION: WE COMMIT. WE DELIVER. WE STAY. ──────────────────── */}
+      <section className="about-commit-deliver-section" style={{
+        background: 'linear-gradient(180deg, #F0F6FD 0%, #E7F1FB 50%, #F0F6FD 100%)',
+        padding: '50px 24px 45px',
+        textAlign: 'center',
+        borderTop: '1px solid #D8E6F5',
+        borderBottom: '1px solid #D8E6F5',
+        marginTop: '20px'
+      }}>
+        <div style={{ maxWidth: '820px', margin: '0 auto' }}>
+          <h2 style={{
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontSize: '32px',
+            fontWeight: '800',
+            color: '#063B73',
+            lineHeight: 1.25,
+            margin: '0 0 12px 0',
+            letterSpacing: '-0.5px'
+          }}>
+            We Commit. We Deliver. We Stay.
+          </h2>
+
+          {/* Decorative horizontal blue accent line */}
+          <div style={{
+            width: '50px',
+            height: '3.5px',
+            background: 'linear-gradient(90deg, #0057B8, #00B8FF)',
+            borderRadius: '4px',
+            margin: '0 auto 18px auto'
+          }} />
+
+          <p style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '16.5px',
+            lineHeight: '1.65',
+            color: '#334155',
+            margin: '0 0 14px 0',
+            fontWeight: '500'
+          }}>
+            We don't pursue projects simply to grow numbers. We choose projects where we can provide the{' '}
+            <strong style={{ color: '#0057B8', fontWeight: '700' }}>right expertise, fair commercial value</strong>{' '}
+            and{' '}
+            <strong style={{ color: '#0057B8', fontWeight: '700' }}>uncompromised delivery.</strong>
+          </p>
+
+          <p style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '16.5px',
+            lineHeight: '1.65',
+            color: '#334155',
+            margin: '0',
+            fontWeight: '500'
+          }}>
+            Because at Blue Crescent, every client is more than a customer.<br />
+            <strong style={{ color: '#0057B8', fontWeight: '800', fontSize: '18px', display: 'inline-block', marginTop: '4px' }}>
+              They are our partner.
+            </strong>
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

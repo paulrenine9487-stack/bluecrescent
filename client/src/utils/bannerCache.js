@@ -1,6 +1,7 @@
 // client/src/utils/bannerCache.js
 
 const CACHE_KEY = 'companySettings';
+const PAGE_BANNERS_KEY = 'pageBannersMap';
 
 export function getCachedCompanySettings() {
   try {
@@ -57,11 +58,47 @@ export function updateCachedCompanySettings(newSettings) {
   }
 }
 
+export function getCachedPageBanners() {
+  try {
+    const saved = localStorage.getItem(PAGE_BANNERS_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch (e) {}
+    }
+  } catch (e) {
+    console.warn('Error reading cached page banners:', e);
+  }
+  return {};
+}
+
+export function updateCachedPageBanners(newMap) {
+  try {
+    const current = getCachedPageBanners();
+    const merged = { ...current, ...newMap };
+    localStorage.setItem(PAGE_BANNERS_KEY, JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent('pageBannersUpdated', { detail: merged }));
+    return merged;
+  } catch (e) {
+    console.warn('Error updating cached page banners:', e);
+    return newMap;
+  }
+}
+
+export function getPageBanner(pageKey) {
+  if (!pageKey) return null;
+  const map = getCachedPageBanners();
+  const normalizedKey = pageKey.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  return map[pageKey] || map[normalizedKey] || null;
+}
+
 export async function fetchAndCacheCompanySettings() {
   try {
-    const [compRes, bannerRes] = await Promise.all([
+    const [compRes, legacyBannerRes, liveBannersRes] = await Promise.all([
       fetch('/api/settings/company').catch(() => null),
-      fetch('/api/settings/banners').catch(() => null)
+      fetch('/api/settings/banners').catch(() => null),
+      fetch('/api/banners').catch(() => null)
     ]);
 
     let mergedData = {};
@@ -73,10 +110,17 @@ export async function fetchAndCacheCompanySettings() {
       }
     }
 
-    if (bannerRes && bannerRes.ok) {
-      const bannerData = await bannerRes.json();
+    if (legacyBannerRes && legacyBannerRes.ok) {
+      const bannerData = await legacyBannerRes.json();
       if (bannerData && typeof bannerData === 'object') {
         mergedData = { ...mergedData, ...bannerData };
+      }
+    }
+
+    if (liveBannersRes && liveBannersRes.ok) {
+      const liveBanners = await liveBannersRes.json();
+      if (liveBanners && typeof liveBanners === 'object') {
+        updateCachedPageBanners(liveBanners);
       }
     }
 
@@ -88,3 +132,4 @@ export async function fetchAndCacheCompanySettings() {
   }
   return getCachedCompanySettings();
 }
+

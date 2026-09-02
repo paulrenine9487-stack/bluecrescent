@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import projectBanner from '../assets/project1.png';
+import DynamicBanner from './DynamicBanner';
 
 const PROJECT_CATEGORIES = [
   {
@@ -375,14 +376,13 @@ export default function ProjectsPage({ activeSubTab = '', onNavigate }) {
 
   return (
     <div className="projects-page">
-      {/* Full-Width Projects Banner */}
-      <section className="about-full-banner-wrap" style={{ width: '100%', overflow: 'hidden', marginBottom: 0 }}>
-        <img
-          src={companySettings?.projectsPageBannerUrl || projectBanner}
-          alt="Projects Banner"
-          className="about-hero-banner-img page-banner-img"
-        />
-      </section>
+      {/* Dynamic Live Projects Banner */}
+      <DynamicBanner
+        pageKey="projects"
+        defaultImage={projectBanner}
+        defaultImages={[projectBanner, '/servicepage1.png', '/about.png']}
+        overlayOpacity="none"
+      />
 
       {/* Main Content */}
       <div className="container" style={{ paddingTop: '40px', paddingBottom: '60px' }}>

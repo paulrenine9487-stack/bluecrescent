@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
+import { getCachedCompanySettings, updateCachedCompanySettings, getCachedPageBanners, updateCachedPageBanners } from '../utils/bannerCache';
 import {
   Lock, User, Plus, Trash, Edit, Check, LogOut, Settings,
   Globe, Award, FileText, Menu, Layers, Shield, Eye, Trash2,
@@ -10,11 +10,56 @@ import {
   Building, MapPin, Phone, Map, Clock, Cpu, ExternalLink,
   Radio, Leaf, Building2, Wind, Volume2, Droplet, Activity, Zap, Users,
   Monitor, Cloud, TrendingUp, Share2, ClipboardCheck, Heart, RefreshCw,
-  CheckCircle, AlertCircle, Info, BarChart3, Video, Sparkles, Save
+  CheckCircle, AlertCircle, Info, BarChart3, Video, Sparkles, Save,
+  Play, Film, Upload, ArrowUp, ArrowDown
 } from 'lucide-react';
 import './AdminPanel.css';
 import logoBlueImg from '../assets/logo1_transparent_blue.png';
 import logoWhiteImg from '../assets/logo1_transparent_white.png';
+
+const ALL_BANNER_PAGES = [
+  // Core & Company
+  { key: 'aboutus', title: 'About Us', group: 'Core Pages', defaultImg: '/about.png' },
+  { key: 'contactus', title: "Let's Connect / Contact Us", group: 'Core Pages', defaultImg: '/contact1.png' },
+  { key: 'certifications', title: 'Certifications & Accreditations', group: 'Core Pages', defaultImg: '/credentials_cityscape_bg.png' },
+
+  // Engineering Expertise
+  { key: 'services', title: 'All Expertise Overview', group: 'Engineering Expertise', defaultImg: '/servicepage1.png' },
+  { key: 'bim', title: 'BIM Services', group: 'Engineering Expertise', defaultImg: '/bimmodel.png' },
+  { key: 'cad', title: 'CAD Services', group: 'Engineering Expertise', defaultImg: '/why.png' },
+  { key: 'laser-scanning', title: 'Laser Scanning Services', group: 'Engineering Expertise', defaultImg: '/aboutus6.png' },
+  { key: 'scan-to-bim', title: 'Scan to BIM', group: 'Engineering Expertise', defaultImg: '/bimmodel.png' },
+
+  // Sustainability Expertise
+  { key: 'sustainability-services', title: 'Sustainability Overview', group: 'Sustainability Expertise', defaultImg: '/servicepage1.png' },
+  { key: 'gsas', title: 'GSAS Certification', group: 'Sustainability Expertise', defaultImg: 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=1600&q=80' },
+  { key: 'leed', title: 'LEED Certification', group: 'Sustainability Expertise', defaultImg: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80' },
+  { key: 'energy-audit', title: 'Energy & Carbon Audit', group: 'Sustainability Expertise', defaultImg: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80' },
+  { key: 'carbon-management', title: 'Carbon & Environmental Management', group: 'Sustainability Expertise', defaultImg: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80' },
+
+  // Digital Twin & Smart Systems
+  { key: 'digital-twin', title: 'Digital Twin Integration', group: 'Digital Twin & Smart Systems', defaultImg: '/bimmodel.png' },
+  { key: 'asset-twin', title: 'Asset Twin', group: 'Digital Twin & Smart Systems', defaultImg: '/servicepage1.png' },
+  { key: 'system-integration', title: 'System Integration', group: 'Digital Twin & Smart Systems', defaultImg: '/aboutus6.png' },
+  { key: 'real-time-monitoring', title: 'Real-Time Monitoring', group: 'Digital Twin & Smart Systems', defaultImg: '/bimmodel.png' },
+  { key: 'predictive-maintenance', title: 'Predictive Maintenance', group: 'Digital Twin & Smart Systems', defaultImg: '/aboutus5.png' },
+
+  // Construction Technology
+  { key: 'construction-technology', title: 'Construction Technology Solutions', group: 'Construction Technology', defaultImg: '/project1.png' },
+  { key: 'remote-construction', title: 'Remote Construction Management', group: 'Construction Technology', defaultImg: '/project1.png' },
+  { key: '360-capture', title: '360° Site Capture', group: 'Construction Technology', defaultImg: '/aboutus6.png' },
+  { key: 'ar-solutions', title: 'AR Solutions', group: 'Construction Technology', defaultImg: '/bimmodel.png' },
+  { key: 'robotics', title: 'Robotics & Automation', group: 'Construction Technology', defaultImg: '/aboutus5.png' },
+
+  // Projects & Media
+  { key: 'projects', title: 'Projects Portfolio', group: 'Projects & Media', defaultImg: '/project1.png' },
+  { key: 'project-detail', title: 'Project Details View', group: 'Projects & Media', defaultImg: '/project1.png' },
+  { key: 'media', title: 'Media Center', group: 'Projects & Media', defaultImg: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=80' },
+  { key: 'gallery', title: 'Photo Gallery', group: 'Projects & Media', defaultImg: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=80' },
+  { key: 'videos', title: 'Video Showcase', group: 'Projects & Media', defaultImg: 'https://images.unsplash.com/photo-1581094288338-2314dddb7eed?auto=format&fit=crop&w=1600&q=80' },
+  { key: 'blogs', title: 'Blogs & Insights', group: 'Projects & Media', defaultImg: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80' },
+  { key: 'blog-detail', title: 'Blog Article Detail', group: 'Projects & Media', defaultImg: '/servicepage1.png' }
+];
 
 export default function AdminPanel({ onNavigate }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -1138,6 +1183,22 @@ export default function AdminPanel({ onNavigate }) {
   });
   const [bannerUploadingKey, setBannerUploadingKey] = useState(null);
 
+  // Dynamic Live Banners State
+  const [selectedBannerPageKey, setSelectedBannerPageKey] = useState('aboutus');
+  const [dynamicBannersMap, setDynamicBannersMap] = useState(() => getCachedPageBanners());
+  const [bannerEditor, setBannerEditor] = useState({
+    banner_type: 'slider',
+    images: [],
+    video_url: '',
+    fallback_image: '',
+    slide_duration: 5,
+    status: 'active'
+  });
+  const [bannerSaving, setBannerSaving] = useState(false);
+  const [bannerUploadingSlide, setBannerUploadingSlide] = useState(false);
+  const [bannerUploadingVideo, setBannerUploadingVideo] = useState(false);
+  const [bannerUploadingFallback, setBannerUploadingFallback] = useState(false);
+
   // Major Clients State & Handlers
   const [majorClients, setMajorClients] = useState([]);
   const [clientModalOpen, setClientModalOpen] = useState(false);
@@ -1179,6 +1240,72 @@ export default function AdminPanel({ onNavigate }) {
       }
     } catch (err) {
       console.warn('Error fetching partners in admin:', err);
+    }
+  };
+
+  // Managing Partner's Message State & Handlers
+  const [managingPartnerMsg, setManagingPartnerMsg] = useState({
+    sectionTitle: "MANAGING PARTNER'S MESSAGE",
+    mainQuote: "We don't build business on price. We build it on trust, quality and relationships.",
+    introText: "At Blue Crescent, our principles are simple and non-negotiable: do what we commit to, deliver what we promise, and never compromise on quality.",
+    messageParagraph1: "We do not take projects simply to increase our numbers, nor do we accept work at an unrealistic price and allow quality or deliverables to suffer later. We believe every project must begin with a fair commitment, the right resources and a clear responsibility to deliver it successfully.",
+    messageParagraph2: "Once we commit to a project, we stand by it until completion. We will not step away midway because circumstances become difficult. Our client's project should never suffer because of our internal challenges. Their responsibility becomes our responsibility.",
+    messageParagraph3: "Our greatest strength is our people. We believe in having the right people in the right roles—qualified professionals with genuine domain knowledge and practical experience. We treat our employees as family, because strong projects are delivered by strong teams, not by individuals.",
+    messageParagraph4: "We see our clients not simply as customers, but as long-term partners. We value transparency, teamwork, professional integrity and relationships that continue well beyond the completion of a single project.",
+    fairCommitmentTitle: "FAIR COMMITMENT",
+    fairCommitmentContent: "We do not take projects simply to increase our numbers, nor do we accept work at an unrealistic price and allow quality or deliverables to suffer later.",
+    completeCommitmentTitle: "COMPLETE COMMITMENT",
+    completeCommitmentContent: "Once we commit to a project, we stand by it until completion. We will not step away midway because circumstances become difficult.",
+    responsibilityTitle: "OUR RESPONSIBILITY",
+    responsibilityContent: "Our client's project should never suffer because of our internal challenges. Their responsibility becomes our responsibility.",
+    peopleStrengthTitle: "OUR PEOPLE, OUR STRENGTH",
+    peopleStrengthContent: "Our greatest strength is our people. We believe in having the right people in the right roles—qualified professionals with genuine domain knowledge and practical experience.",
+    longTermPartnersTitle: "LONG-TERM PARTNERS",
+    longTermPartnersContent: "We see our clients not simply as customers, but as long-term partners. We value transparency, teamwork, professional integrity and relationships that continue well beyond the completion of a single project.",
+    visionTitle: "OUR VISION",
+    visionContent: "Right People.\nFair Price.\nNo Compromise on Quality.\nComplete Commitment.\nLong-Term Partnership.",
+    finalStatement: "That is how we work.\nThat is how we build trust.\nThat is Blue Crescent.",
+    partnerName: "Chandrasekar Nallusamy",
+    partnerDesignation: "Managing Partner",
+    partnerImage: null,
+    status: "Active"
+  });
+  const [isSavingManagingPartnerMsg, setIsSavingManagingPartnerMsg] = useState(false);
+
+  const fetchManagingPartnerMsgAdmin = async () => {
+    try {
+      const res = await fetch('/api/admin/managing-partner-message');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+          setManagingPartnerMsg(prev => ({ ...prev, ...data }));
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching managing partner message in admin:', err);
+    }
+  };
+
+  const handleSaveManagingPartnerMsg = async () => {
+    setIsSavingManagingPartnerMsg(true);
+    try {
+      const res = await fetch('/api/admin/managing-partner-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(managingPartnerMsg)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNotification({ type: 'success', message: 'Managing Partner’s Message updated successfully!' });
+        window.dispatchEvent(new CustomEvent('managingPartnerMessageUpdated'));
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Failed to update Managing Partner’s Message.' });
+      }
+    } catch (err) {
+      console.error('Error saving managing partner message:', err);
+      setNotification({ type: 'error', message: 'Network error saving Managing Partner’s Message.' });
+    } finally {
+      setIsSavingManagingPartnerMsg(false);
     }
   };
 
@@ -1598,104 +1725,202 @@ export default function AdminPanel({ onNavigate }) {
     }
   };
 
-  const fetchPageBanners = async () => {
+  const fetchDynamicBanners = async () => {
     try {
-      const res = await fetch('/api/settings/banners');
+      const res = await fetch('/api/banners');
       if (res.ok) {
         const data = await res.json();
-        setPageBanners({
-          home: data.homeBannerUrl || '',
-          aboutus: data.aboutUsPageBannerUrl || '',
-          services: data.servicesPageBannerUrl || '',
-          projects: data.projectsPageBannerUrl || '',
-          media: data.mediaPageBannerUrl || '',
-          contactus: data.contactUsPageBannerUrl || ''
-        });
+        setDynamicBannersMap(data || {});
+        updateCachedPageBanners(data || {});
       }
     } catch (err) {
-      console.warn('Error fetching page banners:', err);
+      console.warn('Error fetching dynamic banners in admin:', err);
     }
   };
 
-  const handleBannerUpload = async (pageKey, file) => {
+  useEffect(() => {
+    fetchDynamicBanners();
+    fetchMajorClientsAdmin();
+    fetchPartnersAdmin();
+    fetchManagingPartnerMsgAdmin();
+  }, []);
+
+  // When selected page changes, sync bannerEditor
+  useEffect(() => {
+    const pageConfig = dynamicBannersMap[selectedBannerPageKey];
+    const pageInfo = ALL_BANNER_PAGES.find(p => p.key === selectedBannerPageKey);
+    const defaultImg = pageInfo?.defaultImg || '/servicepage1.png';
+
+    if (pageConfig) {
+      setBannerEditor({
+        banner_type: pageConfig.banner_type || 'slider',
+        images: Array.isArray(pageConfig.images) && pageConfig.images.length > 0 ? pageConfig.images : [defaultImg],
+        video_url: pageConfig.video_url || '',
+        fallback_image: pageConfig.fallback_image || defaultImg,
+        slide_duration: pageConfig.slide_duration || 5,
+        status: pageConfig.status || 'active'
+      });
+    } else {
+      setBannerEditor({
+        banner_type: 'slider',
+        images: [defaultImg],
+        video_url: '',
+        fallback_image: defaultImg,
+        slide_duration: 5,
+        status: 'active'
+      });
+    }
+  }, [selectedBannerPageKey, dynamicBannersMap]);
+
+  const handleAddBannerSlide = (file) => {
     if (!file) return;
-    setBannerUploadingKey(pageKey);
-    const keyMap = {
-      'home': 'homeBannerUrl',
-      'aboutus': 'aboutUsPageBannerUrl',
-      'services': 'servicesPageBannerUrl',
-      'projects': 'projectsPageBannerUrl',
-      'media': 'mediaPageBannerUrl',
-      'contactus': 'contactUsPageBannerUrl'
+    if (bannerEditor.images.length >= 5) {
+      alert('Maximum 5 images allowed per banner slider.');
+      return;
+    }
+    setBannerUploadingSlide(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result;
+      setBannerEditor(prev => ({
+        ...prev,
+        images: [...prev.images, base64]
+      }));
+      setBannerUploadingSlide(false);
     };
+    reader.onerror = () => {
+      alert('Failed to read image file.');
+      setBannerUploadingSlide(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveBannerSlide = (index) => {
+    if (bannerEditor.images.length <= 1) {
+      alert('At least 1 banner image is recommended. You can replace this image or upload a new one.');
+    }
+    setBannerEditor(prev => ({
+      ...prev,
+      images: prev.images.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const handleMoveBannerSlide = (index, direction) => {
+    setBannerEditor(prev => {
+      const newImages = [...prev.images];
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= newImages.length) return prev;
+      const temp = newImages[index];
+      newImages[index] = newImages[targetIndex];
+      newImages[targetIndex] = temp;
+      return { ...prev, images: newImages };
+    });
+  };
+
+  const handleVideoSelect = (file) => {
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert('Video file exceeds 50MB limit. Please upload an optimized MP4/WebM video.');
+      return;
+    }
+    setBannerUploadingVideo(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBannerEditor(prev => ({ ...prev, video_url: reader.result }));
+      setBannerUploadingVideo(false);
+    };
+    reader.onerror = () => {
+      alert('Error reading video file.');
+      setBannerUploadingVideo(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFallbackSelect = (file) => {
+    if (!file) return;
+    setBannerUploadingFallback(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBannerEditor(prev => ({ ...prev, fallback_image: reader.result }));
+      setBannerUploadingFallback(false);
+    };
+    reader.onerror = () => {
+      alert('Error reading fallback image.');
+      setBannerUploadingFallback(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveDynamicBanner = async () => {
+    if (bannerEditor.banner_type === 'slider' && (!bannerEditor.images || bannerEditor.images.length === 0)) {
+      alert('Please add at least 1 image for the slider banner.');
+      return;
+    }
+    if (bannerEditor.banner_type === 'video' && !bannerEditor.video_url) {
+      alert('Please upload or provide a video URL for the video banner.');
+      return;
+    }
+
+    setBannerSaving(true);
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Url = reader.result;
-        const res = await fetch('/api/settings/banners', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pageKey, bannerUrl: base64Url })
-        });
-        if (res.ok) {
-          const result = await res.json();
-          const newBannerUrl = result.bannerUrl || base64Url;
-          setPageBanners(prev => ({
-            ...prev,
-            [pageKey]: newBannerUrl
-          }));
-          if (keyMap[pageKey]) {
-            setCompanySettings(prev => ({
-              ...prev,
-              [keyMap[pageKey]]: newBannerUrl
-            }));
-            updateCachedCompanySettings({ [keyMap[pageKey]]: newBannerUrl });
-          }
-          window.dispatchEvent(new Event('dataUpdated'));
-          alert(`✓ ${pageKey.toUpperCase()} banner updated successfully! Changes are live on the website.`);
-        } else {
-          alert('Failed to upload banner. Please try again.');
-        }
-        setBannerUploadingKey(null);
-      };
-      reader.readAsDataURL(file);
+      const res = await fetch(`/api/banners/${selectedBannerPageKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bannerEditor)
+      });
+      if (res.ok) {
+        const result = await res.json();
+        const saved = result.banner || bannerEditor;
+        setDynamicBannersMap(prev => ({
+          ...prev,
+          [selectedBannerPageKey]: saved
+        }));
+        updateCachedPageBanners({ [selectedBannerPageKey]: saved });
+        window.dispatchEvent(new CustomEvent('pageBannersUpdated'));
+        window.dispatchEvent(new Event('dataUpdated'));
+        alert(`✓ Live dynamic banner for "${selectedBannerPageKey}" saved successfully!`);
+      } else {
+        alert('Failed to save banner. Please try again.');
+      }
     } catch (err) {
-      console.error('Upload error:', err);
-      alert('Error uploading file.');
-      setBannerUploadingKey(null);
+      console.error('Error saving dynamic banner:', err);
+      alert('Error saving banner: ' + err.message);
+    } finally {
+      setBannerSaving(false);
     }
   };
 
-  const handleBannerDelete = async (pageKey, title) => {
-    if (!confirm(`Are you sure you want to delete the custom banner for ${title} and revert to the default system banner?`)) return;
-    const keyMap = {
-      'home': 'homeBannerUrl',
-      'aboutus': 'aboutUsPageBannerUrl',
-      'services': 'servicesPageBannerUrl',
-      'projects': 'projectsPageBannerUrl',
-      'media': 'mediaPageBannerUrl',
-      'contactus': 'contactUsPageBannerUrl'
-    };
+  const handleResetDynamicBanner = async () => {
+    const pageInfo = ALL_BANNER_PAGES.find(p => p.key === selectedBannerPageKey);
+    const title = pageInfo ? pageInfo.title : selectedBannerPageKey;
+    if (!confirm(`Are you sure you want to reset the dynamic banner for "${title}" to system defaults?`)) return;
+
     try {
-      const res = await fetch(`/api/settings/banners/${pageKey}`, { method: 'DELETE' });
+      const res = await fetch(`/api/banners/${selectedBannerPageKey}`, { method: 'DELETE' });
       if (res.ok) {
-        setPageBanners(prev => ({
+        const defaultImg = pageInfo?.defaultImg || '/servicepage1.png';
+        const defaultBanner = {
+          page_key: selectedBannerPageKey,
+          banner_type: 'slider',
+          images: [defaultImg],
+          video_url: '',
+          fallback_image: defaultImg,
+          slide_duration: 5,
+          status: 'active'
+        };
+        setDynamicBannersMap(prev => ({
           ...prev,
-          [pageKey]: ''
+          [selectedBannerPageKey]: defaultBanner
         }));
-        if (keyMap[pageKey]) {
-          setCompanySettings(prev => ({
-            ...prev,
-            [keyMap[pageKey]]: ''
-          }));
-          updateCachedCompanySettings({ [keyMap[pageKey]]: '' });
-        }
+        updateCachedPageBanners({ [selectedBannerPageKey]: defaultBanner });
+        setBannerEditor(defaultBanner);
+        window.dispatchEvent(new CustomEvent('pageBannersUpdated'));
         window.dispatchEvent(new Event('dataUpdated'));
-        alert(`✓ Custom banner for ${title} deleted. Reverted to default system banner on the website.`);
+        alert(`✓ Banner for "${title}" reset to system defaults.`);
       }
     } catch (err) {
-      console.error('Delete error:', err);
-      alert('Error deleting banner.');
+      console.error('Error resetting dynamic banner:', err);
+      alert('Error resetting banner: ' + err.message);
     }
   };
 
@@ -2320,6 +2545,10 @@ export default function AdminPanel({ onNavigate }) {
 
       const resSub = await fetch('/api/subscribers');
       if (resSub.ok) setSubscribers(await resSub.json());
+
+      fetchPartnersAdmin();
+      fetchMajorClientsAdmin();
+      fetchManagingPartnerMsgAdmin();
     } catch (err) {
       console.warn('Dashboard stats fetch warning:', err);
     }
@@ -2390,9 +2619,18 @@ export default function AdminPanel({ onNavigate }) {
         const resTeam = await fetch('/api/team?all=true');
         if (resTeam.ok) setTeamMembers(await resTeam.json());
       } else if (tab === '/admin/settings/company') {
-        fetchPageBanners();
-        fetchMajorClientsAdmin();
-        fetchPartnersAdmin();
+        try {
+          fetchDynamicBanners();
+        } catch (e) {}
+        try {
+          fetchMajorClientsAdmin();
+        } catch (e) {}
+        try {
+          fetchPartnersAdmin();
+        } catch (e) {}
+        try {
+          fetchManagingPartnerMsgAdmin();
+        } catch (e) {}
         const resTeam = await fetch('/api/team?all=true');
         if (resTeam.ok) setTeamMembers(await resTeam.json());
         const res = await fetch('/api/settings/company');
@@ -3474,13 +3712,13 @@ export default function AdminPanel({ onNavigate }) {
                 {activeTab === '/admin/projects' && <div className="admin-nav-indicator" />}
               </button>
               <button
-                className={`admin-nav-item ${activeTab.startsWith('/admin/services') ? 'active' : ''}`}
+                className={`admin-nav-item ${activeTab.startsWith('/admin/services') || activeTab.startsWith('/admin/expertise') ? 'active' : ''}`}
                 onClick={() => handleNavClick('/admin/services')}
               >
                 <div className="admin-nav-item-left">
-                  <Wrench size={20} /> Services
+                  <Wrench size={20} /> Expertise
                 </div>
-                {activeTab.startsWith('/admin/services') && <div className="admin-nav-indicator" />}
+                {(activeTab.startsWith('/admin/services') || activeTab.startsWith('/admin/expertise')) && <div className="admin-nav-indicator" />}
               </button>
               <button
                 className={`admin-nav-item ${activeTab === '/admin/certificates' ? 'active' : ''}`}
@@ -3706,7 +3944,7 @@ export default function AdminPanel({ onNavigate }) {
               >
                 <Plus size={16} />
                 {activeTab === '/admin/news' && 'Compose News'}
-                {activeTab === '/admin/services' && 'Add New Service'}
+                {activeTab === '/admin/services' && 'Add New Expertise'}
                 {activeTab === '/admin/certificates' && 'Add Certificate'}
                 {activeTab === '/admin/testimonials' && 'Add Testimonial'}
                 {activeTab === '/admin/users' && 'Create Administrator'}
@@ -4081,6 +4319,219 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                   </div>
 
+                  {/* SECTION: MANAGING PARTNER’S MESSAGE (HOME PAGE) */}
+                  <div style={{ background: '#F8FAFC', borderRadius: '14px', border: '1.5px solid #CBD5E1', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 24px', background: '#EFF6FF', borderBottom: '1px solid #DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E40AF' }}>
+                          <Award size={16} />
+                        </div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E3A8A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Managing Partner’s Message
+                          </h3>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#3B82F6' }}>
+                            Dynamic leadership statement, 6 core principle cards & closing quote on Home Page
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {/* Status Toggle */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#FFFFFF', padding: '4px 12px', borderRadius: '8px', border: '1px solid #CBD5E1' }}>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: '#475569' }}>Status:</span>
+                          <select
+                            value={managingPartnerMsg.status || 'Active'}
+                            onChange={e => setManagingPartnerMsg(prev => ({ ...prev, status: e.target.value }))}
+                            style={{ border: 'none', background: 'transparent', fontSize: '12px', fontWeight: '800', color: managingPartnerMsg.status === 'Active' ? '#059669' : '#DC2626', outline: 'none', cursor: 'pointer' }}
+                          >
+                            <option value="Active">Active (ON)</option>
+                            <option value="Inactive">Inactive (OFF)</option>
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          style={{ background: '#2563EB', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(37,99,235,0.2)' }}
+                          onClick={handleSaveManagingPartnerMsg}
+                          disabled={isSavingManagingPartnerMsg}
+                        >
+                          <Check size={13} /> {isSavingManagingPartnerMsg ? 'Saving...' : 'Save Message'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {/* Section Title & Partner Name */}
+                      <div className="admin-form-grid-2col">
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Section Header Title</label>
+                          <input 
+                            type="text" 
+                            value={managingPartnerMsg.sectionTitle || ''} 
+                            onChange={e => setManagingPartnerMsg(prev => ({ ...prev, sectionTitle: e.target.value }))} 
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Managing Partner Name</label>
+                          <input 
+                            type="text" 
+                            value={managingPartnerMsg.partnerName || ''} 
+                            onChange={e => setManagingPartnerMsg(prev => ({ ...prev, partnerName: e.target.value }))} 
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} 
+                          />
+                        </div>
+                      </div>
+
+                      {/* Main Quote */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Main Quote (Focal Statement)</label>
+                        <textarea 
+                          rows={2}
+                          value={managingPartnerMsg.mainQuote || ''} 
+                          onChange={e => setManagingPartnerMsg(prev => ({ ...prev, mainQuote: e.target.value }))} 
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} 
+                        />
+                      </div>
+
+                      {/* Introduction */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Introductory Message</label>
+                        <textarea 
+                          rows={2}
+                          value={managingPartnerMsg.introText || ''} 
+                          onChange={e => setManagingPartnerMsg(prev => ({ ...prev, introText: e.target.value }))} 
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} 
+                        />
+                      </div>
+
+                      {/* 4 Narrative Paragraphs */}
+                      <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '800', color: '#0F172A', textTransform: 'uppercase' }}>Leadership Narrative (4 Paragraphs)</h4>
+                        <div className="admin-form-grid-2col" style={{ gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '700', color: '#64748B', marginBottom: '4px' }}>Message Paragraph 1</label>
+                            <textarea rows={3} value={managingPartnerMsg.messageParagraph1 || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, messageParagraph1: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '700', color: '#64748B', marginBottom: '4px' }}>Message Paragraph 2</label>
+                            <textarea rows={3} value={managingPartnerMsg.messageParagraph2 || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, messageParagraph2: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '700', color: '#64748B', marginBottom: '4px' }}>Message Paragraph 3</label>
+                            <textarea rows={3} value={managingPartnerMsg.messageParagraph3 || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, messageParagraph3: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '700', color: '#64748B', marginBottom: '4px' }}>Message Paragraph 4</label>
+                            <textarea rows={3} value={managingPartnerMsg.messageParagraph4 || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, messageParagraph4: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 6 Principle Cards */}
+                      <div style={{ background: '#FFFFFF', padding: '18px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 14px 0', fontSize: '13px', fontWeight: '800', color: '#0F172A', textTransform: 'uppercase' }}>Six Core Principle Cards</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                          {/* Card 1 */}
+                          <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase' }}>Card 1: Fair Commitment</label>
+                            <input type="text" value={managingPartnerMsg.fairCommitmentTitle || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, fairCommitmentTitle: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', marginBottom: '6px', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#64748B' }}>Content</label>
+                            <textarea rows={3} value={managingPartnerMsg.fairCommitmentContent || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, fairCommitmentContent: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box' }} />
+                          </div>
+                          {/* Card 2 */}
+                          <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase' }}>Card 2: Complete Commitment</label>
+                            <input type="text" value={managingPartnerMsg.completeCommitmentTitle || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, completeCommitmentTitle: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', marginBottom: '6px', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#64748B' }}>Content</label>
+                            <textarea rows={3} value={managingPartnerMsg.completeCommitmentContent || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, completeCommitmentContent: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box' }} />
+                          </div>
+                          {/* Card 3 */}
+                          <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase' }}>Card 3: Our Responsibility</label>
+                            <input type="text" value={managingPartnerMsg.responsibilityTitle || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, responsibilityTitle: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', marginBottom: '6px', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#64748B' }}>Content</label>
+                            <textarea rows={3} value={managingPartnerMsg.responsibilityContent || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, responsibilityContent: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box' }} />
+                          </div>
+                          {/* Card 4 */}
+                          <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase' }}>Card 4: Our People</label>
+                            <input type="text" value={managingPartnerMsg.peopleStrengthTitle || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, peopleStrengthTitle: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', marginBottom: '6px', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#64748B' }}>Content</label>
+                            <textarea rows={3} value={managingPartnerMsg.peopleStrengthContent || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, peopleStrengthContent: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box' }} />
+                          </div>
+                          {/* Card 5 */}
+                          <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase' }}>Card 5: Long-Term Partners</label>
+                            <input type="text" value={managingPartnerMsg.longTermPartnersTitle || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, longTermPartnersTitle: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', marginBottom: '6px', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#64748B' }}>Content</label>
+                            <textarea rows={3} value={managingPartnerMsg.longTermPartnersContent || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, longTermPartnersContent: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box' }} />
+                          </div>
+                          {/* Card 6 */}
+                          <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#0057B8', textTransform: 'uppercase' }}>Card 6: Our Vision</label>
+                            <input type="text" value={managingPartnerMsg.visionTitle || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, visionTitle: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', marginBottom: '6px', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#64748B' }}>Content (Lines)</label>
+                            <textarea rows={3} value={managingPartnerMsg.visionContent || ''} onChange={e => setManagingPartnerMsg(prev => ({ ...prev, visionContent: e.target.value }))} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', boxSizing: 'border-box' }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Final Statement & Designation & Optional Photo */}
+                      <div className="admin-form-grid-2col">
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Final Statement Panel (Closing Quote)</label>
+                          <textarea 
+                            rows={3} 
+                            value={managingPartnerMsg.finalStatement || ''} 
+                            onChange={e => setManagingPartnerMsg(prev => ({ ...prev, finalStatement: e.target.value }))} 
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Designation / Title</label>
+                          <input 
+                            type="text" 
+                            value={managingPartnerMsg.partnerDesignation || ''} 
+                            onChange={e => setManagingPartnerMsg(prev => ({ ...prev, partnerDesignation: e.target.value }))} 
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '12px' }} 
+                          />
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Optional Partner Avatar / Photo</label>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {managingPartnerMsg.partnerImage ? (
+                              <img src={managingPartnerMsg.partnerImage} alt="Partner" style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #0057B8' }} />
+                            ) : (
+                              <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#64748B', fontWeight: '700' }}>No Pic</div>
+                            )}
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    setManagingPartnerMsg(prev => ({ ...prev, partnerImage: ev.target.result }));
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              style={{ fontSize: '12px' }} 
+                            />
+                            {managingPartnerMsg.partnerImage && (
+                              <button 
+                                type="button" 
+                                onClick={() => setManagingPartnerMsg(prev => ({ ...prev, partnerImage: null }))}
+                                style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#DC2626', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* SECTION: OUR WORKING PARTNERS */}
                   <div style={{ background: '#F8FAFC', borderRadius: '14px', border: '1.5px solid #CBD5E1', overflow: 'hidden' }}>
                     <div style={{ padding: '16px 24px', background: '#F0FDF4', borderBottom: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -4298,131 +4749,466 @@ export default function AdminPanel({ onNavigate }) {
                     </div>
                   </div>
 
-                  {/* ALL WEBSITE PAGE BANNERS MANAGEMENT SECTION */}
-                  <div style={{ background: '#FAF5FF', borderRadius: '14px', border: '1.5px solid #E9D5FF', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 24px', background: '#F3E8FF', borderBottom: '1px solid #E9D5FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {/* ALL WEBSITE DYNAMIC LIVE BANNERS MANAGEMENT STUDIO */}
+                  <div style={{ background: '#FAF5FF', borderRadius: '14px', border: '1.5px solid #D8B4FE', overflow: 'hidden', marginBottom: '24px' }}>
+                    <div style={{ padding: '18px 24px', background: '#F3E8FF', borderBottom: '1px solid #D8B4FE', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#E9D5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E22CE' }}>
-                          <ImageIcon size={20} />
+                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#E9D5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E22CE' }}>
+                          <Sparkles size={22} />
                         </div>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#581C87', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            Website Page Banners Management
-                          </h3>
-                          <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#7E22CE' }}>
-                            Upload, view, replace, or delete custom top banner images for each page.
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#581C87', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Dynamic / Live Banners Studio
+                            </h3>
+                            <span style={{ fontSize: '10.5px', fontWeight: '800', background: '#7E22CE', color: '#FFFFFF', padding: '2px 8px', borderRadius: '12px', letterSpacing: '0.5px' }}>
+                              ALL PAGES
+                            </span>
+                          </div>
+                          <p style={{ margin: '2px 0 0 0', fontSize: '12.5px', color: '#6B21A8' }}>
+                            Configure moving image sliders (2–5 slides with smooth 5s crossfade) or HD video banners for every website page.
                           </p>
                         </div>
                       </div>
-                      <button
-                        style={{ background: '#9333EA', color: '#FFFFFF', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 2px 4px rgba(147,51,234,0.2)' }}
-                        onClick={() => saveCompanySettings('Website Page Banners')}
-                      >
-                        <Check size={13} /> Save Banners
-                      </button>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          type="button"
+                          style={{ background: '#7E22CE', color: '#FFFFFF', border: 'none', padding: '8px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 6px rgba(126,34,206,0.25)' }}
+                          onClick={handleSaveDynamicBanner}
+                          disabled={bannerSaving}
+                        >
+                          <Save size={15} /> {bannerSaving ? 'Saving Banner...' : 'Save Banner'}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="admin-banners-grid">
-                      {[
-                        { key: 'aboutus', title: 'About Us Banner', route: '/about-us', defaultBanner: '/about.png', description: 'Top banner image displayed on the About Us page.' },
-                        { key: 'services', title: 'Services Banner', route: '/services', defaultBanner: '/servicepage1.png', description: 'Top banner image displayed across all Services pages.' },
-                        { key: 'projects', title: 'Projects Banner', route: '/projects', defaultBanner: '/project1.png', description: 'Top banner image displayed on the Projects portfolio page.' },
-                        { key: 'media', title: 'Media Center Banner', route: '/media', defaultBanner: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=80', description: 'Top hero section background on the Media & News page.' },
-                        { key: 'contactus', title: 'Contact Us Banner', route: '/contact-us', defaultBanner: '/contact1.png', description: 'Top banner image displayed on the Contact Us page.' }
-                      ].map((item) => {
-                        const currentUrl = pageBanners[item.key] || '';
-                        const isCustom = Boolean(currentUrl);
-                        const displayImg = currentUrl || item.defaultBanner;
+                    <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
+                      
+                      {/* LEFT COLUMN: Controls */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        
+                        {/* 1. Page Selector */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#581C87', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '8px' }}>
+                            Select Target Page
+                          </label>
+                          <select
+                            value={selectedBannerPageKey}
+                            onChange={(e) => setSelectedBannerPageKey(e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '10px 14px',
+                              borderRadius: '8px',
+                              border: '1.5px solid #CBD5E1',
+                              background: '#FFFFFF',
+                              color: '#0F172A',
+                              fontSize: '14px',
+                              fontWeight: '700',
+                              outline: 'none',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {Array.from(new Set(ALL_BANNER_PAGES.map(p => p.group))).map(groupName => (
+                              <optgroup key={groupName} label={groupName}>
+                                {ALL_BANNER_PAGES.filter(p => p.group === groupName).map(page => (
+                                  <option key={page.key} value={page.key}>
+                                    {page.title} ({page.key})
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))}
+                          </select>
+                        </div>
 
-                        return (
-                          <div key={item.key} className="admin-banner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                            <div style={{ padding: '16px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#0F172A' }}>{item.title}</h4>
-                                <span style={{
-                                  fontSize: '11px',
-                                  fontWeight: '700',
-                                  padding: '4px 8px',
-                                  borderRadius: '20px',
-                                  background: isCustom ? '#DCFCE7' : '#F1F5F9',
-                                  color: isCustom ? '#15803D' : '#64748B'
-                                }}>
-                                  {isCustom ? 'Custom Uploaded' : 'Default System'}
-                                </span>
-                              </div>
-                              <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#64748B', lineHeight: '1.4' }}>{item.description}</p>
-
-                              {/* Preview Box */}
-                              <div style={{
-                                width: '100%',
-                                height: '120px',
+                        {/* 2. Banner Mode Switcher */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#581C87', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '8px' }}>
+                            Banner Media Type
+                          </label>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setBannerEditor(prev => ({ ...prev, banner_type: 'slider' }))}
+                              style={{
+                                padding: '12px 14px',
                                 borderRadius: '8px',
-                                overflow: 'hidden',
-                                background: '#061E3D',
-                                border: '1px solid #CBD5E1',
+                                border: bannerEditor.banner_type === 'slider' ? '2px solid #7E22CE' : '1px solid #CBD5E1',
+                                background: bannerEditor.banner_type === 'slider' ? '#F3E8FF' : '#FFFFFF',
+                                color: bannerEditor.banner_type === 'slider' ? '#581C87' : '#64748B',
+                                fontWeight: '700',
+                                fontSize: '13px',
+                                cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                position: 'relative'
-                              }}>
-                                <img
-                                  src={displayImg}
-                                  alt={`${item.title} Preview`}
-                                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                                  onError={e => { e.currentTarget.src = item.defaultBanner; }}
-                                />
-                              </div>
+                                gap: '8px'
+                              }}
+                            >
+                              <ImageIcon size={16} /> Moving Image Slider
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setBannerEditor(prev => ({ ...prev, banner_type: 'video' }))}
+                              style={{
+                                padding: '12px 14px',
+                                borderRadius: '8px',
+                                border: bannerEditor.banner_type === 'video' ? '2px solid #7E22CE' : '1px solid #CBD5E1',
+                                background: bannerEditor.banner_type === 'video' ? '#F3E8FF' : '#FFFFFF',
+                                color: bannerEditor.banner_type === 'video' ? '#581C87' : '#64748B',
+                                fontWeight: '700',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
+                              }}
+                            >
+                              <Film size={16} /> HD Video Banner
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* 3. Slider Settings (If Slider Mode) */}
+                        {bannerEditor.banner_type === 'slider' && (
+                          <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A' }}>
+                                Slides Gallery ({bannerEditor.images.length}/5 Images)
+                              </span>
+                              <span style={{ fontSize: '11px', color: '#64748B' }}>
+                                Auto-crossfades every {bannerEditor.slide_duration || 5}s
+                              </span>
                             </div>
 
-                            {/* Card Action Controls */}
-                            <div style={{ padding: '12px 16px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            {/* Slides List */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+                              {bannerEditor.images.map((imgUrl, idx) => (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    background: '#F8FAFC',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #E2E8F0'
+                                  }}
+                                >
+                                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#7E22CE', width: '20px' }}>
+                                    #{idx + 1}
+                                  </span>
+                                  <div style={{ width: '60px', height: '40px', borderRadius: '4px', overflow: 'hidden', background: '#061E3D', flexShrink: 0 }}>
+                                    <img src={imgUrl} alt={`Slide ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ margin: 0, fontSize: '11px', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {imgUrl.startsWith('data:') ? 'Custom Uploaded Image' : imgUrl}
+                                    </p>
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button
+                                      type="button"
+                                      disabled={idx === 0}
+                                      onClick={() => handleMoveBannerSlide(idx, 'up')}
+                                      style={{ padding: '4px 6px', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '4px', cursor: idx === 0 ? 'not-allowed' : 'pointer', color: '#475569' }}
+                                      title="Move Up"
+                                    >
+                                      <ArrowUp size={12} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={idx === bannerEditor.images.length - 1}
+                                      onClick={() => handleMoveBannerSlide(idx, 'down')}
+                                      style={{ padding: '4px 6px', background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '4px', cursor: idx === bannerEditor.images.length - 1 ? 'not-allowed' : 'pointer', color: '#475569' }}
+                                      title="Move Down"
+                                    >
+                                      <ArrowDown size={12} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveBannerSlide(idx)}
+                                      style={{ padding: '4px 6px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '4px', cursor: 'pointer', color: '#DC2626' }}
+                                      title="Remove Slide"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Add Slide Button */}
+                            {bannerEditor.images.length < 5 && (
                               <label style={{
-                                flex: 1,
-                                padding: '8px 12px',
-                                borderRadius: '6px',
-                                background: '#003E8A',
-                                color: '#FFFFFF',
-                                fontSize: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                padding: '10px 14px',
+                                borderRadius: '8px',
+                                border: '1.5px dashed #9333EA',
+                                background: '#FAF5FF',
+                                color: '#7E22CE',
+                                fontSize: '12.5px',
                                 fontWeight: '700',
-                                textAlign: 'center',
                                 cursor: 'pointer',
-                                display: 'inline-block'
+                                marginBottom: '14px'
                               }}>
-                                {bannerUploadingKey === item.key ? 'Uploading...' : '📤 Upload New Banner'}
+                                <Upload size={14} /> {bannerUploadingSlide ? 'Processing Image...' : '+ Add Image Slide (Max 5)'}
                                 <input
                                   type="file"
-                                  accept="image/*"
+                                  accept="image/png,image/jpeg,image/webp,image/jpg"
                                   style={{ display: 'none' }}
-                                  onChange={e => {
+                                  onChange={(e) => {
                                     if (e.target.files && e.target.files[0]) {
-                                      handleBannerUpload(item.key, e.target.files[0]);
+                                      handleAddBannerSlide(e.target.files[0]);
                                     }
                                   }}
                                 />
                               </label>
+                            )}
 
-                              {isCustom && (
-                                <button
-                                  type="button"
-                                  style={{
-                                    padding: '8px 12px',
-                                    borderRadius: '6px',
-                                    background: '#FEF2F2',
-                                    color: '#DC2626',
-                                    border: '1px solid #FCA5A5',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    cursor: 'pointer'
-                                  }}
-                                  onClick={() => handleBannerDelete(item.key, item.title)}
-                                >
-                                  🗑 Reset Default
-                                </button>
-                              )}
+                            {/* Slide Duration Input */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569' }}>
+                                Slide Transition Duration:
+                              </label>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                  type="number"
+                                  min="2"
+                                  max="30"
+                                  value={bannerEditor.slide_duration || 5}
+                                  onChange={(e) => setBannerEditor(prev => ({ ...prev, slide_duration: parseInt(e.target.value, 10) || 5 }))}
+                                  style={{ width: '60px', padding: '6px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', fontWeight: '700', textAlign: 'center' }}
+                                />
+                                <span style={{ fontSize: '12px', color: '#64748B' }}>seconds</span>
+                              </div>
                             </div>
                           </div>
-                        );
-                      })}
+                        )}
+
+                        {/* 4. Video Settings (If Video Mode) */}
+                        {bannerEditor.banner_type === 'video' && (
+                          <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '10px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#0F172A', marginBottom: '6px' }}>
+                                Video File Upload (MP4 / WebM / QuickTime, Max 50MB)
+                              </label>
+                              <label style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                padding: '10px 14px',
+                                borderRadius: '8px',
+                                border: '1.5px dashed #0284C7',
+                                background: '#F0F9FF',
+                                color: '#0369A1',
+                                fontSize: '12.5px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                marginBottom: '8px'
+                              }}>
+                                <Film size={15} /> {bannerUploadingVideo ? 'Processing Video...' : 'Upload Video File'}
+                                <input
+                                  type="file"
+                                  accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                                  style={{ display: 'none' }}
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleVideoSelect(e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Or enter direct video URL (e.g. /uploads/video.mp4)"
+                                value={bannerEditor.video_url || ''}
+                                onChange={(e) => setBannerEditor(prev => ({ ...prev, video_url: e.target.value }))}
+                                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', color: '#0F172A' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#0F172A', marginBottom: '6px' }}>
+                                Mandatory Fallback Image (for mobile & error states)
+                              </label>
+                              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <div style={{ width: '60px', height: '40px', borderRadius: '4px', overflow: 'hidden', background: '#061E3D', flexShrink: 0 }}>
+                                  {bannerEditor.fallback_image && (
+                                    <img src={bannerEditor.fallback_image} alt="Fallback Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  )}
+                                </div>
+                                <label style={{
+                                  flex: 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  padding: '8px 12px',
+                                  borderRadius: '6px',
+                                  background: '#F1F5F9',
+                                  color: '#334155',
+                                  fontSize: '12px',
+                                  fontWeight: '700',
+                                  cursor: 'pointer',
+                                  border: '1px solid #CBD5E1'
+                                }}>
+                                  <Upload size={13} /> {bannerUploadingFallback ? 'Uploading...' : 'Upload Fallback Image'}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={(e) => {
+                                      if (e.target.files && e.target.files[0]) {
+                                        handleFallbackSelect(e.target.files[0]);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 5. Status & Actions */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input
+                              type="checkbox"
+                              id="bannerActiveToggle"
+                              checked={bannerEditor.status === 'active'}
+                              onChange={(e) => setBannerEditor(prev => ({ ...prev, status: e.target.checked ? 'active' : 'inactive' }))}
+                              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#7E22CE' }}
+                            />
+                            <label htmlFor="bannerActiveToggle" style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', cursor: 'pointer' }}>
+                              Banner Active (Live)
+                            </label>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleResetDynamicBanner}
+                            style={{
+                              background: '#FEF2F2',
+                              color: '#DC2626',
+                              border: '1px solid #FCA5A5',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            🔄 Reset to Default
+                          </button>
+                        </div>
+
+                      </div>
+
+                      {/* RIGHT COLUMN: Live Banner Preview Box */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '12px', fontWeight: '800', color: '#581C87', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                            Real-Time Banner Preview
+                          </span>
+                          <span style={{
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            padding: '3px 8px',
+                            borderRadius: '12px',
+                            background: bannerEditor.banner_type === 'video' ? '#E0F2FE' : '#F3E8FF',
+                            color: bannerEditor.banner_type === 'video' ? '#0284C7' : '#7E22CE'
+                          }}>
+                            {bannerEditor.banner_type === 'video' ? '🎥 VIDEO MODE' : `🖼️ SLIDER MODE (${bannerEditor.images.length} SLIDES)`}
+                          </span>
+                        </div>
+
+                        {/* Preview Screen */}
+                        <div style={{
+                          width: '100%',
+                          height: '240px',
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          background: '#061E3D',
+                          border: '2px solid #CBD5E1',
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 8px 24px rgba(6,30,61,0.25)'
+                        }}>
+                          {bannerEditor.banner_type === 'video' && bannerEditor.video_url ? (
+                            <video
+                              key={bannerEditor.video_url}
+                              src={bannerEditor.video_url}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <img
+                              src={(bannerEditor.images && bannerEditor.images[0]) || bannerEditor.fallback_image || '/servicepage1.png'}
+                              alt="Live Preview"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          )}
+
+                          {/* Gradient Overlay */}
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(180deg, rgba(6,27,61,0.45) 0%, rgba(6,30,61,0.72) 100%)',
+                            pointerEvents: 'none'
+                          }} />
+
+                          {/* Overlaid Sample Text */}
+                          <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '16px' }}>
+                            <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: '800', background: 'rgba(0,184,255,0.2)', border: '1px solid rgba(0,184,255,0.4)', color: '#00D9FF', padding: '3px 10px', borderRadius: '12px', marginBottom: '8px', letterSpacing: '1px' }}>
+                              {ALL_BANNER_PAGES.find(p => p.key === selectedBannerPageKey)?.group.toUpperCase() || 'BLUE CRESCENT'}
+                            </span>
+                            <h3 style={{ margin: '0 0 6px 0', fontSize: '20px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.3px' }}>
+                              {ALL_BANNER_PAGES.find(p => p.key === selectedBannerPageKey)?.title || selectedBannerPageKey}
+                            </h3>
+                            <p style={{ margin: 0, fontSize: '12px', color: '#E2E8F0', maxWidth: '400px' }}>
+                              Live visual performance banner with smooth transition and corporate presentation.
+                            </p>
+                          </div>
+
+                          {/* Slider Indicator Dots in Preview */}
+                          {bannerEditor.banner_type === 'slider' && bannerEditor.images.length > 1 && (
+                            <div style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px', zIndex: 3 }}>
+                              {bannerEditor.images.map((_, dotIdx) => (
+                                <span
+                                  key={dotIdx}
+                                  style={{
+                                    width: dotIdx === 0 ? '16px' : '6px',
+                                    height: '6px',
+                                    borderRadius: '3px',
+                                    background: dotIdx === 0 ? '#00D9FF' : 'rgba(255,255,255,0.5)'
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Informative Help Box */}
+                        <div style={{ background: '#FFFFFF', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '12px', color: '#64748B', lineHeight: '1.5' }}>
+                          💡 <strong>How it works:</strong> Clicking <strong>Save Banner</strong> updates the banner for <em>{ALL_BANNER_PAGES.find(p => p.key === selectedBannerPageKey)?.title}</em> immediately. The website auto-synchronizes without requiring a server reboot.
+                        </div>
+
+                      </div>
+
                     </div>
                   </div>
 
@@ -6550,14 +7336,14 @@ export default function AdminPanel({ onNavigate }) {
               </div>
             )}
 
-            {/* SERVICES WORKSPACE */}
+            {/* SERVICES / EXPERTISE WORKSPACE */}
             {activeTab === '/admin/services' && (
               <div>
                 <div className="admin-table-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#0F172A' }}>Services Management</h3>
+                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#0F172A' }}>Expertise Management</h3>
                     <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748B' }}>
-                      Manage your 4 main service categories and 16 dynamic sub-services structure.
+                      Manage your 4 main expertise categories and 16 dynamic sub-services structure.
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '12px' }}>
@@ -6577,7 +7363,7 @@ export default function AdminPanel({ onNavigate }) {
                         setShowCategoryModal(true);
                       }}
                     >
-                      <Plus size={16} /> Add Main Category
+                      <Plus size={16} /> Add Expertise Category
                     </button>
                     <button
                       className="admin-add-btn"
@@ -6587,7 +7373,7 @@ export default function AdminPanel({ onNavigate }) {
                         setShowServiceModal(true);
                       }}
                     >
-                      <Plus size={16} /> Add Sub-Service
+                      <Plus size={16} /> Add Sub-Expertise
                     </button>
                   </div>
                 </div>
@@ -6779,7 +7565,7 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A198', letterSpacing: '1px' }}>
-                      SERVICES → SUSTAINABILITY SERVICES → GSAS
+                      EXPERTISE → SUSTAINABILITY SERVICES → GSAS
                     </span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
                       GSAS Service Content Editor
@@ -6795,7 +7581,7 @@ export default function AdminPanel({ onNavigate }) {
                       style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
                       onClick={() => setActiveTab('/admin/services')}
                     >
-                      ← Back to Services
+                      ← Back to Expertise
                     </button>
                     <button
                       type="button"
@@ -7006,14 +7792,14 @@ export default function AdminPanel({ onNavigate }) {
                 {/* Page Header */}
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
-                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#0057B8', letterSpacing: '1px' }}>
-                      SERVICES → SUSTAINABILITY SERVICES → LEED
+                    <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#0284C7', letterSpacing: '1px' }}>
+                      EXPERTISE → SUSTAINABILITY SERVICES → LEED
                     </span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
                       LEED Service Content Editor
                     </h2>
                     <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
-                      Manage dynamic page title, introduction, section descriptions, and image galleries for Design, Build/Construction, and Operational stages.
+                      Manage dynamic page title, hero introduction, and detailed ratings for BD+C, ID+C, O+M, and Cities/Communities.
                     </p>
                   </div>
 
@@ -7021,9 +7807,9 @@ export default function AdminPanel({ onNavigate }) {
                     <button
                       type="button"
                       style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
-                      onClick={() => setActiveTab('/admin/services')}
+                      onClick={() => setActiveTab('/admin/expertise')}
                     >
-                      ← Back to Services
+                      ← Back to Expertise
                     </button>
                     <button
                       type="button"
@@ -7235,7 +8021,7 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#0057B8', letterSpacing: '1px' }}>
-                      SERVICES → SUSTAINABILITY SERVICES → ENERGY AUDIT
+                      EXPERTISE → SUSTAINABILITY SERVICES → ENERGY AUDIT
                     </span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
                       Energy Audit Service Content Editor
@@ -7251,7 +8037,7 @@ export default function AdminPanel({ onNavigate }) {
                       style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
                       onClick={() => setActiveTab('/admin/services')}
                     >
-                      ← Back to Services
+                      ← Back to Expertise
                     </button>
                     <button
                       type="button"
@@ -7462,7 +8248,7 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
-                      SERVICES → SUSTAINABILITY SERVICES → ENVIRONMENTAL & CARBON MANAGEMENT
+                      EXPERTISE → SUSTAINABILITY SERVICES → ENVIRONMENTAL & CARBON MANAGEMENT
                     </span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
                       Environmental & Carbon Management Content Editor
@@ -7478,7 +8264,7 @@ export default function AdminPanel({ onNavigate }) {
                       style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
                       onClick={() => setActiveTab('/admin/services')}
                     >
-                      ← Back to Services
+                      ← Back to Expertise
                     </button>
                     <button
                       type="button"
@@ -7689,7 +8475,7 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
-                      SERVICES → ENGINEERING SERVICES → LASER SCANNING SERVICES
+                      EXPERTISE → ENGINEERING SERVICES → LASER SCANNING SERVICES
                     </span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
                       Laser Scanning Services Content Editor
@@ -7705,7 +8491,7 @@ export default function AdminPanel({ onNavigate }) {
                       style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
                       onClick={() => setActiveTab('/admin/services')}
                     >
-                      ← Back to Services
+                      ← Back to Expertise
                     </button>
                     <button
                       type="button"
@@ -7918,7 +8704,7 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
-                      SERVICES → ENGINEERING SERVICES → CAD
+                      EXPERTISE → ENGINEERING SERVICES → CAD
                     </span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
                       CAD Services Content Editor
@@ -7934,7 +8720,7 @@ export default function AdminPanel({ onNavigate }) {
                       style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
                       onClick={() => setActiveTab('/admin/services')}
                     >
-                      ← Back to Services
+                      ← Back to Expertise
                     </button>
                     <button
                       type="button"
@@ -8152,7 +8938,7 @@ export default function AdminPanel({ onNavigate }) {
                 <div className="admin-settings-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', color: '#00A896', letterSpacing: '1px' }}>
-                      SERVICES → ENGINEERING SERVICES → BIM
+                      EXPERTISE → ENGINEERING SERVICES → BIM
                     </span>
                     <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#0F172A', margin: '4px 0 0 0' }}>
                       BIM Services Content Editor
@@ -8168,7 +8954,7 @@ export default function AdminPanel({ onNavigate }) {
                       style={{ background: '#0F172A', color: '#FFFFFF', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
                       onClick={() => setActiveTab('/admin/services')}
                     >
-                      ← Back to Services
+                      ← Back to Expertise
                     </button>
                     <button
                       type="button"

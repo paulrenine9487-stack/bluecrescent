@@ -71,15 +71,22 @@ export default function Footer({ onNavigate }) {
     fetchAllFooterData();
     window.addEventListener('dataUpdated', fetchAllFooterData);
     window.addEventListener('menuUpdated', fetchAllFooterData);
+    window.addEventListener('servicesUpdated', fetchAllFooterData);
+    window.addEventListener('companySettingsUpdated', fetchAllFooterData);
     return () => {
       window.removeEventListener('dataUpdated', fetchAllFooterData);
       window.removeEventListener('menuUpdated', fetchAllFooterData);
+      window.removeEventListener('servicesUpdated', fetchAllFooterData);
+      window.removeEventListener('companySettingsUpdated', fetchAllFooterData);
     };
   }, []);
 
   const handleNav = (page, subTab = '') => {
+    let target = page;
+    if (page === "Let's Connect" || page === 'Contact Us') target = 'Contact Us';
+    if (page === 'Expertise' || page === 'Services') target = 'Services';
     if (onNavigate) {
-      onNavigate(page, subTab);
+      onNavigate(target, subTab);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -87,8 +94,12 @@ export default function Footer({ onNavigate }) {
   // Resolve quick links from dynamicMenus or default
   const rootMenus = dynamicMenus.filter(m => !m.parent_id).sort((a, b) => (a.order_num || 0) - (b.order_num || 0));
   const quickLinks = rootMenus.length > 0
-    ? rootMenus.map(m => m.name)
-    : ['Home', 'About Us', 'Services', 'Projects', 'Media', 'Contact Us'];
+    ? rootMenus.map(m => {
+        if (m.name === 'Contact Us') return "Let's Connect";
+        if (m.name === 'Services') return 'Expertise';
+        return m.name;
+      })
+    : ['Home', 'About Us', 'Expertise', 'Projects', 'Insights', "Let's Connect"];
 
   // Exact 6 services list for footer as requested
   const serviceItems = [
@@ -173,9 +184,9 @@ export default function Footer({ onNavigate }) {
           </ul>
         </div>
 
-        {/* Column 4: Contact Us */}
+        {/* Column 4: Let's Connect */}
         <div className="bce-footer-v2-col contact-col">
-          <h4 className="bce-footer-v2-heading">CONTACT US</h4>
+          <h4 className="bce-footer-v2-heading">LET'S CONNECT</h4>
           <ul className="bce-footer-v2-list contact-list">
             {footerData.address && (
               <li>

@@ -49,7 +49,15 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   useEffect(() => {
     fetchAllHeaderData();
     window.addEventListener('menuUpdated', fetchAllHeaderData);
-    return () => window.removeEventListener('menuUpdated', fetchAllHeaderData);
+    window.addEventListener('servicesUpdated', fetchAllHeaderData);
+    window.addEventListener('dataUpdated', fetchAllHeaderData);
+    window.addEventListener('companySettingsUpdated', fetchAllHeaderData);
+    return () => {
+      window.removeEventListener('menuUpdated', fetchAllHeaderData);
+      window.removeEventListener('servicesUpdated', fetchAllHeaderData);
+      window.removeEventListener('dataUpdated', fetchAllHeaderData);
+      window.removeEventListener('companySettingsUpdated', fetchAllHeaderData);
+    };
   }, []);
 
   useEffect(() => {
@@ -75,7 +83,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   }, [currentView]);
 
   // Fallbacks
-  const defaultNavItems = ['Home', 'About Us', 'Services', 'Projects', 'Insights', 'Contact Us'];
+  const defaultNavItems = ['Home', 'About Us', 'Expertise', 'Projects', 'Insights', "Let's Connect"];
   const defaultProjectSubItems = ['BIM Projects', 'CAD Projects', 'Laser Scanning Projects', 'Digital Twin Projects', 'Sustainability Projects'];
   const defaultServiceCategories = [
     {
@@ -116,7 +124,11 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
   if (dynamicMenus.length > 0) {
     const rootMenus = dynamicMenus.filter(m => !m.parent_id).sort((a, b) => (a.order_num || 0) - (b.order_num || 0));
     if (rootMenus.length > 0) {
-      navItems = rootMenus.map(m => m.name);
+      navItems = rootMenus.map(m => {
+        if (m.name === 'Services') return 'Expertise';
+        if (m.name === 'Contact Us') return "Let's Connect";
+        return m.name;
+      });
     }
 
     const projectsMenu = rootMenus.find(m => m.name.toLowerCase() === 'projects');
@@ -273,8 +285,8 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
           <nav className="desktop-nav">
             <ul className="nav-menu">
               {navItems.map((item) => {
-                // Services Multi-Level Dropdown
-                if (item === 'Services') {
+                // Services / Expertise Multi-Level Dropdown
+                if (item === 'Services' || item === 'Expertise') {
                   return (
                     <li
                       key={item}
@@ -293,7 +305,7 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                           if (onNavigate) onNavigate('Services');
                         }}
                       >
-                        Services <span className="dropdown-arrow">▾</span>
+                        Expertise <span className="dropdown-arrow">▾</span>
                       </a>
 
                       {servicesDropdownOpen && (
@@ -521,14 +533,17 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
                 }
 
                 // Standard Nav Link
+                const isItemActive = currentView === item ||
+                  ((item === "Let's Connect" || item === 'Contact Us') && (currentView === 'Contact Us' || currentView === "Let's Connect"));
                 return (
                   <li key={item}>
                     <a
                       href="#"
-                      className={`nav-link ${currentView === item ? 'active' : ''}`}
+                      className={`nav-link ${isItemActive ? 'active' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        if (onNavigate) onNavigate(item, '', rootMenuObj?.url);
+                        const navTarget = (item === "Let's Connect" || item === 'Contact Us') ? 'Contact Us' : item;
+                        if (onNavigate) onNavigate(navTarget, '', rootMenuObj?.url);
                       }}
                     >
                       {item}
@@ -555,16 +570,16 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
         <nav className="mobile-nav-content">
           <ul className="mobile-nav-list">
             {navItems.map((item) => {
-              // Services accordion
-              if (item === 'Services') {
-                const isOpen = activeMobileDropdown === 'Services';
+              // Services / Expertise accordion
+              if (item === 'Services' || item === 'Expertise') {
+                const isOpen = activeMobileDropdown === 'Services' || activeMobileDropdown === 'Expertise';
                 return (
                   <li key={item} className="mobile-dropdown-item">
                     <button
                       className={`mobile-dropdown-trigger ${isServicesActive ? 'active' : ''}`}
-                      onClick={() => setActiveMobileDropdown(isOpen ? null : 'Services')}
+                      onClick={() => setActiveMobileDropdown(isOpen ? null : 'Expertise')}
                     >
-                      <span>Services</span>
+                      <span>Expertise</span>
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
 
@@ -775,15 +790,18 @@ export default function Header({ currentView = 'Home', activeSubTab = '', onNavi
               }
 
               // Standard Link
+              const isItemActive = currentView === item ||
+                ((item === "Let's Connect" || item === 'Contact Us') && (currentView === 'Contact Us' || currentView === "Let's Connect"));
               return (
                 <li key={item}>
                   <a
                     href="#"
-                    className={`mobile-nav-link ${currentView === item ? 'active' : ''}`}
+                    className={`mobile-nav-link ${isItemActive ? 'active' : ''}`}
                     onClick={(e) => {
                       e.preventDefault();
                       setIsMobileMenuOpen(false);
-                      if (onNavigate) onNavigate(item, '', rootMenuObj?.url);
+                      const navTarget = (item === "Let's Connect" || item === 'Contact Us') ? 'Contact Us' : item;
+                      if (onNavigate) onNavigate(navTarget, '', rootMenuObj?.url);
                     }}
                   >
                     {item}

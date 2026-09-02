@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import projectFallbackImg from '../assets/project1.png';
+import DynamicBanner from './DynamicBanner';
 
 // Helper to safely parse JSON strings or arrays
 const parseArray = (input) => {
@@ -107,6 +108,15 @@ export default function ProjectDetailPage({ projectSlug, projectData: initialDat
   return (
     <div style={{ background: '#F8FAFC', color: '#1E293B', minHeight: '100vh', paddingBottom: '80px' }}>
       
+      {/* Dynamic Live Projects Banner */}
+      <DynamicBanner
+        pageKey="project-detail"
+        defaultImage={mainImageSrc}
+        defaultImages={[mainImageSrc, '/servicepage1.png', '/why.png']}
+        minHeight="280px"
+        overlayOpacity="subtle"
+      />
+
       {/* 1. BREADCRUMB NAVIGATION */}
       <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '14px 0' }}>
         <div className="container" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', color: '#64748B', flexWrap: 'wrap' }}>

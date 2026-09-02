@@ -433,6 +433,33 @@ const fallbackData = {
       { url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80', alt: 'Periodic Multi-Disciplinary Coordination Dashboard', display_order: 3 },
       { url: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=80', alt: 'CDE Common Data Environment Progress & Issue Audit', display_order: 4 }
     ]
+  },
+  managing_partner_message: {
+    id: 1,
+    sectionTitle: "MANAGING PARTNER'S MESSAGE",
+    mainQuote: "We don't build business on price. We build it on trust, quality and relationships.",
+    introText: "At Blue Crescent, our principles are simple and non-negotiable: do what we commit to, deliver what we promise, and never compromise on quality.",
+    messageParagraph1: "We do not take projects simply to increase our numbers, nor do we accept work at an unrealistic price and allow quality or deliverables to suffer later. We believe every project must begin with a fair commitment, the right resources and a clear responsibility to deliver it successfully.",
+    messageParagraph2: "Once we commit to a project, we stand by it until completion. We will not step away midway because circumstances become difficult. Our client's project should never suffer because of our internal challenges. Their responsibility becomes our responsibility.",
+    messageParagraph3: "Our greatest strength is our people. We believe in having the right people in the right roles—qualified professionals with genuine domain knowledge and practical experience. We treat our employees as family, because strong projects are delivered by strong teams, not by individuals.",
+    messageParagraph4: "We see our clients not simply as customers, but as long-term partners. We value transparency, teamwork, professional integrity and relationships that continue well beyond the completion of a single project.",
+    fairCommitmentTitle: "FAIR COMMITMENT",
+    fairCommitmentContent: "We do not take projects simply to increase our numbers, nor do we accept work at an unrealistic price and allow quality or deliverables to suffer later.",
+    completeCommitmentTitle: "COMPLETE COMMITMENT",
+    completeCommitmentContent: "Once we commit to a project, we stand by it until completion. We will not step away midway because circumstances become difficult.",
+    responsibilityTitle: "OUR RESPONSIBILITY",
+    responsibilityContent: "Our client's project should never suffer because of our internal challenges. Their responsibility becomes our responsibility.",
+    peopleStrengthTitle: "OUR PEOPLE, OUR STRENGTH",
+    peopleStrengthContent: "Our greatest strength is our people. We believe in having the right people in the right roles—qualified professionals with genuine domain knowledge and practical experience.",
+    longTermPartnersTitle: "LONG-TERM PARTNERS",
+    longTermPartnersContent: "We see our clients not simply as customers, but as long-term partners. We value transparency, teamwork, professional integrity and relationships that continue well beyond the completion of a single project.",
+    visionTitle: "OUR VISION",
+    visionContent: "Right People.\nFair Price.\nNo Compromise on Quality.\nComplete Commitment.\nLong-Term Partnership.",
+    finalStatement: "That is how we work.\nThat is how we build trust.\nThat is Blue Crescent.",
+    partnerName: "Chandrasekar Nallusamy",
+    partnerDesignation: "Managing Partner",
+    partnerImage: null,
+    status: "Active"
   }
 };
 
@@ -590,6 +617,22 @@ async function initDB() {
         image LONGTEXT,
         status VARCHAR(50) DEFAULT 'published',
         order_num INT DEFAULT 0
+      );
+    `);
+
+    // 8b. Dynamic Page Banners Table (Slider & Video Live Banners for all pages)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS page_banners (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        page_key VARCHAR(100) NOT NULL UNIQUE,
+        banner_type VARCHAR(20) DEFAULT 'slider',
+        images LONGTEXT,
+        video_url LONGTEXT,
+        fallback_image LONGTEXT,
+        slide_duration INT DEFAULT 5,
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );
     `);
 
@@ -1318,6 +1361,79 @@ async function initDB() {
       `);
     }
 
+    // 17. Managing Partner's Message Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS managing_partner_message (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sectionTitle VARCHAR(255) DEFAULT 'MANAGING PARTNER’S MESSAGE',
+        mainQuote TEXT,
+        introText TEXT,
+        messageParagraph1 TEXT,
+        messageParagraph2 TEXT,
+        messageParagraph3 TEXT,
+        messageParagraph4 TEXT,
+        fairCommitmentTitle VARCHAR(255) DEFAULT 'FAIR COMMITMENT',
+        fairCommitmentContent TEXT,
+        completeCommitmentTitle VARCHAR(255) DEFAULT 'COMPLETE COMMITMENT',
+        completeCommitmentContent TEXT,
+        responsibilityTitle VARCHAR(255) DEFAULT 'OUR RESPONSIBILITY',
+        responsibilityContent TEXT,
+        peopleStrengthTitle VARCHAR(255) DEFAULT 'OUR PEOPLE, OUR STRENGTH',
+        peopleStrengthContent TEXT,
+        longTermPartnersTitle VARCHAR(255) DEFAULT 'LONG-TERM PARTNERS',
+        longTermPartnersContent TEXT,
+        visionTitle VARCHAR(255) DEFAULT 'OUR VISION',
+        visionContent TEXT,
+        finalStatement TEXT,
+        partnerName VARCHAR(255) DEFAULT 'Chandrasekar Nallusamy',
+        partnerDesignation VARCHAR(255) DEFAULT 'Managing Partner',
+        partnerImage LONGTEXT,
+        status VARCHAR(50) DEFAULT 'Active',
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Seed default managing partner message if empty
+    const [mpCountRows] = await pool.query('SELECT COUNT(*) as count FROM managing_partner_message');
+    if (mpCountRows[0].count === 0) {
+      console.log('Seeding default managing partner message...');
+      await pool.query(`
+        INSERT INTO managing_partner_message (
+          sectionTitle, mainQuote, introText, messageParagraph1, messageParagraph2, messageParagraph3, messageParagraph4,
+          fairCommitmentTitle, fairCommitmentContent, completeCommitmentTitle, completeCommitmentContent,
+          responsibilityTitle, responsibilityContent, peopleStrengthTitle, peopleStrengthContent,
+          longTermPartnersTitle, longTermPartnersContent, visionTitle, visionContent, finalStatement,
+          partnerName, partnerDesignation, partnerImage, status
+        ) VALUES (
+          'MANAGING PARTNER’S MESSAGE',
+          'We don’t build business on price. We build it on trust, quality and relationships.',
+          'At Blue Crescent, our principles are simple and non-negotiable: do what we commit to, deliver what we promise, and never compromise on quality.',
+          'We do not take projects simply to increase our numbers, nor do we accept work at an unrealistic price and allow quality or deliverables to suffer later. We believe every project must begin with a fair commitment, the right resources and a clear responsibility to deliver it successfully.',
+          'Once we commit to a project, we stand by it until completion. We will not step away midway because circumstances become difficult. Our client’s project should never suffer because of our internal challenges. Their responsibility becomes our responsibility.',
+          'Our greatest strength is our people. We believe in having the right people in the right roles—qualified professionals with genuine domain knowledge and practical experience. We treat our employees as family, because strong projects are delivered by strong teams, not by individuals.',
+          'We see our clients not simply as customers, but as long-term partners. We value transparency, teamwork, professional integrity and relationships that continue well beyond the completion of a single project.',
+          'FAIR COMMITMENT',
+          'We do not take projects simply to increase our numbers, nor do we accept work at an unrealistic price and allow quality or deliverables to suffer later.',
+          'COMPLETE COMMITMENT',
+          'Once we commit to a project, we stand by it until completion. We will not step away midway because circumstances become difficult.',
+          'OUR RESPONSIBILITY',
+          'Our client’s project should never suffer because of our internal challenges. Their responsibility becomes our responsibility.',
+          'OUR PEOPLE, OUR STRENGTH',
+          'Our greatest strength is our people. We believe in having the right people in the right roles—qualified professionals with genuine domain knowledge and practical experience.',
+          'LONG-TERM PARTNERS',
+          'We see our clients not simply as customers, but as long-term partners. We value transparency, teamwork, professional integrity and relationships that continue well beyond the completion of a single project.',
+          'OUR VISION',
+          'Right People.\nFair Price.\nNo Compromise on Quality.\nComplete Commitment.\nLong-Term Partnership.',
+          'That is how we work.\nThat is how we build trust.\nThat is Blue Crescent.',
+          'Chandrasekar Nallusamy',
+          'Managing Partner',
+          null,
+          'Active'
+        )
+      `);
+    }
+
     // Migration for team_members hierarchy_number
     try {
       await pool.query("SELECT hierarchy_number FROM team_members LIMIT 1");
@@ -1458,10 +1574,10 @@ async function initDB() {
       console.log('Seeding menus...');
       const [r1] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Home', 'Home', 1)");
       const [r2] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('About Us', 'About Us', 2)");
-      const [r3] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Services', 'Services', 3)");
+      const [r3] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Expertise', 'Services', 3)");
       const [r4] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Projects', 'Projects', 4)");
       const [r5] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Media', 'Media', 5)");
-      const [r6] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Contact Us', 'Contact Us', 6)");
+      const [r6] = await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Let\\'s Connect', 'Contact Us', 6)");
 
       const projectsId = r4.insertId;
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('BIM Projects', 'BIM Projects', ?, 1)", [projectsId]);
@@ -1470,11 +1586,17 @@ async function initDB() {
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Digital Twin Projects', 'Digital Twin Projects', ?, 4)", [projectsId]);
       await pool.query("INSERT INTO menus (name, url, parent_id, order_num) VALUES ('Sustainability Projects', 'Sustainability Projects', ?, 5)", [projectsId]);
     } else {
+      // Dynamic migration for existing databases: ensure 'Expertise' and 'Let's Connect' are updated
+      try {
+        await pool.query("UPDATE menus SET name = 'Expertise' WHERE name = 'Services'");
+        await pool.query("UPDATE menus SET name = 'Let\\'s Connect' WHERE name = 'Contact Us'");
+      } catch (e) {}
+
       // Dynamic migration for existing databases: ensure 'Media' exists
       const [hasMedia] = await pool.query("SELECT id FROM menus WHERE name = 'Media'");
       if (hasMedia.length === 0) {
         console.log('Migrating database: Adding Media menu item...');
-        await pool.query("UPDATE menus SET order_num = 6 WHERE name = 'Contact Us'");
+        await pool.query("UPDATE menus SET order_num = 6 WHERE name = 'Contact Us' OR name = 'Let\\'s Connect'");
         await pool.query("INSERT INTO menus (name, url, order_num) VALUES ('Media', 'Media', 5)");
       }
 
@@ -1527,6 +1649,53 @@ async function initDB() {
         ('ISO 9001:2015 & GSAS Sustainability Accreditation Recertification', 'iso-9001-gsas-recertification', 'Announcement', 'Quality & Compliance Division', 'July 2026', '/why.png', 'Our engineering quality control management and GSAS green building consultancy frameworks have achieved renewed compliance certification.', 'Full detailed blog article content regarding ISO 9001:2015 and GSAS accreditation...', 'Active', 1, 2),
         ('Innovations in Remote Construction Management & Drone Site Inspections', 'innovations-remote-construction-drone-inspections', 'Engineering Blog', 'Technical Innovation Team', 'June 2026', '/project1.png', 'Discover how 360-degree site monitoring and cloud-based CAD/BIM collaboration are accelerating remote project deliveries.', 'Full detailed blog article content regarding drone site inspections and point cloud scans...', 'Active', 1, 3)
       `);
+    }
+
+    // Seed default page banners if empty
+    const [bannerRows] = await pool.query('SELECT COUNT(*) as count FROM page_banners');
+    if (bannerRows[0].count === 0) {
+      console.log('Seeding default live page banners...');
+      const defaultBanners = [
+        { page_key: 'aboutus', type: 'slider', images: ['/about.png', '/why.png', '/aboutus5.png'], fallback: '/about.png' },
+        { page_key: 'services', type: 'slider', images: ['/servicepage1.png', '/bimmodel.png', '/about.png'], fallback: '/servicepage1.png' },
+        { page_key: 'engineering-services', type: 'slider', images: ['/servicepage1.png', '/bimmodel.png', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'bim', type: 'slider', images: ['/servicepage1.png', '/bimmodel.png', 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=80'], fallback: '/servicepage1.png' },
+        { page_key: 'cad', type: 'slider', images: ['/servicepage1.png', '/why.png', 'https://images.unsplash.com/photo-1581094288338-2314dddb7eed?auto=format&fit=crop&w=1600&q=80'], fallback: '/servicepage1.png' },
+        { page_key: 'laser-scanning', type: 'slider', images: ['/servicepage1.png', '/aboutus6.png', 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=80'], fallback: '/servicepage1.png' },
+        { page_key: 'scan-to-bim', type: 'slider', images: ['/servicepage1.png', '/bimmodel.png', '/aboutus6.png'], fallback: '/servicepage1.png' },
+        { page_key: 'sustainability-services', type: 'slider', images: ['/servicepage1.png', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=1600&q=80', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'gsas', type: 'slider', images: ['/servicepage1.png', 'https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=1600&q=80', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'leed', type: 'slider', images: ['/servicepage1.png', 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'energy-audit', type: 'slider', images: ['/servicepage1.png', 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'carbon-management', type: 'slider', images: ['/servicepage1.png', 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'digital-twin', type: 'slider', images: ['/servicepage1.png', '/bimmodel.png', '/aboutus5.png'], fallback: '/servicepage1.png' },
+        { page_key: 'asset-twin', type: 'slider', images: ['/servicepage1.png', '/why.png', '/bimmodel.png'], fallback: '/servicepage1.png' },
+        { page_key: 'system-integration', type: 'slider', images: ['/servicepage1.png', '/aboutus6.png', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'real-time-monitoring', type: 'slider', images: ['/servicepage1.png', '/bimmodel.png', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'predictive-maintenance', type: 'slider', images: ['/servicepage1.png', '/aboutus5.png', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'construction-technology', type: 'slider', images: ['/servicepage1.png', '/project1.png', '/about.png'], fallback: '/servicepage1.png' },
+        { page_key: 'remote-construction', type: 'slider', images: ['/servicepage1.png', '/project1.png', '/about.png'], fallback: '/servicepage1.png' },
+        { page_key: '360-capture', type: 'slider', images: ['/servicepage1.png', '/aboutus6.png', '/project1.png'], fallback: '/servicepage1.png' },
+        { page_key: 'ar-solutions', type: 'slider', images: ['/servicepage1.png', '/bimmodel.png', '/project1.png'], fallback: '/servicepage1.png' },
+        { page_key: 'robotics', type: 'slider', images: ['/servicepage1.png', '/aboutus5.png', '/project1.png'], fallback: '/servicepage1.png' },
+        { page_key: 'projects', type: 'slider', images: ['/project1.png', '/servicepage1.png', '/about.png'], fallback: '/project1.png' },
+        { page_key: 'project-detail', type: 'slider', images: ['/project1.png', '/servicepage1.png', '/why.png'], fallback: '/project1.png' },
+        { page_key: 'media', type: 'slider', images: ['https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=80', '/servicepage1.png', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'gallery', type: 'slider', images: ['https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=80', '/servicepage1.png', '/aboutus5.png'], fallback: '/servicepage1.png' },
+        { page_key: 'videos', type: 'slider', images: ['https://images.unsplash.com/photo-1581094288338-2314dddb7eed?auto=format&fit=crop&w=1600&q=80', '/bimmodel.png', '/servicepage1.png'], fallback: '/servicepage1.png' },
+        { page_key: 'blogs', type: 'slider', images: ['https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80', '/servicepage1.png', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'blog-detail', type: 'slider', images: ['/servicepage1.png', '/project1.png', '/why.png'], fallback: '/servicepage1.png' },
+        { page_key: 'contactus', type: 'slider', images: ['/contact1.png', '/contact1_copy.png', '/about.png'], fallback: '/contact1.png' },
+        { page_key: 'certifications', type: 'slider', images: ['https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80', '/credentials_cityscape_bg.png', '/servicepage1.png'], fallback: '/credentials_cityscape_bg.png' }
+      ];
+
+      for (const b of defaultBanners) {
+        await pool.query(
+          `INSERT INTO page_banners (page_key, banner_type, images, fallback_image, slide_duration, status)
+           VALUES (?, ?, ?, ?, ?, 'active')`,
+          [b.page_key, b.type, JSON.stringify(b.images), b.fallback, 5]
+        );
+      }
     }
 
 

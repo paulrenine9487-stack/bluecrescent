@@ -11,6 +11,7 @@ import BIMDetailPage from './BIMDetailPage';
 import serviceBanner from '../assets/servicepage1.png';
 import aboutBanner from '../assets/about.png';
 import projectBanner from '../assets/project1.png';
+import DynamicBanner from './DynamicBanner';
 import './AboutUsPage.css';
 
 export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigate }) {
@@ -209,10 +210,10 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
 
   // Resolve Categories list dynamically for the main overview
   const categoryGroups = {
-    'Engineering Services': ['BIM', 'CAD', 'Laser Scanning'],
-    'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Environment'],
-    'Digital Twin': ['Asset Management', 'System Integration'],
-    'Digital Construction Technology': ['Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration']
+    'Engineering Services': ['BIM', 'CAD', 'Laser Scanning', 'Scan to BIM'],
+    'Sustainability Services': ['GSAS', 'LEED', 'Energy Audit', 'Carbon Management'],
+    'Digital Twin': ['Asset Twin', 'System Integration', 'Real-Time Monitoring', 'Asset Management'],
+    'Digital Construction Technology': ['Construction Laser Scanning', '360° Site Documentation', 'AR Solutions', 'Digital Collaboration']
   };
 
   if (dynamicServices.length > 0) {
@@ -227,7 +228,7 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
       }
     });
     if (Object.keys(dynamicGroups).length > 0) {
-      delete categoryGroups['Construction Technology'];
+      delete categoryGroups['Digital Construction Technology'];
       Object.assign(categoryGroups, dynamicGroups);
     }
   }
@@ -237,6 +238,10 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
     categoryGroups[catName].sort((a, b) => {
       const strA = a.toString().toUpperCase();
       const strB = b.toString().toUpperCase();
+      if (strA.includes('BIM')) return -1;
+      if (strB.includes('BIM')) return 1;
+      if (strA.includes('CAD')) return strB.includes('BIM') ? 1 : -1;
+      if (strB.includes('CAD')) return strA.includes('BIM') ? -1 : 1;
       if (strA === 'BIM') return -1;
       if (strB === 'BIM') return 1;
       if (strA === 'CAD') return strB === 'BIM' ? 1 : -1;
@@ -246,11 +251,12 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   });
 
   const getCategoryIcon = (category) => {
-    if (category.toLowerCase().includes('engineering')) {
+    const lower = category.toLowerCase();
+    if (lower.includes('engineering')) {
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>;
-    } else if (category.toLowerCase().includes('sustainability')) {
+    } else if (lower.includes('sustainability')) {
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>;
-    } else if (category.toLowerCase().includes('digital twin')) {
+    } else if (lower.includes('twin')) {
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><rect x="2" y="3" width="9" height="9" rx="1"/><rect x="13" y="3" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg>;
     } else {
       return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00B8FF" strokeWidth="2" style={{ marginBottom: '16px' }}><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16M4 18h.01"/></svg>;
@@ -258,30 +264,35 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   };
 
   const subKey = (activeSubTab || '').toLowerCase().trim();
-  const isGsas = subKey === 'gsas' || subKey.endsWith('/gsas') || subKey.endsWith('-gsas') || subKey === 'sustainability-services/gsas';
-  const isLeed = subKey === 'leed' || subKey.endsWith('/leed') || subKey.endsWith('-leed') || subKey === 'sustainability-services/leed';
-  const isEnergyAudit = subKey === 'energy audit' || subKey === 'energy-audit' || subKey.endsWith('/energy-audit') || subKey.endsWith('/energy audit') || subKey === 'sustainability-services/energy-audit';
-  const isEnvironmental = subKey === 'environmental' || subKey === 'carbon management' || subKey === 'carbon-management' || subKey === 'noise monitoring' || subKey === 'noise-monitoring' || subKey.endsWith('/environmental') || subKey.endsWith('/carbon-management') || subKey.endsWith('/noise-monitoring') || subKey === 'sustainability-services/carbon-management';
-  const isLaserScanning = (subKey === 'laser scanning' || subKey === 'laser-scanning' || subKey === 'laser scanning services' || subKey === 'scan to bim' || subKey === 'scan-to-bim' || subKey === 'recap work' || subKey === 'recap-work' || subKey.endsWith('/laser-scanning') || subKey.endsWith('/scan-to-bim')) && !subKey.includes('construction');
-  const isCad = subKey === 'cad' || subKey.endsWith('/cad') || subKey.endsWith('-cad') || subKey === 'engineering-services/cad';
-  const isBim = subKey === 'bim' || subKey.endsWith('/bim') || subKey.endsWith('-bim') || subKey === 'engineering-services/bim';
+  const isGsas = subKey === 'gsas' || subKey.includes('gsas');
+  const isLeed = subKey === 'leed' || subKey.includes('leed');
+  const isEnergyAudit = subKey.includes('energy') || subKey.includes('carbon');
+  const isEnvironmental = subKey.includes('environmental');
+  const isLaserScanning = subKey.includes('laser') || subKey.includes('scan');
+  const isCad = subKey === 'cad' || subKey.includes('cad');
+  const isBim = subKey === 'bim' || subKey.includes('bim');
+
+  const resolveBannerPageKey = () => {
+    if (isGsas) return 'gsas';
+    if (isLeed) return 'leed';
+    if (isEnergyAudit) return 'energy-audit';
+    if (isEnvironmental) return 'carbon-management';
+    if (isLaserScanning) return 'laser-scanning';
+    if (isCad) return 'cad';
+    if (isBim) return 'bim';
+    const cleanSub = subKey.replace(/[^a-z0-9-]/g, '');
+    if (cleanSub.includes('twin')) return 'digital-twin';
+    if (cleanSub.includes('construction') || cleanSub.includes('remote')) return 'construction-technology';
+    return 'services';
+  };
+
+  const dynamicPageKey = resolveBannerPageKey();
 
   if (isGsas) {
     return (
       <div className="services-page">
-        {/* 1. Header Title Banner */}
-        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img
-            src={bannerToDisplay}
-            alt="Services Banner"
-            className="about-hero-banner-img page-banner-img"
-          />
-        </section>
-
-        {/* 2. GSAS Service Detail Component */}
+        <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
         <GSASDetailPage onNavigate={onNavigate} />
-
-        {/* 3. Client Testimonials Section */}
         <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
           <TestimonialsSection />
         </div>
@@ -292,19 +303,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   if (isLeed) {
     return (
       <div className="services-page">
-        {/* 1. Header Title Banner */}
-        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img
-            src={bannerToDisplay}
-            alt="Services Banner"
-            className="about-hero-banner-img page-banner-img"
-          />
-        </section>
-
-        {/* 2. LEED Service Detail Component */}
+        <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
         <LEEDDetailPage onNavigate={onNavigate} />
-
-        {/* 3. Client Testimonials Section */}
         <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
           <TestimonialsSection />
         </div>
@@ -315,19 +315,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   if (isEnergyAudit) {
     return (
       <div className="services-page">
-        {/* 1. Header Title Banner */}
-        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img
-            src={bannerToDisplay}
-            alt="Services Banner"
-            className="about-hero-banner-img page-banner-img"
-          />
-        </section>
-
-        {/* 2. Energy Audit Service Detail Component */}
+        <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
         <EnergyAuditDetailPage onNavigate={onNavigate} />
-
-        {/* 3. Client Testimonials Section */}
         <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
           <TestimonialsSection />
         </div>
@@ -338,19 +327,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   if (isEnvironmental) {
     return (
       <div className="services-page">
-        {/* 1. Header Title Banner */}
-        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img
-            src={bannerToDisplay}
-            alt="Services Banner"
-            className="about-hero-banner-img page-banner-img"
-          />
-        </section>
-
-        {/* 2. Environmental Service Detail Component */}
+        <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
         <EnvironmentalDetailPage onNavigate={onNavigate} />
-
-        {/* 3. Client Testimonials Section */}
         <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
           <TestimonialsSection />
         </div>
@@ -361,19 +339,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   if (isLaserScanning) {
     return (
       <div className="services-page">
-        {/* 1. Header Title Banner */}
-        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img
-            src={bannerToDisplay}
-            alt="Services Banner"
-            className="about-hero-banner-img page-banner-img"
-          />
-        </section>
-
-        {/* 2. Laser Scanning Service Detail Component */}
+        <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
         <LaserScanningDetailPage onNavigate={onNavigate} />
-
-        {/* 3. Client Testimonials Section */}
         <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
           <TestimonialsSection />
         </div>
@@ -384,19 +351,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   if (isCad) {
     return (
       <div className="services-page">
-        {/* 1. Header Title Banner */}
-        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img
-            src={bannerToDisplay}
-            alt="Services Banner"
-            className="about-hero-banner-img page-banner-img"
-          />
-        </section>
-
-        {/* 2. CAD Service Detail Component */}
+        <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
         <CADDetailPage onNavigate={onNavigate} />
-
-        {/* 3. Client Testimonials Section */}
         <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
           <TestimonialsSection />
         </div>
@@ -407,19 +363,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
   if (isBim) {
     return (
       <div className="services-page">
-        {/* 1. Header Title Banner */}
-        <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-          <img
-            src={bannerToDisplay}
-            alt="Services Banner"
-            className="about-hero-banner-img page-banner-img"
-          />
-        </section>
-
-        {/* 2. BIM Service Detail Component */}
+        <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
         <BIMDetailPage onNavigate={onNavigate} />
-
-        {/* 3. Client Testimonials Section */}
         <div className="container" style={{ marginTop: '40px', marginBottom: '60px' }}>
           <TestimonialsSection />
         </div>
@@ -429,17 +374,8 @@ export default function ServicesPage({ activeSubTab = '', onOpenModal, onNavigat
 
   return (
     <div className="services-page">
-      {/* 1. Header Title Banner */}
-      <section className="about-full-banner-wrap" style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-        <img
-          src={bannerToDisplay}
-          alt="Services Banner"
-          className="about-hero-banner-img page-banner-img"
-        />
-      </section>
+      <DynamicBanner pageKey={dynamicPageKey} defaultImage={bannerToDisplay} />
 
-
-      {/* 3. Main Content Container — full width, no sidebar */}
       <div className="container">
         <div className="services-enterprise-layout" style={{ gridTemplateColumns: '1fr' }}>
           {/* Main Column */}

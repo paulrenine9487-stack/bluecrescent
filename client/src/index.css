@@ -3908,3 +3908,37 @@ a[class*='read-more'] {
     height: 36px !important;
   }
 }
+
+/* ── About Us Page: We Commit. We Deliver. We Stay. Section ── */
+.about-commit-deliver-section {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .about-commit-deliver-section {
+    padding: 50px 20px 45px !important;
+    margin-top: 35px !important;
+  }
+  .about-commit-deliver-section h2 {
+    font-size: 28px !important;
+  }
+  .about-commit-deliver-section p {
+    font-size: 15.5px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-commit-deliver-section {
+    padding: 42px 16px 38px !important;
+    margin-top: 25px !important;
+  }
+  .about-commit-deliver-section h2 {
+    font-size: 24px !important;
+  }
+  .about-commit-deliver-section p {
+    font-size: 14.5px !important;
+    line-height: 1.65 !important;
+  }
+}

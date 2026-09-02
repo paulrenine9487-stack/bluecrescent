@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCachedCompanySettings, updateCachedCompanySettings } from '../utils/bannerCache';
 import contactBanner from '../assets/contact1_copy.png';
+import DynamicBanner from './DynamicBanner';
 
 export default function ContactUsPage({ onNavigate }) {
   const [formData, setFormData] = useState({
@@ -294,14 +295,13 @@ export default function ContactUsPage({ onNavigate }) {
 
   return (
     <div className="contact-us-page">
-      {/* 1. Full-Width Contact Us Banner Image */}
-      <section className="about-full-banner-wrap" style={{ width: '100%', overflow: 'hidden' }}>
-        <img
-          src={companySettings?.contactUsPageBannerUrl || contactBanner}
-          alt="Contact Us Banner"
-          className="about-hero-banner-img page-banner-img"
-        />
-      </section>
+      {/* 1. Full-Width Dynamic Live Contact Us Banner */}
+      <DynamicBanner
+        pageKey="contactus"
+        defaultImage={contactBanner}
+        defaultImages={[contactBanner, '/about.png', '/why.png']}
+        overlayOpacity="none"
+      />
 
       <div className="container" style={{ paddingTop: '48px' }}>
         <div className="services-enterprise-layout" style={{ marginBottom: '32px' }}>

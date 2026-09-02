@@ -1,0 +1,215 @@
+/* ProjectInMindCTASection.css - Clean Architectural & Engineering CTA */
+
+.project-cta-section {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, #F0F6FD 0%, #E7F1FB 50%, #F0F6FD 100%);
+  padding: 65px 0 60px;
+  overflow: hidden;
+  border-top: 1px solid #D8E6F5;
+  border-bottom: 1px solid #D8E6F5;
+}
+
+/* Subtle Technical Blueprint Background Grid */
+.project-cta-bg-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(#0057B8 0.55px, transparent 0.55px),
+    linear-gradient(to right, rgba(0, 87, 184, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 87, 184, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px, 72px 72px, 72px 72px;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Decorative Blueprint Graphics - Left Side */
+.project-cta-blueprint-left {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 260px;
+  height: 220px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.28;
+  transition: opacity 0.3s ease;
+}
+
+/* Decorative Blueprint Graphics - Right Side */
+.project-cta-blueprint-right {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 260px;
+  height: 220px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.28;
+  transition: opacity 0.3s ease;
+}
+
+.project-cta-container {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* ── Heading (Refined Size) ── */
+.project-cta-heading {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: #063B73;
+  line-height: 1.25;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.5px;
+}
+
+.project-cta-heading span {
+  display: block;
+}
+
+/* ── Divider Accent Line ── */
+.project-cta-divider {
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #0057B8 0%, #00B8FF 100%);
+  border-radius: 4px;
+  margin: 0 auto 16px;
+}
+
+/* ── Description (Refined Size) ── */
+.project-cta-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #475569;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto 26px;
+}
+
+/* ── CTA Button ── */
+.project-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 32px;
+  background: linear-gradient(90deg, #0057B8 0%, #0088FF 100%);
+  color: #FFFFFF;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 87, 184, 0.25);
+  transition: all 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.project-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 87, 184, 0.38);
+  background: linear-gradient(90deg, #004B99 0%, #0077EE 100%);
+}
+
+.project-cta-btn:active {
+  transform: translateY(0);
+}
+
+.project-cta-arrow {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 240ms ease;
+}
+
+.project-cta-btn:hover .project-cta-arrow {
+  transform: translateX(4px);
+}
+
+/* ── Responsive Queries ── */
+@media (max-width: 1024px) {
+  .project-cta-section {
+    padding: 55px 0;
+  }
+  .project-cta-heading {
+    font-size: 32px;
+  }
+  .project-cta-desc {
+    font-size: 15.5px;
+    max-width: 520px;
+  }
+  .project-cta-blueprint-left,
+  .project-cta-blueprint-right {
+    width: 200px;
+    height: 180px;
+    opacity: 0.22;
+  }
+}
+
+@media (max-width: 768px) {
+  .project-cta-section {
+    padding: 48px 0;
+  }
+  .project-cta-heading {
+    font-size: 28px;
+    line-height: 1.25;
+  }
+  .project-cta-desc {
+    font-size: 14.5px;
+    margin-bottom: 22px;
+    max-width: 440px;
+  }
+  .project-cta-btn {
+    padding: 12px 26px;
+    font-size: 13px;
+  }
+  .project-cta-blueprint-left,
+  .project-cta-blueprint-right {
+    width: 150px;
+    height: 140px;
+    opacity: 0.16;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-cta-section {
+    padding: 40px 0;
+  }
+  .project-cta-heading {
+    font-size: 23px;
+    line-height: 1.25;
+    letter-spacing: -0.3px;
+  }
+  .project-cta-desc {
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .project-cta-divider {
+    width: 40px;
+    margin-bottom: 14px;
+  }
+  .project-cta-btn {
+    padding: 11px 22px;
+    font-size: 12.5px;
+  }
+  .project-cta-blueprint-left,
+  .project-cta-blueprint-right {
+    display: none;
+  }
+}

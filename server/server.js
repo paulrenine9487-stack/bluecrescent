@@ -11,6 +11,14 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Graceful JSON parse error handler for malformed client requests
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON payload structure provided.' });
+  }
+  next(err);
+});
+
 // API Status
 app.get('/api/status', (req, res) => {
   res.json({
@@ -28,6 +36,11 @@ app.get('/api/news', (req, res) => {
 // ==========================================
 // SETTINGS PERSISTENCE APIs (MySQL)
 // ==========================================
+
+// Health Check Endpoint
+app.get(['/api/health', '/health'], (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), database: getIsConnected() ? 'connected' : 'fallback' });
+});
 
 let companySettingsMemoryCache = null;
 
@@ -147,11 +160,19 @@ const saveBase64File = (base64Str, prefix) => {
     if (mimeType.includes('png')) ext = 'png';
     else if (mimeType.includes('webp')) ext = 'webp';
     else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
+    else if (mimeType.includes('gif')) ext = 'gif';
+    else if (mimeType.includes('svg')) ext = 'svg';
+    else if (mimeType.includes('mp4') || mimeType.includes('video/mp4')) ext = 'mp4';
+    else if (mimeType.includes('webm') || mimeType.includes('video/webm')) ext = 'webm';
+    else if (mimeType.includes('ogg') || mimeType.includes('video/ogg')) ext = 'ogv';
+    else if (mimeType.includes('quicktime') || mimeType.includes('mov')) ext = 'mov';
     else return base64Str;
 
     const buffer = Buffer.from(base64Data, 'base64');
-    if (buffer.length > 5 * 1024 * 1024) {
-      console.warn('Base64 file exceeds allowed 5MB limit');
+    const isVideo = ['mp4', 'webm', 'ogv', 'mov'].includes(ext);
+    const maxSize = isVideo ? 60 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (buffer.length > maxSize) {
+      console.warn(`Base64 file exceeds allowed ${isVideo ? '60MB' : '10MB'} limit`);
       return base64Str;
     }
 
@@ -260,9 +281,178 @@ app.post('/api/settings/company', async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 
-  // Fallback in-memory storage if DB is not connected
+// Fallback in-memory storage if DB is not connected
   fallbackData.company_settings = { ...fallbackData.company_settings, ...settings };
   return res.json({ success: true, message: 'Settings saved (fallback mode).', data: settings });
+});
+
+// ============================================================================
+// MANAGING PARTNER'S MESSAGE APIs (Dynamic Leadership Statement)
+// ============================================================================
+let managingPartnerMemoryCache = null;
+
+// Public Endpoint
+app.get('/api/managing-partner-message', async (req, res) => {
+  try {
+    if (managingPartnerMemoryCache) {
+      if (managingPartnerMemoryCache.status === 'Inactive' || managingPartnerMemoryCache.status === 'OFF') {
+        return res.json({ status: 'Inactive', message: 'Section is disabled' });
+      }
+      return res.json(managingPartnerMemoryCache);
+    }
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM managing_partner_message ORDER BY id ASC LIMIT 1');
+      if (rows.length > 0) {
+        const raw = rows[0];
+        managingPartnerMemoryCache = raw;
+        if (raw.status === 'Inactive' || raw.status === 'OFF') {
+          return res.json({ status: 'Inactive', message: 'Section is disabled' });
+        }
+        return res.json(raw);
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching managing partner message:', err);
+  }
+  const fallback = fallbackData.managing_partner_message || {};
+  return res.json(fallback);
+});
+
+// Admin Endpoint (Fetch without active status filter)
+app.get('/api/admin/managing-partner-message', async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM managing_partner_message ORDER BY id ASC LIMIT 1');
+      if (rows.length > 0) {
+        return res.json(rows[0]);
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching admin managing partner message:', err);
+  }
+  return res.json(fallbackData.managing_partner_message || {});
+});
+
+// Admin Save / Update Endpoint
+app.post(['/api/admin/managing-partner-message', '/api/settings/managing-partner-message'], async (req, res) => {
+  const data = req.body || {};
+  try {
+    // Process base64 partnerImage if uploaded as base64
+    if (data.partnerImage && typeof data.partnerImage === 'string' && data.partnerImage.startsWith('data:')) {
+      data.partnerImage = saveBase64File(data.partnerImage, 'managing_partner');
+    }
+
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT id FROM managing_partner_message ORDER BY id ASC LIMIT 1');
+      if (rows.length > 0) {
+        const id = rows[0].id;
+        await pool.query(
+          `UPDATE managing_partner_message SET
+            sectionTitle = ?, mainQuote = ?, introText = ?,
+            messageParagraph1 = ?, messageParagraph2 = ?, messageParagraph3 = ?, messageParagraph4 = ?,
+            fairCommitmentTitle = ?, fairCommitmentContent = ?,
+            completeCommitmentTitle = ?, completeCommitmentContent = ?,
+            responsibilityTitle = ?, responsibilityContent = ?,
+            peopleStrengthTitle = ?, peopleStrengthContent = ?,
+            longTermPartnersTitle = ?, longTermPartnersContent = ?,
+            visionTitle = ?, visionContent = ?, finalStatement = ?,
+            partnerName = ?, partnerDesignation = ?, partnerImage = ?, status = ?,
+            updatedAt = NOW()
+          WHERE id = ?`,
+          [
+            data.sectionTitle || 'MANAGING PARTNER’S MESSAGE',
+            data.mainQuote || '',
+            data.introText || '',
+            data.messageParagraph1 || '',
+            data.messageParagraph2 || '',
+            data.messageParagraph3 || '',
+            data.messageParagraph4 || '',
+            data.fairCommitmentTitle || 'FAIR COMMITMENT',
+            data.fairCommitmentContent || '',
+            data.completeCommitmentTitle || 'COMPLETE COMMITMENT',
+            data.completeCommitmentContent || '',
+            data.responsibilityTitle || 'OUR RESPONSIBILITY',
+            data.responsibilityContent || '',
+            data.peopleStrengthTitle || 'OUR PEOPLE, OUR STRENGTH',
+            data.peopleStrengthContent || '',
+            data.longTermPartnersTitle || 'LONG-TERM PARTNERS',
+            data.longTermPartnersContent || '',
+            data.visionTitle || 'OUR VISION',
+            data.visionContent || '',
+            data.finalStatement || '',
+            data.partnerName || 'Chandrasekar Nallusamy',
+            data.partnerDesignation || 'Managing Partner',
+            data.partnerImage || null,
+            data.status || 'Active',
+            id
+          ]
+        );
+        const [updatedRows] = await pool.query('SELECT * FROM managing_partner_message WHERE id = ?', [id]);
+        managingPartnerMemoryCache = updatedRows[0] || null;
+        return res.json({ success: true, message: 'Managing partner message updated successfully.', data: updatedRows[0] });
+      } else {
+        const [insertRes] = await pool.query(
+          `INSERT INTO managing_partner_message (
+            sectionTitle, mainQuote, introText,
+            messageParagraph1, messageParagraph2, messageParagraph3, messageParagraph4,
+            fairCommitmentTitle, fairCommitmentContent,
+            completeCommitmentTitle, completeCommitmentContent,
+            responsibilityTitle, responsibilityContent,
+            peopleStrengthTitle, peopleStrengthContent,
+            longTermPartnersTitle, longTermPartnersContent,
+            visionTitle, visionContent, finalStatement,
+            partnerName, partnerDesignation, partnerImage, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            data.sectionTitle || 'MANAGING PARTNER’S MESSAGE',
+            data.mainQuote || '',
+            data.introText || '',
+            data.messageParagraph1 || '',
+            data.messageParagraph2 || '',
+            data.messageParagraph3 || '',
+            data.messageParagraph4 || '',
+            data.fairCommitmentTitle || 'FAIR COMMITMENT',
+            data.fairCommitmentContent || '',
+            data.completeCommitmentTitle || 'COMPLETE COMMITMENT',
+            data.completeCommitmentContent || '',
+            data.responsibilityTitle || 'OUR RESPONSIBILITY',
+            data.responsibilityContent || '',
+            data.peopleStrengthTitle || 'OUR PEOPLE, OUR STRENGTH',
+            data.peopleStrengthContent || '',
+            data.longTermPartnersTitle || 'LONG-TERM PARTNERS',
+            data.longTermPartnersContent || '',
+            data.visionTitle || 'OUR VISION',
+            data.visionContent || '',
+            data.finalStatement || '',
+            data.partnerName || 'Chandrasekar Nallusamy',
+            data.partnerDesignation || 'Managing Partner',
+            data.partnerImage || null,
+            data.status || 'Active'
+          ]
+        );
+        const [newRows] = await pool.query('SELECT * FROM managing_partner_message WHERE id = ?', [insertRes.insertId]);
+        managingPartnerMemoryCache = newRows[0] || null;
+        return res.json({ success: true, message: 'Managing partner message created successfully.', data: newRows[0] });
+      }
+    }
+  } catch (err) {
+    console.error('Error saving managing partner message:', err);
+    return res.status(500).json({ error: err.message });
+  }
+
+  // In-memory fallback
+  fallbackData.managing_partner_message = { ...fallbackData.managing_partner_message, ...data };
+  managingPartnerMemoryCache = fallbackData.managing_partner_message;
+  return res.json({ success: true, message: 'Saved in memory.', data: fallbackData.managing_partner_message });
+});
+
+app.put('/api/admin/managing-partner-message', async (req, res) => {
+  // Alias for POST
+  req.url = '/api/admin/managing-partner-message';
+  return app._router.handle(req, res);
 });
 
 // Dedicated Page Banners Endpoints
@@ -390,6 +580,161 @@ app.delete('/api/settings/banners/:pageKey', async (req, res) => {
     });
   } catch (err) {
     console.error('Error deleting banner:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================
+// DYNAMIC LIVE BANNERS API (Image Slider & Video Banner for all pages)
+// ============================================================
+app.get(['/api/banners', '/api/dynamic-banners'], async (req, res) => {
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM page_banners');
+      const bannerMap = {};
+      rows.forEach(r => {
+        let images = [];
+        try {
+          images = typeof r.images === 'string' ? JSON.parse(r.images) : (r.images || []);
+        } catch (e) {
+          images = r.images ? [r.images] : [];
+        }
+        bannerMap[r.page_key] = {
+          id: r.id,
+          page_key: r.page_key,
+          banner_type: r.banner_type || 'slider',
+          images: Array.isArray(images) ? images : [],
+          video_url: r.video_url || '',
+          fallback_image: r.fallback_image || '',
+          slide_duration: r.slide_duration || 5,
+          status: r.status || 'active'
+        };
+      });
+      return res.json(bannerMap);
+    }
+  } catch (err) {
+    console.error('Error fetching dynamic banners:', err);
+  }
+  return res.json(fallbackData.page_banners || {});
+});
+
+app.get('/api/banners/:pageKey', async (req, res) => {
+  const { pageKey } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      const [rows] = await pool.query('SELECT * FROM page_banners WHERE page_key = ?', [pageKey]);
+      if (rows.length > 0) {
+        const r = rows[0];
+        let images = [];
+        try {
+          images = typeof r.images === 'string' ? JSON.parse(r.images) : (r.images || []);
+        } catch (e) {
+          images = r.images ? [r.images] : [];
+        }
+        return res.json({
+          id: r.id,
+          page_key: r.page_key,
+          banner_type: r.banner_type || 'slider',
+          images: Array.isArray(images) ? images : [],
+          video_url: r.video_url || '',
+          fallback_image: r.fallback_image || '',
+          slide_duration: r.slide_duration || 5,
+          status: r.status || 'active'
+        });
+      }
+    }
+  } catch (err) {
+    console.error(`Error fetching banner for ${pageKey}:`, err);
+  }
+  const fallback = (fallbackData.page_banners && fallbackData.page_banners[pageKey]) || null;
+  return res.json(fallback || { page_key: pageKey, banner_type: 'slider', images: [], video_url: '', fallback_image: '', slide_duration: 5, status: 'active' });
+});
+
+app.post('/api/banners/:pageKey', async (req, res) => {
+  const { pageKey } = req.params;
+  let { banner_type = 'slider', images = [], video_url = '', fallback_image = '', slide_duration = 5, status = 'active' } = req.body;
+
+  try {
+    // Process base64 file data in images array
+    if (Array.isArray(images)) {
+      images = images.map((img, idx) => {
+        if (typeof img === 'string' && img.startsWith('data:')) {
+          return saveBase64File(img, `banner_${pageKey}_slide_${idx + 1}`);
+        }
+        return img;
+      }).filter(Boolean);
+    }
+
+    // Process base64 video
+    if (video_url && typeof video_url === 'string' && video_url.startsWith('data:')) {
+      video_url = saveBase64File(video_url, `banner_${pageKey}_video`);
+    }
+
+    // Process base64 fallback image
+    if (fallback_image && typeof fallback_image === 'string' && fallback_image.startsWith('data:')) {
+      fallback_image = saveBase64File(fallback_image, `banner_${pageKey}_fallback`);
+    }
+
+    const durationNum = parseInt(slide_duration, 10) || 5;
+    const pool = getPool();
+
+    if (getIsConnected() && pool) {
+      const [existing] = await pool.query('SELECT id FROM page_banners WHERE page_key = ?', [pageKey]);
+      const jsonImages = JSON.stringify(images);
+
+      if (existing.length > 0) {
+        await pool.query(
+          `UPDATE page_banners 
+           SET banner_type = ?, images = ?, video_url = ?, fallback_image = ?, slide_duration = ?, status = ?
+           WHERE page_key = ?`,
+          [banner_type, jsonImages, video_url, fallback_image, durationNum, status, pageKey]
+        );
+      } else {
+        await pool.query(
+          `INSERT INTO page_banners (page_key, banner_type, images, video_url, fallback_image, slide_duration, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [pageKey, banner_type, jsonImages, video_url, fallback_image, durationNum, status]
+        );
+      }
+    }
+
+    if (!fallbackData.page_banners) fallbackData.page_banners = {};
+    fallbackData.page_banners[pageKey] = {
+      page_key: pageKey,
+      banner_type,
+      images,
+      video_url,
+      fallback_image,
+      slide_duration: durationNum,
+      status
+    };
+
+    return res.json({
+      success: true,
+      message: `Dynamic banner for '${pageKey}' saved successfully.`,
+      banner: fallbackData.page_banners[pageKey]
+    });
+  } catch (err) {
+    console.error(`Error saving banner for ${pageKey}:`, err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/banners/:pageKey', async (req, res) => {
+  const { pageKey } = req.params;
+  try {
+    const pool = getPool();
+    if (getIsConnected() && pool) {
+      await pool.query('DELETE FROM page_banners WHERE page_key = ?', [pageKey]);
+    }
+    if (fallbackData.page_banners && fallbackData.page_banners[pageKey]) {
+      delete fallbackData.page_banners[pageKey];
+    }
+    return res.json({ success: true, message: `Banner configuration for '${pageKey}' reset to system default.` });
+  } catch (err) {
+    console.error(`Error resetting banner for ${pageKey}:`, err);
     return res.status(500).json({ error: err.message });
   }
 });

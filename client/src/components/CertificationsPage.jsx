@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import DynamicBanner from './DynamicBanner';
 
 export default function CertificationsPage({ onNavigate }) {
   const [activeCertModal, setActiveCertModal] = useState(null);
@@ -248,28 +249,30 @@ export default function CertificationsPage({ onNavigate }) {
 
   return (
     <div className="certifications-page-root">
-      {/* 1. Hero Banner */}
-      <section className="cert-page-hero">
-        <div className="container">
-          <div className="cert-hero-badge">
-            <span className="badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00D9FF', display: 'inline-block' }}></span>
-            OFFICIAL COMPANY ACCREDITATIONS
-          </div>
-          <h1 className="cert-hero-title" style={{ color: '#FFFFF0' }}>
-            Our Official <span className="cyan-text" style={{ color: '#00D9FF' }}>Certifications</span> &amp; Licenses
-          </h1>
-          <p className="cert-hero-subtitle" style={{ color: '#FFFFF0' }}>
-            Blue Crescent Engineering operates under strict international standards and official governing body accreditations in Qatar and globally.
-          </p>
-          <button
-            type="button"
-            className="btn-back-home"
-            onClick={() => { if (onNavigate) onNavigate('Home'); }}
-          >
-            <ArrowLeft size={16} /> BACK TO HOME
-          </button>
+      {/* 1. Dynamic Live Hero Banner */}
+      <DynamicBanner
+        pageKey="certifications"
+        defaultImage="/credentials_cityscape_bg.png"
+        defaultImages={['/credentials_cityscape_bg.png', 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80', '/servicepage1.png']}
+      >
+        <div className="cert-hero-badge">
+          <span className="badge-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00D9FF', display: 'inline-block' }}></span>
+          OFFICIAL COMPANY ACCREDITATIONS
         </div>
-      </section>
+        <h1 className="cert-hero-title" style={{ color: '#FFFFF0' }}>
+          Our Official <span className="cyan-text" style={{ color: '#00D9FF' }}>Certifications</span> &amp; Licenses
+        </h1>
+        <p className="cert-hero-subtitle" style={{ color: '#FFFFF0' }}>
+          Blue Crescent Engineering operates under strict international standards and official governing body accreditations in Qatar and globally.
+        </p>
+        <button
+          type="button"
+          className="btn-back-home"
+          onClick={() => { if (onNavigate) onNavigate('Home'); }}
+        >
+          <ArrowLeft size={16} /> BACK TO HOME
+        </button>
+      </DynamicBanner>
 
       {/* 2. Main Certifications Showcase */}
       <section className="cert-page-main container" style={{ paddingBottom: '90px' }}>
