@@ -10,7 +10,7 @@ import {
   Building, MapPin, Phone, Map, Clock, Cpu, ExternalLink,
   Radio, Leaf, Building2, Wind, Volume2, Droplet, Activity, Zap, Users,
   Monitor, Cloud, TrendingUp, Share2, ClipboardCheck, Heart, RefreshCw,
-  CheckCircle, AlertCircle, Info, BarChart3, Video, Sparkles, Save,
+  CheckCircle, AlertCircle, AlertTriangle, Info, BarChart3, Video, Sparkles, Save,
   Play, Film, Upload, ArrowUp, ArrowDown
 } from 'lucide-react';
 import './AdminPanel.css';
@@ -2142,13 +2142,14 @@ export default function AdminPanel({ onNavigate }) {
       { id: 'india', name: 'INDIA', desc: 'Technical delivery & design production center.', accentColor: '#8A3FFC' }
     ]),
     aboutUsDisciplinesJson: JSON.stringify([
-      { name: 'BIM Modeling & Coordination', icon: 'Layers' },
-      { name: 'CAD Documentation', icon: 'Building2' },
-      { name: 'Reality Capture & Laser Scanning', icon: 'Radio' },
-      { name: 'Specialized Engineering support', icon: 'Wrench' },
-      { name: 'Energy Auditing & Commissioning', icon: 'Zap' },
-      { name: 'Green Building Facilitation', icon: 'Leaf' },
-      { name: 'Technical experts outsourcing', icon: 'Users' }
+      { name: 'BIM Consultancy', icon: 'Layers', image: '/our capacity/bim1.png' },
+      { name: 'CAD Documentation', icon: 'Building2', image: '/our capacity/cad.png' },
+      { name: '3D Laser Scanning', icon: 'Radio', image: '/our capacity/3d.png' },
+      { name: 'Augment Reality (AR)', icon: 'Cpu', image: '/our capacity/ar.png' },
+      { name: 'Digital Twin', icon: 'Monitor', image: '/our capacity/digital.png' },
+      { name: 'GSAS Consultancy', icon: 'Leaf', image: '/our capacity/gsas.png' },
+      { name: 'Environmental Consultancy', icon: 'Globe', image: '/our capacity/envir.png' },
+      { name: 'LEED Consultancy', icon: 'Award', image: '/our capacity/leed.png' }
     ]),
     aboutUsFlowchartJson: JSON.stringify([
       { num: '01', title: 'PHYSICAL ASSET', desc: 'The tangible operational environment.', icon: 'Building2' },
@@ -2248,6 +2249,36 @@ export default function AdminPanel({ onNavigate }) {
     return [];
   };
 
+  // Central project confirmation dialog state (replacing native browser confirm())
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: 'Confirm Action',
+    message: '',
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    type: 'danger',
+    onConfirm: null
+  });
+
+  const showConfirm = ({ title = 'Confirm Delete', message, confirmText = 'Delete', cancelText = 'Cancel', type = 'danger', onConfirm }) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText,
+      type,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        if (onConfirm) await onConfirm();
+      }
+    });
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog(prev => ({ ...prev, isOpen: false, onConfirm: null }));
+  };
+
   // Popup Banner Modal state for Company Info 5 CRUD sections
   const [crudModal, setCrudModal] = useState({
     isOpen: false,
@@ -2262,13 +2293,16 @@ export default function AdminPanel({ onNavigate }) {
       type,
       editIndex,
       data: {
+        id: initialData.id || null,
         name: initialData.name || '',
         title: initialData.title || '',
         desc: initialData.desc || '',
         icon: initialData.icon || (type === 'discipline' ? 'Building2' : type === 'digitalTwin' ? 'Cloud' : type === 'capabilityChip' ? 'Award' : type === 'remotePillar' ? 'Radio' : ''),
         slug: initialData.slug || '',
         role: initialData.role || '',
-        image: initialData.image || ''
+        image: initialData.image || '',
+        department: initialData.department || '',
+        hierarchy_number: initialData.hierarchy_number ?? initialData.order_num ?? ''
       }
     });
   };
@@ -2330,13 +2364,13 @@ export default function AdminPanel({ onNavigate }) {
     } else if (type === 'teamMember') {
       const hierarchyVal = parseInt(data.hierarchy_number ?? data.hierarchyNumber ?? data.order_num ?? 0, 10) || 1;
       if (editIndex !== null) {
-        const member = (Array.isArray(teamMembers) ? teamMembers : [])[editIndex];
+        const member = (Array.isArray(teamMembers) ? teamMembers : []).find(m => m.id === data.id || m.id === editIndex) || (Array.isArray(teamMembers) ? teamMembers : [])[editIndex];
         if (member) {
           const updatedMember = {
             ...member,
             name: data.name,
             role: data.role || '',
-            image: data.image,
+            image: data.image || null,
             department: data.department || '',
             hierarchy_number: hierarchyVal,
             order_num: hierarchyVal
@@ -2353,6 +2387,7 @@ export default function AdminPanel({ onNavigate }) {
                 const list = (Array.isArray(prev) ? prev : []).map(m => m.id === member.id ? saved : m);
                 return list.sort((a, b) => (parseInt(a.hierarchy_number ?? a.order_num ?? 0, 10) - parseInt(b.hierarchy_number ?? b.order_num ?? 0, 10)) || (a.id - b.id));
               });
+              closeCrudModal();
               window.dispatchEvent(new CustomEvent('dataUpdated'));
             } else {
               const errData = await res.json().catch(() => ({}));
@@ -2385,6 +2420,7 @@ export default function AdminPanel({ onNavigate }) {
               const list = [...(Array.isArray(prev) ? prev : []), newMember];
               return list.sort((a, b) => (parseInt(a.hierarchy_number ?? a.order_num ?? 0, 10) - parseInt(b.hierarchy_number ?? b.order_num ?? 0, 10)) || (a.id - b.id));
             });
+            closeCrudModal();
             window.dispatchEvent(new CustomEvent('dataUpdated'));
           } else {
             const errData = await res.json().catch(() => ({}));
@@ -2397,6 +2433,7 @@ export default function AdminPanel({ onNavigate }) {
           return;
         }
       }
+      return;
     }
 
     closeCrudModal();
@@ -2486,15 +2523,7 @@ export default function AdminPanel({ onNavigate }) {
   // Pagination mocks
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Auto-login from sessionStorage
-  useEffect(() => {
-    const savedUser = sessionStorage.getItem('admin_user');
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      setCurrentUser(parsed);
-      setIsLoggedIn(true);
-    }
-  }, []);
+  // Enforce explicit Manager Login on initial entry
 
   // Enforce access control: redirect non-superadmins from restricted tabs
   useEffect(() => {
@@ -3562,43 +3591,51 @@ export default function AdminPanel({ onNavigate }) {
     );
   };
 
-  // Render auth box if not logged in
+  // Render Manager Login screen if not logged in
   if (!isLoggedIn) {
     return (
-      <div className="admin-panel-root">
-        <div className="admin-auth-container">
-          <div className="admin-auth-card">
-            <div className="admin-auth-logo">
-              <h2>BLUE CRESCENT</h2>
-              <p>CONTROL PANEL LOGIN</p>
+      <div className="admin-panel-root" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #071C3B 0%, #0F2747 50%, #063B73 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div className="admin-auth-container" style={{ maxWidth: '440px', width: '100%' }}>
+          <div className="admin-auth-card" style={{ background: '#FFFFFF', borderRadius: '24px', padding: '44px 36px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2)' }}>
+            <div className="admin-auth-logo" style={{ textAlign: 'center', marginBottom: '28px' }}>
+              <img src={logoBlueImg} alt="Blue Crescent Engineering" style={{ height: '48px', objectFit: 'contain', marginBottom: '16px' }} />
+              <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#063B73', margin: '0 0 8px 0', letterSpacing: '0.5px' }}>BLUE CRESCENT</h2>
+              <div style={{ display: 'inline-block', background: '#EFF6FF', color: '#0057B8', border: '1px solid #DBEAFE', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '800', letterSpacing: '1px' }}>
+                MANAGER LOGIN
+              </div>
             </div>
 
-            {authError && <div className="admin-auth-error">{authError}</div>}
+            {authError && (
+              <div className="admin-auth-error" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', padding: '10px 14px', borderRadius: '10px', fontSize: '13px', marginBottom: '18px', textAlign: 'center', fontWeight: '600' }}>
+                {authError}
+              </div>
+            )}
 
             <form onSubmit={handleLogin}>
-              <div className="admin-form-group">
-                <label>Username</label>
+              <div className="admin-form-group" style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px', textTransform: 'uppercase' }}>Manager Username</label>
                 <div style={{ position: 'relative' }}>
-                  <User size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
+                  <User size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: '#94A3B8' }} />
                   <input
                     type="text"
                     className="admin-input"
-                    style={{ paddingLeft: '40px' }}
-                    placeholder="Enter admin username"
+                    style={{ width: '100%', boxSizing: 'border-box', paddingLeft: '42px', height: '46px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '14px' }}
+                    placeholder="Enter manager username"
                     value={usernameInput}
                     onChange={(e) => setUsernameInput(e.target.value)}
+                    autoFocus
                   />
                 </div>
               </div>
 
-              <div className="admin-form-group">
-                <label>Password</label>
+              <div className="admin-form-group" style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px', textTransform: 'uppercase' }}>Password</label>
                 <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
+                  <Lock size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: '#94A3B8' }} />
                   <input
                     type="password"
                     className="admin-input"
-                    style={{ paddingLeft: '40px' }}
+                    style={{ width: '100%', boxSizing: 'border-box', paddingLeft: '42px', height: '46px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '14px' }}
                     placeholder="Enter password"
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
@@ -3606,17 +3643,46 @@ export default function AdminPanel({ onNavigate }) {
                 </div>
               </div>
 
-              <button type="submit" className="admin-btn" style={{ marginTop: '10px' }}>
+              <button
+                type="submit"
+                className="admin-btn"
+                style={{
+                  width: '100%',
+                  height: '46px',
+                  background: 'linear-gradient(135deg, #00A198 0%, #00827B 100%)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  letterSpacing: '0.5px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(0, 161, 152, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
                 LOG IN
               </button>
             </form>
 
             <button
+              type="button"
               onClick={() => onNavigate('Home')}
               className="admin-btn-secondary"
-              style={{ width: '100%', marginTop: '15px' }}
+              style={{
+                width: '100%',
+                marginTop: '14px',
+                height: '40px',
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '10px',
+                color: '#64748B',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
             >
-              ← GO TO HOMEPAGE
+              ← RETURN TO HOMEPAGE
             </button>
           </div>
         </div>
@@ -5947,10 +6013,17 @@ export default function AdminPanel({ onNavigate }) {
                                 title="Delete Discipline"
                                 style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 onClick={() => {
-                                  if (!confirm('Are you sure you want to delete this discipline card?')) return;
-                                  const copy = [...list];
-                                  copy.splice(idx, 1);
-                                  updateCompanyFieldAndSave('aboutUsDisciplinesJson', JSON.stringify(copy));
+                                  showConfirm({
+                                    title: 'Delete Discipline Card',
+                                    message: `Are you sure you want to delete "${item.name}" from the Our Capacity section?`,
+                                    confirmText: 'Yes, Delete',
+                                    type: 'danger',
+                                    onConfirm: async () => {
+                                      const copy = [...list];
+                                      copy.splice(idx, 1);
+                                      await updateCompanyFieldAndSave('aboutUsDisciplinesJson', JSON.stringify(copy));
+                                    }
+                                  });
                                 }}
                               >
                                 <Trash2 size={14} />
@@ -6176,9 +6249,17 @@ export default function AdminPanel({ onNavigate }) {
                                     title="Delete Chip"
                                     style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onClick={() => {
-                                      const copy = [...list];
-                                      copy.splice(idx, 1);
-                                      updateCompanyField('sustainabilityCapabilitiesJson', JSON.stringify(copy));
+                                      showConfirm({
+                                        title: 'Delete Capability Chip',
+                                        message: `Are you sure you want to delete "${item.name}"?`,
+                                        confirmText: 'Yes, Delete',
+                                        type: 'danger',
+                                        onConfirm: () => {
+                                          const copy = [...list];
+                                          copy.splice(idx, 1);
+                                          updateCompanyField('sustainabilityCapabilitiesJson', JSON.stringify(copy));
+                                        }
+                                      });
                                     }}
                                   >
                                     <Trash2 size={14} />
@@ -6281,9 +6362,17 @@ export default function AdminPanel({ onNavigate }) {
                                       title="Delete Pillar"
                                       style={{ background: '#EF4444', color: '#FFFFFF', border: 'none', width: '30px', height: '30px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                       onClick={() => {
-                                        const copy = [...list];
-                                        copy.splice(idx, 1);
-                                        updateCompanyField('remotePillarsJson', JSON.stringify(copy));
+                                        showConfirm({
+                                          title: 'Delete Solution Pillar',
+                                          message: `Are you sure you want to delete "${pillar.title}"?`,
+                                          confirmText: 'Yes, Delete',
+                                          type: 'danger',
+                                          onConfirm: () => {
+                                            const copy = [...list];
+                                            copy.splice(idx, 1);
+                                            updateCompanyField('remotePillarsJson', JSON.stringify(copy));
+                                          }
+                                        });
                                       }}
                                     >
                                       <Trash2 size={14} />
@@ -10386,13 +10475,22 @@ export default function AdminPanel({ onNavigate }) {
                               color: '#FFFFFF',
                               fontWeight: '800',
                               fontSize: '18px',
-                              boxShadow: '0 2px 6px rgba(0, 161, 152, 0.2)'
+                              boxShadow: '0 2px 6px rgba(0, 161, 152, 0.2)',
+                              position: 'relative'
                             }}>
+                              <span style={{ position: 'absolute', zIndex: 1, textTransform: 'uppercase' }}>
+                                {member.name ? member.name.charAt(0) : 'T'}
+                              </span>
                               {member.image ? (
-                                <img src={member.image} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : (
-                                (member.name ? member.name.charAt(0) : 'T')
-                              )}
+                                <img
+                                  src={member.image}
+                                  alt=""
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'relative', zIndex: 2 }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              ) : null}
                             </div>
 
                             <div style={{ minWidth: 0, flex: 1 }}>
@@ -10409,7 +10507,7 @@ export default function AdminPanel({ onNavigate }) {
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
                         <button
                           title="Edit Team Member"
-                          onClick={() => openCrudModal('teamMember', idx, member)}
+                          onClick={() => openCrudModal('teamMember', member.id, member)}
                           style={{
                             width: '36px',
                             height: '36px',
@@ -10439,14 +10537,24 @@ export default function AdminPanel({ onNavigate }) {
 
                         <button
                           title="Delete Team Member"
-                          onClick={async () => {
-                            if (!confirm(`Delete ${member.name}?`)) return;
-                            try {
-                              const res = await fetch(`/api/team/${member.id}`, { method: 'DELETE' });
-                              if (res.ok) {
-                                setTeamMembers(prev => (Array.isArray(prev) ? prev : []).filter(m => m.id !== member.id));
+                          onClick={() => {
+                            showConfirm({
+                              title: 'Delete Team Member',
+                              message: `Are you sure you want to delete "${member.name}"? This action will remove their profile from the website.`,
+                              confirmText: 'Yes, Delete',
+                              type: 'danger',
+                              onConfirm: async () => {
+                                try {
+                                  const res = await fetch(`/api/team/${member.id}`, { method: 'DELETE' });
+                                  if (res.ok) {
+                                    setTeamMembers(prev => (Array.isArray(prev) ? prev : []).filter(m => m.id !== member.id));
+                                    window.dispatchEvent(new CustomEvent('dataUpdated'));
+                                  }
+                                } catch (e) {
+                                  console.error('Error deleting team member:', e);
+                                }
                               }
-                            } catch (e) { }
+                            });
                           }}
                           style={{
                             width: '36px',
@@ -11913,13 +12021,22 @@ export default function AdminPanel({ onNavigate }) {
                         fontWeight: '800',
                         fontSize: '22px',
                         border: '2px solid #E2E8F0',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        position: 'relative'
                       }}>
+                        <span style={{ position: 'absolute', zIndex: 1, textTransform: 'uppercase' }}>
+                          {crudModal.data.name ? crudModal.data.name.charAt(0) : 'T'}
+                        </span>
                         {crudModal.data.image ? (
-                          <img src={crudModal.data.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          (crudModal.data.name ? crudModal.data.name.charAt(0) : 'T')
-                        )}
+                          <img
+                            src={crudModal.data.image}
+                            alt=""
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'relative', zIndex: 2 }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '200px' }}>
@@ -11958,11 +12075,17 @@ export default function AdminPanel({ onNavigate }) {
                                   return;
                                 }
 
-                                // Try multipart upload endpoint first
-                                const formData = new FormData();
-                                formData.append('photo', file);
+                                // 1. Instant local base64 preview
+                                const reader = new FileReader();
+                                reader.onload = (evt) => {
+                                  setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: evt.target.result } }));
+                                };
+                                reader.readAsDataURL(file);
 
+                                // 2. Concurrently upload to server to get persistent static path
                                 try {
+                                  const formData = new FormData();
+                                  formData.append('photo', file);
                                   const res = await fetch('/api/upload', {
                                     method: 'POST',
                                     body: formData
@@ -11971,19 +12094,11 @@ export default function AdminPanel({ onNavigate }) {
                                     const uploadData = await res.json();
                                     if (uploadData && uploadData.url) {
                                       setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: uploadData.url } }));
-                                      return;
                                     }
                                   }
                                 } catch (uploadErr) {
                                   console.warn('Multipart upload fallback to base64 reader:', uploadErr);
                                 }
-
-                                // Fallback to Base64 reader if multipart endpoint fails
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: reader.result } }));
-                                };
-                                reader.readAsDataURL(file);
                               }}
                             />
                           </label>
@@ -12055,13 +12170,20 @@ export default function AdminPanel({ onNavigate }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       overflow: 'hidden',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      position: 'relative'
                     }}>
+                      <ImageIcon size={24} color="#94A3B8" style={{ position: 'absolute', zIndex: 1 }} />
                       {crudModal.data.image ? (
-                        <img src={crudModal.data.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} />
-                      ) : (
-                        <ImageIcon size={24} color="#94A3B8" />
-                      )}
+                        <img
+                          src={crudModal.data.image}
+                          alt=""
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px', position: 'relative', zIndex: 2 }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : null}
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
@@ -12094,10 +12216,17 @@ export default function AdminPanel({ onNavigate }) {
                               return;
                             }
 
-                            const formData = new FormData();
-                            formData.append('photo', file);
+                            // 1. Instant local base64 preview
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                              setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: evt.target.result } }));
+                            };
+                            reader.readAsDataURL(file);
 
+                            // 2. Concurrently upload to server
                             try {
+                              const formData = new FormData();
+                              formData.append('photo', file);
                               const res = await fetch('/api/upload', {
                                 method: 'POST',
                                 body: formData
@@ -12106,18 +12235,11 @@ export default function AdminPanel({ onNavigate }) {
                                 const uploadData = await res.json();
                                 if (uploadData && uploadData.url) {
                                   setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: uploadData.url } }));
-                                  return;
                                 }
                               }
                             } catch (err) {
                               console.warn('Multipart upload fallback to base64 reader:', err);
                             }
-
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCrudModal(prev => ({ ...prev, data: { ...prev.data, image: reader.result } }));
-                            };
-                            reader.readAsDataURL(file);
                           }}
                         />
                       </label>
@@ -12327,6 +12449,112 @@ export default function AdminPanel({ onNavigate }) {
                 }}
               >
                 {targetMaintenanceState ? 'ENABLE MAINTENANCE' : 'MAKE WEBSITE LIVE'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PROJECT CENTER CONFIRMATION POPUP MODAL (Replaces browser default confirm) ── */}
+      {confirmDialog.isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.70)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999,
+            padding: '20px'
+          }}
+          onClick={closeConfirmDialog}
+        >
+          <div
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '20px',
+              maxWidth: '440px',
+              width: '100%',
+              padding: '28px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              border: '1px solid #E2E8F0',
+              animation: 'modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              boxSizing: 'border-box'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
+              <div style={{
+                width: '46px',
+                height: '46px',
+                borderRadius: '12px',
+                background: confirmDialog.type === 'danger' ? '#FEF2F2' : '#EFF6FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: confirmDialog.type === 'danger' ? '#DC2626' : '#2563EB',
+                flexShrink: 0
+              }}>
+                {confirmDialog.type === 'danger' ? <Trash2 size={24} /> : <AlertTriangle size={24} />}
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  {confirmDialog.title}
+                </h3>
+              </div>
+            </div>
+
+            <p style={{ margin: '0 0 24px 0', fontSize: '14.5px', lineHeight: '1.6', color: '#475569' }}>
+              {confirmDialog.message}
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={closeConfirmDialog}
+                style={{
+                  background: '#F1F5F9',
+                  border: '1px solid #CBD5E1',
+                  color: '#475569',
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  fontSize: '13.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {confirmDialog.cancelText || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={confirmDialog.onConfirm}
+                style={{
+                  background: confirmDialog.type === 'danger'
+                    ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
+                    : 'linear-gradient(135deg, #00A198 0%, #00827B 100%)',
+                  border: 'none',
+                  color: '#FFFFFF',
+                  padding: '10px 22px',
+                  borderRadius: '10px',
+                  fontSize: '13.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: confirmDialog.type === 'danger'
+                    ? '0 4px 12px rgba(239, 68, 68, 0.3)'
+                    : '0 4px 12px rgba(0, 161, 152, 0.25)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {confirmDialog.confirmText || 'Confirm'}
               </button>
             </div>
           </div>

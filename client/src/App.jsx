@@ -26,6 +26,7 @@ import AdminPanel from './components/AdminPanel';
 import MaintenancePage from './components/MaintenancePage';
 import ProjectDetailPage from './components/ProjectDetailPage';
 import BlogDetailPage from './components/BlogDetailPage';
+import UnauthorizedPage from './components/UnauthorizedPage';
 import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
@@ -63,7 +64,9 @@ export default function App() {
     fetchAndCacheCompanySettings();
     const syncRouteWithURL = () => {
       const path = window.location.pathname;
-      if (path === '/manager' || path === '/admin' || path.startsWith('/admin/')) {
+      if (path === '/admin' || path.startsWith('/admin/')) {
+        setCurrentView('Unauthorized');
+      } else if (path === '/manager' || path.startsWith('/manager/')) {
         setCurrentView('Admin');
       } else if (path === '/our-journey') {
         setCurrentView('Our Journey');
@@ -197,7 +200,18 @@ export default function App() {
     }
   };
 
-  // CRITICAL ADMIN BYPASS: If current view is Admin (/admin, /manager), Admin Panel renders normally
+  // 404 UNAUTHORIZED ENTRY VIEW: Displayed when accessing /admin directly
+  if (currentView === 'Unauthorized') {
+    return (
+      <div className="app-root is-unauthorized-view">
+        <ErrorBoundary key="Unauthorized">
+          <UnauthorizedPage onNavigate={handleNavigate} />
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
+  // CRITICAL ADMIN BYPASS: If current view is Admin (/manager), Admin Panel renders normally
   if (currentView === 'Admin') {
     return (
       <div className="app-root is-admin-view">

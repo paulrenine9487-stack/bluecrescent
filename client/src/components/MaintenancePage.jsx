@@ -124,7 +124,7 @@ export default function MaintenancePage({ onNavigate, maintenanceData }) {
             if (onNavigate) {
               onNavigate('Admin');
             } else {
-              window.location.href = '/admin';
+              window.location.href = '/manager';
             }
           }}
           style={{ background: 'none', border: 'none', cursor: 'pointer' }}

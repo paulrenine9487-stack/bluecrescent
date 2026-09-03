@@ -73,9 +73,39 @@ const getLucideIcon = (name, size = 22, color = '#0057B8') => {
     case 'Leaf': return <Leaf size={size} color={color} />;
     case 'Users': return <Users size={size} color={color} />;
     case 'Cpu': return <Cpu size={size} color={color} />;
+    case 'Globe': return <Globe size={size} color={color} />;
+    case 'Award': return <Award size={size} color={color} />;
     default: return <Building2 size={size} color={color} />;
   }
 };
+
+const DEFAULT_DISCIPLINES = [
+  { name: 'BIM Consultancy', icon: 'Layers', image: '/our capacity/bim1.png' },
+  { name: 'CAD Documentation', icon: 'Building2', image: '/our capacity/cad.png' },
+  { name: '3D Laser Scanning', icon: 'Radio', image: '/our capacity/3d.png' },
+  { name: 'Augment Reality (AR)', icon: 'Cpu', image: '/our capacity/ar.png' },
+  { name: 'Digital Twin', icon: 'Monitor', image: '/our capacity/digital.png' },
+  { name: 'GSAS Consultancy', icon: 'Leaf', image: '/our capacity/gsas.png' },
+  { name: 'Environmental Consultancy', icon: 'Globe', image: '/our capacity/envir.png' },
+  { name: 'LEED Consultancy', icon: 'Award', image: '/our capacity/leed.png' }
+];
+
+function DisciplineCardIcon({ item }) {
+  const [hasImgError, setHasImgError] = useState(false);
+  const imgSrc = item.image && typeof item.image === 'string' ? item.image.trim() : '';
+
+  if (imgSrc && !hasImgError) {
+    return (
+      <img
+        src={imgSrc}
+        alt={item.name || 'Discipline'}
+        style={{ width: '32px', height: '32px', objectFit: 'contain' }}
+        onError={() => setHasImgError(true)}
+      />
+    );
+  }
+  return getLucideIcon(item.icon || 'Building2', 22, '#0057B8');
+}
 
 const DEFAULT_COUNTRIES = [
   {
@@ -242,6 +272,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
       value4Desc: 'Together we achieve more through collaborative engineering.',
       value5Title: 'Innovation',
       value5Desc: 'Pioneering green technology and sustainable design.',
+      aboutUsDisciplinesJson: JSON.stringify(DEFAULT_DISCIPLINES)
     };
     const cached = getCachedCompanySettings();
     return { ...DEFAULT_COMPANY, ...cached };
@@ -348,19 +379,21 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
   const disciplines = React.useMemo(() => {
     try {
       if (companySettings.aboutUsDisciplinesJson !== undefined && companySettings.aboutUsDisciplinesJson !== null && companySettings.aboutUsDisciplinesJson !== '') {
-        const parsed = JSON.parse(companySettings.aboutUsDisciplinesJson);
-        if (Array.isArray(parsed)) {
+        const parsed = typeof companySettings.aboutUsDisciplinesJson === 'string'
+          ? JSON.parse(companySettings.aboutUsDisciplinesJson)
+          : companySettings.aboutUsDisciplinesJson;
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((item) => ({
             ...item,
             icon: item.icon || 'Building2',
-            image: item.image || (item.name && item.name.toLowerCase().includes('bim') ? '/uploads/bimmodel.png' : '')
+            image: item.image || ''
           }));
         }
       }
     } catch (e) {
       console.warn('Disciplines parsing error', e);
     }
-    return [];
+    return DEFAULT_DISCIPLINES;
   }, [companySettings.aboutUsDisciplinesJson]);
 
   const flowchartSteps = React.useMemo(() => {
@@ -896,21 +929,7 @@ export default function AboutUsPage({ onOpenModal, onNavigate }) {
                       overflow: 'hidden',
                       boxShadow: '0 2px 6px rgba(0, 87, 184, 0.06)'
                     }}>
-                      {(() => {
-                        if (item.image && typeof item.image === 'string' && item.image.trim() !== '') {
-                          return (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              style={{ width: '32px', height: '32px', objectFit: 'contain' }}
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          );
-                        }
-                        return getLucideIcon(item.icon || 'Building2', 22, '#0057B8');
-                      })()}
+                      <DisciplineCardIcon item={item} />
                     </div>
                     <div style={{ width: '20px', height: '2.5px', background: 'linear-gradient(90deg, #0057B8, #00A896)', margin: '4px 0', borderRadius: '2px' }} />
                     <span style={{
@@ -2831,7 +2850,8 @@ function OurTeamSection({ windowWidth }) {
                       color: '#FFFFFF',
                       fontSize: '54px',
                       fontWeight: '800',
-                      zIndex: 1
+                      zIndex: 1,
+                      textTransform: 'uppercase'
                     }}
                   >
                     {member.name ? member.name.charAt(0) : 'T'}
@@ -2854,34 +2874,32 @@ function OurTeamSection({ windowWidth }) {
                         transition: 'transform 0.3s ease'
                       }}
                       onError={(e) => {
-                        e.target.onerror = null;
                         const nameLower = (member.name || '').toLowerCase();
-                        if (nameLower.includes('dijo')) e.target.src = '/Dijo Daniel-Admin.png';
-                        else if (nameLower.includes('hamza')) e.target.src = '/Hamza Maroof - Sales Executive.png';
-                        else if (nameLower.includes('hanuman')) e.target.src = '/Hanuman Pandey - Lidar Specialist.png';
-                        else if (nameLower.includes('pandiarajan')) e.target.src = '/Pandiarajan Nattathi - Sr. BIM Coordinator.png';
-                        else if (nameLower.includes('ranjith')) e.target.src = '/Ranjithkumar - Sustainability Manager.png';
-                        else if (nameLower.includes('riyas')) e.target.src = '/Riyas Abdul Rasheed - Branch Office Manager.png';
-                        else if (nameLower.includes('sudharsan')) e.target.src = '/Sudharsan Shanmugam - Sr. BIM Coordinator.png';
-                        else if (nameLower.includes('sulaiman')) e.target.src = '/Sulaiman Siddique  - Sustainablity Engineer.png';
-                        else if (nameLower.includes('vasanth')) e.target.src = '/Vasanth Subburam - BIM Coordinator.png';
-                        else e.target.src = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80';
+                        if (nameLower.includes('dijo') && !e.target.src.includes('Dijo')) {
+                          e.target.src = '/Dijo Daniel-Admin.png';
+                        } else if (nameLower.includes('hamza') && !e.target.src.includes('Hamza')) {
+                          e.target.src = '/Hamza Maroof - Sales Executive.png';
+                        } else if (nameLower.includes('hanuman') && !e.target.src.includes('Hanuman')) {
+                          e.target.src = '/Hanuman Pandey - Lidar Specialist.png';
+                        } else if (nameLower.includes('pandiarajan') && !e.target.src.includes('Pandiarajan')) {
+                          e.target.src = '/Pandiarajan Nattathi - Sr. BIM Coordinator.png';
+                        } else if (nameLower.includes('ranjith') && !e.target.src.includes('Ranjith')) {
+                          e.target.src = '/Ranjithkumar - Sustainability Manager.png';
+                        } else if (nameLower.includes('riyas') && !e.target.src.includes('Riyas')) {
+                          e.target.src = '/Riyas Abdul Rasheed - Branch Office Manager.png';
+                        } else if (nameLower.includes('sudharsan') && !e.target.src.includes('Sudharsan')) {
+                          e.target.src = '/Sudharsan Shanmugam - Sr. BIM Coordinator.png';
+                        } else if (nameLower.includes('sulaiman') && !e.target.src.includes('Sulaiman')) {
+                          e.target.src = '/Sulaiman Siddique  - Sustainablity Engineer.png';
+                        } else if (nameLower.includes('vasanth') && !e.target.src.includes('Vasanth')) {
+                          e.target.src = '/Vasanth Subburam - BIM Coordinator.png';
+                        } else {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                        }
                       }}
                     />
-                  ) : (
-                    <img
-                      src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80"
-                      alt={member.name}
-                      style={{
-                        position: 'relative',
-                        zIndex: 2,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        objectPosition: 'center 20%'
-                      }}
-                    />
-                  )}
+                  ) : null}
                 </div>
 
                 <div style={{ padding: '20px 16px', textAlign: 'center', background: '#FFFFFF' }}>

@@ -2035,7 +2035,8 @@ async function initDB() {
           value3Title, value3Desc,
           value4Title, value4Desc,
           value5Title, value5Desc,
-          aboutUsVideoUrl, aboutUsHeroType, aboutUsHeroUrl
+          aboutUsVideoUrl, aboutUsHeroType, aboutUsHeroUrl,
+          aboutUsDisciplinesJson
         ) VALUES (
           'Blue Crescent Engineering', 'A Solution for your Vision', 'Blue Crescent Engineering Trading & Contracting WLL', '2010', '© 2026 BLUE CRESCENT ENGINEERING. All Rights Reserved. A Solution for your Vision.',
           'Blue Crescent Engineering is based upon pillars of engineering excellence, a proven system of quality assurance and a dedication in meeting the client\\'s needs and schedules. The company is incorporated by the core values of teamwork, Respect and Integrity.',
@@ -2055,7 +2056,8 @@ async function initDB() {
           'Excellence', 'Striving for the highest international engineering standards.',
           'Teamwork', 'Together we achieve more through collaborative engineering.',
           'Innovation', 'Pioneering green technology and sustainable design.',
-          '/aboutus.mp4', 'image', ''
+          '/aboutus.mp4', 'image', '',
+          '[{\"name\":\"BIM Consultancy\",\"icon\":\"Layers\",\"image\":\"/our capacity/bim1.png\"},{\"name\":\"CAD Documentation\",\"icon\":\"Building2\",\"image\":\"/our capacity/cad.png\"},{\"name\":\"3D Laser Scanning\",\"icon\":\"Radio\",\"image\":\"/our capacity/3d.png\"},{\"name\":\"Augment Reality (AR)\",\"icon\":\"Cpu\",\"image\":\"/our capacity/ar.png\"},{\"name\":\"Digital Twin\",\"icon\":\"Monitor\",\"image\":\"/our capacity/digital.png\"},{\"name\":\"GSAS Consultancy\",\"icon\":\"Leaf\",\"image\":\"/our capacity/gsas.png\"},{\"name\":\"Environmental Consultancy\",\"icon\":\"Globe\",\"image\":\"/our capacity/envir.png\"},{\"name\":\"LEED Consultancy\",\"icon\":\"Award\",\"image\":\"/our capacity/leed.png\"}]'
         )
       `);
     } else {
@@ -2070,8 +2072,8 @@ async function initDB() {
       try {
         await pool.query(`
           UPDATE company_settings 
-          SET aboutUsDisciplinesJson = '[{"name":"BIM Modeling & Coordination","icon":"Layers","image":"/uploads/bimmodel.png"},{"name":"CAD Documentation","icon":"Building2","image":""},{"name":"Reality Capture & Laser Scanning","icon":"Radio","image":""},{"name":"Specialized Engineering support","icon":"Wrench","image":""},{"name":"Computational Fluid Dynamics (CFD)","icon":"Wind","image":""},{"name":"Acoustic & Vibration Analysis","icon":"Volume2","image":""},{"name":"Hydraulic Analysis & Surge Control","icon":"Droplet","image":""},{"name":"Stress Analysis & Pipe Flexibility","icon":"Activity","image":""},{"name":"Energy Auditing & Commissioning","icon":"Zap","image":""},{"name":"Green Building Facilitation","icon":"Leaf","image":""},{"name":"Technical experts outsourcing","icon":"Users","image":""}]'
-          WHERE aboutUsDisciplinesJson IS NULL OR aboutUsDisciplinesJson = ''
+          SET aboutUsDisciplinesJson = '[{"name":"BIM Consultancy","icon":"Layers","image":"/our capacity/bim1.png"},{"name":"CAD Documentation","icon":"Building2","image":"/our capacity/cad.png"},{"name":"3D Laser Scanning","icon":"Radio","image":"/our capacity/3d.png"},{"name":"Augment Reality (AR)","icon":"Cpu","image":"/our capacity/ar.png"},{"name":"Digital Twin","icon":"Monitor","image":"/our capacity/digital.png"},{"name":"GSAS Consultancy","icon":"Leaf","image":"/our capacity/gsas.png"},{"name":"Environmental Consultancy","icon":"Globe","image":"/our capacity/envir.png"},{"name":"LEED Consultancy","icon":"Award","image":"/our capacity/leed.png"}]'
+          WHERE aboutUsDisciplinesJson IS NULL OR aboutUsDisciplinesJson = '' OR aboutUsDisciplinesJson = '[]' OR aboutUsDisciplinesJson LIKE '%BIM Modeling & Coordination%'
         `);
       } catch (err) {}
     }
